@@ -3,91 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portofolio | [Nama Anda]</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-        header {
-            background-color: #1a252f;
-            color: white;
-            padding: 3rem 2rem;
-            text-align: center;
-        }
-        header h1 {
-            margin: 0 0 10px 0;
-        }
-        header p {
-            font-size: 1.2rem;
-            color: #bdc3c7;
-            margin: 0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-        .card {
-            background: white;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-left: 5px solid #3498db;
-        }
-        h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-        }
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-    </style>
+    <title>Lapak Desa Lainungan</title>
+    
+    <!-- Memanggil Framework Tailwind CSS agar desain otomatis rapi -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Memanggil Library PapaParse untuk membaca file CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans text-gray-800">
 
-    <header>
-        <h1>[Nama Anda]</h1>
-        <p>Mahasiswa Aktuaria | Penggemar Data Science & Pemodelan Statistik</p>
+    <!-- Bagian Header (Kepala Website) -->
+    <header class="bg-green-700 text-white text-center py-12 px-4 shadow-lg">
+        <h1 class="text-4xl font-bold mb-2">Lapak Desa Lainungan</h1>
+        <p class="text-lg font-light">Katalog Produk Unggulan & Hasil Olahan Warga Desa</p>
     </header>
 
-    <div class="container">
-        <section>
-            <h2>Tentang Saya</h2>
-            <p>Halo! Saya adalah mahasiswa yang mendalami ilmu aktuaria dan statistika. Saya memiliki ketertarikan kuat dalam menerjemahkan data menjadi *insight* yang berharga, terutama melalui pemrograman Python, analisis *time-series*, dan manajemen risiko finansial.</p>
-        </section>
+    <!-- Bagian Utama Konten -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        
+        <!-- Indikator Loading (Tampil saat data sedang ditarik dari Google Sheets) -->
+        <div id="status-loading" class="text-center py-10 text-gray-500 text-lg animate-pulse">
+            Memuat data lapak desa...
+        </div>
+        
+        <!-- Wadah Grid untuk Katalog Produk -->
+        <!-- Grid ini akan menyusun kartu produk: 1 kolom di HP, 3 kolom di Laptop -->
+        <div id="wadah-katalog" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+            <!-- Kartu produk akan di-generate oleh JavaScript di sini -->
+        </div>
 
-        <section>
-            <h2>Proyek Portofolio</h2>
-            
-            <div class="card">
-                <h3>Analisis Time-Series & Model AR(p)</h3>
-                <p>Melakukan eksplorasi peramalan data menggunakan konsep *Lag Operators* dan estimasi persamaan Yule-Walker untuk memodelkan tren secara akurat.</p>
-            </div>
+    </main>
 
-            <div class="card">
-                <h3>Manajemen Risiko Instrumen Finansial</h3>
-                <p>Menganalisis rasio <em>Risk-to-Reward</em> (RR) dan metrik probabilitas pada pergerakan harga XAUUSD untuk strategi yang lebih terukur.</p>
-            </div>
-            
-            <div class="card">
-                <h3>Data Wrangling dengan Pandas</h3>
-                <p>Membersihkan dan memproses dataset kompleks dari format CSV menggunakan *environment* Python untuk mempersiapkan data sebelum tahap pemodelan.</p>
-            </div>
-        </section>
-    </div>
-
-    <footer>
-        <p>&copy; 2026 [Nama Anda]. Dibuat untuk eksplorasi GitHub Pages.</p>
+    <!-- Bagian Footer (Kaki Website) -->
+    <footer class="bg-gray-800 text-gray-300 text-center py-6 mt-12">
+        <p>&copy; 2026 Inovasi KKN Desa Lainungan, Sidrap.</p>
     </footer>
 
+    <!-- Logika JavaScript -->
+    <script>
+        // 1. MASUKKAN LINK CSV GOOGLE SHEETS DI SINI
+        // Ganti URL di bawah dengan URL Publish to web (format .csv) milikmu nanti
+        const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=989510176&single=true&output=csv";
+
+        // Fungsi untuk mengekstrak ID Gambar dari tautan Google Drive
+        // Ini mengubah link Google Form menjadi link gambar langsung
+        function formatGambarDrive(urlDrive) {
+            if (!urlDrive) return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
+            
+            // Mencari ID unik dari link Google Drive menggunakan Regex
+            const match = urlDrive.match(/([-\w]{25,})/);
+            if (match && match[1]) {
+                const idGambar = match[1];
+                return `https://drive.google.com/uc?export=view&id=${idGambar}`;
+            }
+            return urlDrive;
+        }
+
+        // 2. PROSES PENARIKAN DATA
+        if (urlCSV !== "MASUKKAN_URL_CSV_GOOGLE_SHEETS_DISINI") {
+            Papa.parse(urlCSV, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const dataLapak = results.data;
+                    
+                    // Sembunyikan tulisan loading, tampilkan wadah katalog
+                    document.getElementById("status-loading").classList.add("hidden");
+                    document.getElementById("wadah-katalog").classList.remove("hidden");
+                    
+                    renderKatalog(dataLapak);
+                },
+                error: function(err) {
+                    document.getElementById("status-loading").innerText = "Gagal memuat data. Periksa koneksi atau tautan CSV.";
+                }
+            });
+        } else {
+            document.getElementById("status-loading").innerText = "Silakan masukkan URL CSV Google Sheets ke dalam file HTML terlebih dahulu.";
+        }
+
+        // 3. FUNGSI UNTUK MERAKIT KARTU PRODUK
+        function renderKatalog(data) {
+            const wadah = document.getElementById("wadah-katalog");
+            let elemenHTML = "";
+
+            data.forEach((produk, index) => {
+                // Lewati baris jika Nama Produk kosong (mencegah error baris kosong di akhir sheet)
+                if(!produk["Nama Produk"]) return;
+
+                // Ambil data dari kolom yang sesuai (Pastikan nama ini SAMA PERSIS dengan judul kolom di Google Sheets)
+                const nama = produk["Nama Produk"];
+                const pemilik = produk["Nama Pemilik / Lapak Desa"];
+                const harga = parseFloat(produk["Harga Produk (Rupiah)"]).toLocaleString('id-ID'); // Format angka ke Rupiah
+                const deskripsi = produk["Deskripsi Produk"];
+                const nomorWA = produk["Nomor WhatsApp Penjual"];
+                const fotoAsli = produk["Foto Produk"];
+                const varianMentah = produk["Varian Produk (Jika Ada)"];
+
+                const fotoSiapRender = formatGambarDrive(fotoAsli);
+
+                // Logika Varian Produk (Dropdown)
+                let elemenVarian = "";
+                if (varianMentah && varianMentah !== "-" && varianMentah.trim() !== "") {
+                    // Pecah teks varian berdasarkan tanda koma
+                    const daftarVarian = varianMentah.split(",");
+                    elemenVarian = `<select id="varian-${index}" class="w-full mt-2 p-2 border rounded border-gray-300">`;
+                    daftarVarian.forEach(v => {
+                        elemenVarian += `<option value="${v.trim()}">${v.trim()}</option>`;
+                    });
+                    elemenVarian += `</select>`;
+                } else {
+                    // Jika tidak ada varian, buat input tersembunyi (*hidden*) agar kode tidak error
+                    elemenVarian = `<input type="hidden" id="varian-${index}" value="">`;
+                }
+
+                // Desain Kartu HTML menggunakan Tailwind CSS
+                elemenHTML += `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
+                        <img src="${fotoSiapRender}" alt="${nama}" class="w-full h-48 object-cover">
+                        
+                        <div class="p-5 flex-grow flex flex-col">
+                            <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">${pemilik}</span>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">${nama}</h3>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">${deskripsi}</p>
+                            
+                            <div class="mb-4">
+                                <span class="text-lg font-bold text-gray-900">Rp ${harga}</span>
+                            </div>
+                            
+                            <!-- Tempat Dropdown Varian Muncul (jika ada) -->
+                            <div class="mb-4">
+                                ${elemenVarian}
+                            </div>
+                            
+                            <button onclick="prosesBeli('${nomorWA}', '${nama}', ${index})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                                Beli via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            wadah.innerHTML = elemenHTML;
+        }
+
+        // 4. FUNGSI TRANSAKSI WHATSAPP
+        function prosesBeli(nomorWA, namaProduk, indexProduk) {
+            // Cek apakah ada varian yang dipilih
+            const elemenVarian = document.getElementById(`varian-${indexProduk}`);
+            let teksVarian = "";
+            
+            if (elemenVarian && elemenVarian.value) {
+                teksVarian = ` (Varian: ${elemenVarian.value})`;
+            }
+
+            // Pesan yang akan otomatis terketik di WA penjual
+            const pesan = `Halo, saya melihat informasi dari website Lapak Desa Lainungan. Saya ingin memesan *${namaProduk}*${teksVarian}. Apakah produk ini masih tersedia?`;
+            
+            // Format URL WA (Otomatis mendeteksi pembukaan di HP atau Web)
+            const urlWA = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesan)}`;
+            
+            window.open(urlWA, "_blank");
+        }
+    </script>
 </body>
 </html>

@@ -85,7 +85,33 @@
         // 3. FUNGSI UNTUK MERAKIT KARTU PRODUK
         function renderKatalog(data) {
             const wadah = document.getElementById("wadah-katalog");
-            let elemenHTML = "";
+            let elemenHTML += `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
+                        
+                        <!-- WADAH GAMBAR DENGAN EFEK GRADASI -->
+                        <div class="relative w-full h-48">
+                            <img src="${fotoSiapRender}" alt="${nama}" class="w-full h-full object-cover">
+                            <!-- Blok gradasi: memudar dari putih (bawah) ke transparan (atas) -->
+                            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+                        </div>
+                        
+                        <!-- Bagian Teks (padding atas sedikit dikurangi agar lebih menyatu dengan gradasi) -->
+                        <div class="px-5 pb-5 pt-2 flex-grow flex flex-col">
+                            <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">${pemilik}</span>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">${nama}</h3>
+                            <p class="text-sm text-gray-500 mb-3">${kategori || ''}</p>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">${deskripsi}</p>
+                            
+                            <div class="mb-4">
+                                <span class="text-lg font-bold text-gray-900">Rp ${harga}</span>
+                            </div>
+                            
+                            <button onclick="prosesBeli('${nomorWA}', '${nama}', ${index})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                                Beli via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                `;
 
             data.forEach((produk, index) => {
                 // Lewati baris jika Nama Produk kosong (mencegah error baris kosong di akhir sheet)

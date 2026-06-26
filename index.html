@@ -93,29 +93,14 @@
 
                 // Ambil data dari kolom yang sesuai (Pastikan nama ini SAMA PERSIS dengan judul kolom di Google Sheets)
                 const nama = produk["Nama Produk"];
-                const pemilik = produk["Nama Pemilik / Lapak Desa"];
-                const harga = parseFloat(produk["Harga Produk (Rupiah)"]).toLocaleString('id-ID'); // Format angka ke Rupiah
+                const pemilik = produk["Nama Pemilik"];
+                const kategori = produk["Kategori Produk"];
+                const harga = parseFloat(produk["Harga (Rp)"]).toLocaleString('id-ID'); // Format angka ke Rupiah
                 const deskripsi = produk["Deskripsi Produk"];
-                const nomorWA = produk["Nomor WhatsApp Penjual"];
+                const nomorWA = produk["Nomor Whatsapp (62)"];
                 const fotoAsli = produk["Foto Produk"];
-                const varianMentah = produk["Varian Produk (Jika Ada)"];
 
                 const fotoSiapRender = formatGambarDrive(fotoAsli);
-
-                // Logika Varian Produk (Dropdown)
-                let elemenVarian = "";
-                if (varianMentah && varianMentah !== "-" && varianMentah.trim() !== "") {
-                    // Pecah teks varian berdasarkan tanda koma
-                    const daftarVarian = varianMentah.split(",");
-                    elemenVarian = `<select id="varian-${index}" class="w-full mt-2 p-2 border rounded border-gray-300">`;
-                    daftarVarian.forEach(v => {
-                        elemenVarian += `<option value="${v.trim()}">${v.trim()}</option>`;
-                    });
-                    elemenVarian += `</select>`;
-                } else {
-                    // Jika tidak ada varian, buat input tersembunyi (*hidden*) agar kode tidak error
-                    elemenVarian = `<input type="hidden" id="varian-${index}" value="">`;
-                }
 
                 // Desain Kartu HTML menggunakan Tailwind CSS
                 elemenHTML += `
@@ -125,15 +110,11 @@
                         <div class="p-5 flex-grow flex flex-col">
                             <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">${pemilik}</span>
                             <h3 class="text-xl font-bold text-gray-900 mb-2">${nama}</h3>
+                            <p class="text-sm text-gray-500 mb-3">${kategori || ''}</p>
                             <p class="text-gray-600 text-sm mb-4 flex-grow">${deskripsi}</p>
                             
                             <div class="mb-4">
                                 <span class="text-lg font-bold text-gray-900">Rp ${harga}</span>
-                            </div>
-                            
-                            <!-- Tempat Dropdown Varian Muncul (jika ada) -->
-                            <div class="mb-4">
-                                ${elemenVarian}
                             </div>
                             
                             <button onclick="prosesBeli('${nomorWA}', '${nama}', ${index})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
@@ -148,17 +129,9 @@
         }
 
         // 4. FUNGSI TRANSAKSI WHATSAPP
-        function prosesBeli(nomorWA, namaProduk, indexProduk) {
-            // Cek apakah ada varian yang dipilih
-            const elemenVarian = document.getElementById(`varian-${indexProduk}`);
-            let teksVarian = "";
-            
-            if (elemenVarian && elemenVarian.value) {
-                teksVarian = ` (Varian: ${elemenVarian.value})`;
-            }
-
+        function prosesBeli(nomorWA, namaProduk) {
             // Pesan yang akan otomatis terketik di WA penjual
-            const pesan = `Halo, saya melihat informasi dari website Lapak Desa Lainungan. Saya ingin memesan *${namaProduk}*${teksVarian}. Apakah produk ini masih tersedia?`;
+            const pesan = `Halo, saya melihat informasi dari website Lapak Desa Lainungan. Saya ingin memesan *${namaProduk}*. Apakah produk ini masih tersedia?`;
             
             // Format URL WA (Otomatis mendeteksi pembukaan di HP atau Web)
             const urlWA = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesan)}`;

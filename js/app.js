@@ -76,7 +76,8 @@ function renderKatalog(data) {
         const deskripsiSingkat = produk["Deskripsi Singkat Toko"];
         const fotoAsli = produk["Perwakilan Foto Produk / Etalase"];
         
-        let hargaMentah = produk["Harga Terendah Produk (Rp)"];
+        // PERBAIKAN: Menggunakan huruf 'p' kecil pada kata produk
+        let hargaMentah = produk["Harga Terendah produk (Rp)"];
         let harga = hargaMentah ? parseFloat(hargaMentah).toLocaleString('id-ID') : "0";
         
         const fotoSiapRender = formatGambarDrive(fotoAsli);
@@ -116,11 +117,10 @@ function bukaPopup(index) {
     document.getElementById('modal-nama').innerText = produk["Nama Toko"];
     document.getElementById('modal-kategori').innerText = produk["Kategori Produk"] || '';
     document.getElementById('modal-deskripsi').innerText = produk["Deskripsi Singkat Toko"];
-    
-    // PERBAIKAN: Huruf 'T' pada Terjual sudah dibesarkan sesuai Form
     document.getElementById('modal-list-barang').innerText = produk["List Barang yang Terjual"] || "Tidak ada daftar barang detail.";
     
-    let hargaMentah = produk["Harga Terendah Produk (Rp)"];
+    // PERBAIKAN: Menggunakan huruf 'p' kecil pada kata produk
+    let hargaMentah = produk["Harga Terendah produk (Rp)"];
     document.getElementById('modal-harga').innerText = "Rp " + (hargaMentah ? parseFloat(hargaMentah).toLocaleString('id-ID') : "0");
     
     document.getElementById('modal-foto').src = formatGambarDrive(produk["Perwakilan Foto Produk / Etalase"]);

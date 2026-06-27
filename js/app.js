@@ -76,7 +76,7 @@ function renderKatalog(data) {
         const deskripsiSingkat = produk["Deskripsi Singkat Toko"];
         const fotoAsli = produk["Perwakilan Foto Produk / Etalase"];
         
-        let hargaMentah = produk["Harga Terendah produk (Rp)"];
+        let hargaMentah = produk["Harga Terendah Produk (Rp)"];
         let harga = hargaMentah ? parseFloat(hargaMentah).toLocaleString('id-ID') : "0";
         
         const fotoSiapRender = formatGambarDrive(fotoAsli);
@@ -119,7 +119,7 @@ function bukaPopup(index) {
     document.getElementById('modal-deskripsi').innerText = produk["Deskripsi Singkat Toko"];
     document.getElementById('modal-list-barang').innerText = produk["List Barang yang Terjual"] || "Tidak ada daftar barang detail.";
     
-    let hargaMentah = produk["Harga Terendah produk (Rp)"];
+    let hargaMentah = produk[" produk (Rp)"];
     document.getElementById('modal-harga').innerText = "Rp " + (hargaMentah ? parseFloat(hargaMentah).toLocaleString('id-ID') : "0");
     
     document.getElementById('modal-foto').src = formatGambarDrive(produk["Perwakilan Foto Produk / Etalase"]);

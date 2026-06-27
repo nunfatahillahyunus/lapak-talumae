@@ -1,0 +1,46 @@
+/* =========================================================
+   1. IMPORT GOOGLE FONTS (Font Poppins)
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+
+/* Menerapkan font Poppins ke seluruh elemen website */
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* =========================================================
+   2. KUSTOMISASI SCROLLBAR TEMA HIJAU
+   ========================================================= */
+/* Lebar scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* Warna jalur belakang scrollbar */
+::-webkit-scrollbar-track {
+    background: #f1f5f9; 
+}
+
+/* Warna gagang scrollbar (Hijau khas Tailwind) */
+::-webkit-scrollbar-thumb {
+    background: #16a34a; 
+    border-radius: 10px;
+}
+
+/* Warna gagang saat disorot/diklik */
+::-webkit-scrollbar-thumb:hover {
+    background: #15803d; 
+}
+
+/* =========================================================
+   3. EFEK ANIMASI TAMBAHAN (HOVER ZOOM GAMBAR)
+   ========================================================= */
+/* Memastikan gambar transisinya sangat halus */
+.gambar-etalase {
+    transition: transform 0.5s ease;
+}
+
+/* Saat wadah utamanya disorot, gambar membesar 5% */
+.kartu-toko:hover .gambar-etalase {
+    transform: scale(1.05);
+}

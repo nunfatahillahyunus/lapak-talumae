@@ -101,10 +101,44 @@ function renderKatalog(data) {
         const kategori = toko["Kategori Produk"];
         const deskripsiSingkat = toko["Deskripsi Singkat Toko"];
         const fotoSiapRender = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
+        const kodeUnikToko = toko["Kode Unik Toko"];
         
-        // Pengecekan harga terendah statis dari tabel toko untuk tampilan kartu depan
-        let hargaMentah = toko["Harga Terendah Produk (Rp)"];
-        let harga = hargaMentah ? parseFloat(hargaMentah).toLocaleString('id-ID') : "0";
+        // --- LOGIKA PERHITUNGAN RENTANG HARGA DINAMIS ---
+        // 1. Ambil semua produk milik toko ini
+        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
+        
+        // 2. Jika pengunjung membuka kategori tertentu, saring produknya
+        if (kategoriAktif) {
+            produkTokoIni = produkTokoIni.filter(p => {
+                const katProd = p["Kategori Produk"];
+                if (!katProd) return false;
+                return katProd.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
+            });
+        }
+
+        // 3. Kumpulkan deretan angka harganya
+        let arrayHarga = [];
+        produkTokoIni.forEach(p => {
+            let nominal = parseFloat(p["Harga (Rp)"]);
+            if (!isNaN(nominal) && nominal > 0) arrayHarga.push(nominal);
+        });
+
+        // 4. Hitung min-max
+        let teksHarga = "Belum ada produk";
+        let labelHarga = "Harga";
+
+        if (arrayHarga.length > 0) {
+            let hargaMin = Math.min(...arrayHarga);
+            let hargaMax = Math.max(...arrayHarga);
+            
+            if (hargaMin === hargaMax) {
+                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
+            } else {
+                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
+                labelHarga = "Rentang Harga";
+            }
+        }
+        // ------------------------------------------------
 
         elemenHTML += `
             <div class="kartu-toko bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300 border border-gray-100">
@@ -115,8 +149,8 @@ function renderKatalog(data) {
                     <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
                     <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat}</p>
                     <div class="mb-4">
-                        <span class="text-sm text-gray-500">Mulai dari</span><br>
-                        <span class="text-xl font-bold text-green-700">Rp ${harga}</span>
+                        <span class="text-sm text-gray-500">${labelHarga}</span><br>
+                        <span class="text-lg font-bold text-green-700">${teksHarga}</span>
                     </div>
                     <button onclick="bukaPopup(${index})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
                         Lihat Menu & Detail
@@ -143,25 +177,19 @@ function bukaPopup(index) {
 
     const kodeUnikToko = toko["Kode Unik Toko"];
     
-    // ----------------------------------------------------
-    // INTI LOGIKA PENYARINGAN PRODUK & PEMBUATAN TABEL
-    // ----------------------------------------------------
+    // Logika penyaringan untuk tabel
     const produkTokoIni = dataProdukGlobal.filter(p => {
-        // Syarat 1: Kode Uniknya harus cocok dengan Toko yang sedang diklik
         const matchKode = p["Kode Unik Toko"] === kodeUnikToko;
         if (!matchKode) return false;
 
-        // Syarat 2: Jika warga membuka kategori spesifik (misal: "Olahan Makanan"), 
-        // pastikan produk ini juga berkategori sama!
         if (kategoriAktif) {
             const katProd = p["Kategori Produk"];
             if (!katProd) return false;
             return katProd.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
         }
-        return true; // Jika di halaman "Semua Etalase", loloskan semua produknya
+        return true; 
     });
 
-    // Merakit struktur dasar tabel menggunakan Tailwind
     let htmlTabel = `
         <div class="overflow-x-auto rounded-lg">
             <table class="w-full text-sm text-left text-gray-600">
@@ -174,16 +202,11 @@ function bukaPopup(index) {
                 <tbody>
     `;
 
-    let hargaTerendahDinamis = 0;
+    let arrayHarga = [];
 
     if (produkTokoIni.length > 0) {
-        let arrayHarga = [];
-        
-        // Looping untuk memasukkan setiap barang ke dalam baris tabel (<tr>)
         produkTokoIni.forEach((p, i) => {
-            // Efek warna belang-belang (Zebra Cross) untuk baris ganjil/genap
             const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-            
             let nominalAngka = parseFloat(p["Harga (Rp)"]);
             let hargaTampil = nominalAngka ? nominalAngka.toLocaleString('id-ID') : "0";
             
@@ -196,13 +219,7 @@ function bukaPopup(index) {
                 </tr>
             `;
         });
-        
-        // Kalkulasi Harga Terendah secara otomatis dari barang yang tampil
-        if (arrayHarga.length > 0) {
-            hargaTerendahDinamis = Math.min(...arrayHarga);
-        }
     } else {
-        // Jika tidak ada barang yang sesuai di kategori ini
         htmlTabel += `
             <tr class="bg-white">
                 <td colspan="2" class="px-4 py-6 text-center text-gray-500 italic">Belum ada produk yang diunggah untuk kategori ini.</td>
@@ -211,16 +228,30 @@ function bukaPopup(index) {
     }
 
     htmlTabel += `</tbody></table></div>`;
-    
-    // Suntikkan tabel ke dalam HTML
     document.getElementById('modal-list-barang').innerHTML = htmlTabel;
     
-    // Update teks Harga di modal secara dinamis
-    document.getElementById('modal-harga').innerText = "Rp " + (hargaTerendahDinamis > 0 ? hargaTerendahDinamis.toLocaleString('id-ID') : "0");
+    // Logika pengubahan teks Rentang Harga di dalam Popup
+    let teksHargaModal = "Rp 0";
+    let teksLabelModal = "Harga";
+    
+    if (arrayHarga.length > 0) {
+        let hargaMin = Math.min(...arrayHarga);
+        let hargaMax = Math.max(...arrayHarga);
+        
+        if (hargaMin === hargaMax) {
+            teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID');
+        } else {
+            teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
+            teksLabelModal = "Rentang Harga:";
+        }
+    }
+    
+    document.getElementById('modal-harga').innerText = teksHargaModal;
+    if (document.getElementById('modal-label-harga')) {
+        document.getElementById('modal-label-harga').innerText = teksLabelModal;
+    }
 
-    // ----------------------------------------------------
-    // PERSIAPAN TOMBOL WHATSAPP
-    // ----------------------------------------------------
+    // Persiapan Tombol WhatsApp
     const namaAman = toko["Nama Toko"].replace(/'/g, "\\'"); 
     const nomorWA = toko["Nomor Whatsapp (62)"];
     document.getElementById('btn-modal-wa').setAttribute('onclick', `prosesBeli('${nomorWA}', '${namaAman}')`);
@@ -233,18 +264,6 @@ function bukaPopup(index) {
         modal.children[0].classList.remove('scale-95');
         modal.children[0].classList.add('scale-100');
     }, 10);
-}
-
-function tutupPopup() {
-    const modal = document.getElementById('modal-detail');
-    modal.classList.add('opacity-0');
-    modal.children[0].classList.remove('scale-100');
-    modal.children[0].classList.add('scale-95');
-    
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.getElementById('modal-foto').src = ""; 
-    }, 300); 
 }
 
 // ==========================================

@@ -305,20 +305,26 @@ function prosesBeli(nomorWA, namaToko) {
 // ==========================================
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebarMenu');
-    if (sidebar.classList.contains('-translate-x-full')) {
-        sidebar.classList.remove('-translate-x-full');
-    } else {
-        sidebar.classList.add('-translate-x-full');
+    if (sidebar) {
+        if (sidebar.classList.contains('-translate-x-full')) {
+            sidebar.classList.remove('-translate-x-full');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+        }
     }
 }
 
 function bukaModalKodeUnik() {
-    document.getElementById('sidebarMenu').classList.add('-translate-x-full'); 
+    const sidebar = document.getElementById('sidebarMenu');
+    if(sidebar) sidebar.classList.add('-translate-x-full'); 
+    
     const modal = document.getElementById('modalKodeUnik');
     if(!modal) return; 
     
     document.getElementById('inputKodeUnik').value = "";
-    document.getElementById('pesanErrorKode').classList.add('hidden');
+    const pesanError = document.getElementById('pesanErrorKode');
+    if (pesanError) pesanError.classList.add('hidden');
+    
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -350,6 +356,10 @@ function validasiDanBukaAppSheet() {
 
     btnValidasi.innerText = "Mengecek...";
     btnValidasi.disabled = true;
+
+    // Tarik langsung dari CSV utama
+    const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+    const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
 
     Papa.parse(urlCSV, {
         download: true,

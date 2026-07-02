@@ -190,29 +190,6 @@ function bukaPopup(index) {
         return true; 
     });
 
-    function tutupPopup() {
-    const modal = document.getElementById('modal-detail');
-    modal.classList.add('opacity-0');
-    modal.children[0].classList.remove('scale-100');
-    modal.children[0].classList.add('scale-95');
-    
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.getElementById('modal-foto').src = ""; 
-    }, 300); 
-}
-
-    function prosesBeli(nomorWA, namaToko) {
-    if (!nomorWA || nomorWA === 'undefined') {
-        alert("Maaf, penjual ini belum mencantumkan nomor WhatsApp.");
-        return;
-    }
-    const nomorBersih = nomorWA.replace(/[^0-9]/g, ''); 
-    const pesan = `Halo, saya melihat informasi dari website Lapak Desa. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
-    const urlWA = `https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}`;
-    window.open(urlWA, "_blank");
-}
-
     let htmlTabel = `
         <div class="overflow-x-auto rounded-lg">
             <table class="w-full text-sm text-left text-gray-600">
@@ -289,12 +266,29 @@ function bukaPopup(index) {
     }, 10);
 }
 
+// INI ADALAH FUNGSI PENUTUP YANG SUDAH DIKELUARKAN DARI DALAM BUKAPOPUP
+function tutupPopup() {
+    const modal = document.getElementById('modal-detail');
+    modal.classList.add('opacity-0');
+    modal.children[0].classList.remove('scale-100');
+    modal.children[0].classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.getElementById('modal-foto').src = ""; 
+    }, 300); 
+}
+
 // ==========================================
 // 6. TRANSAKSI WHATSAPP
 // ==========================================
 function prosesBeli(nomorWA, namaToko) {
+    if (!nomorWA || nomorWA === 'undefined') {
+        alert("Maaf, penjual ini belum mencantumkan nomor WhatsApp.");
+        return;
+    }
     const nomorBersih = nomorWA.replace(/[^0-9]/g, ''); 
-    const pesan = `Halo, saya melihat informasi dari website Lapak Desa Lainungan. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
+    const pesan = `Halo, saya melihat informasi dari website Lapak Desa Talumae. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
     const urlWA = `https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}`;
     window.open(urlWA, "_blank");
 }
@@ -350,7 +344,7 @@ function validasiDanBukaAppSheet() {
     btnValidasi.innerText = "Mengecek...";
     btnValidasi.disabled = true;
 
-    // Membaca ulang CSV Toko untuk Login (Bisa dibuat lebih efisien di masa depan)
+    // Membaca ulang CSV Toko untuk Login
     Papa.parse(urlCSV, {
         download: true,
         header: true,

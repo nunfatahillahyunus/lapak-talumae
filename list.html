@@ -8,18 +8,48 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { font-family: 'Poppins', sans-serif; }
-        /* Animasi loading sederhana */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #16a34a; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
-    <nav class="bg-white shadow-sm p-4 sticky top-0 z-[60]">
+    <button onclick="toggleSidebar()" class="fixed top-4 left-4 z-[100] bg-green-800 bg-opacity-90 hover:bg-green-700 text-white p-2 rounded-md shadow-lg transition-colors backdrop-blur-sm">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+
+    <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white shadow-2xl z-[105] transition-transform duration-300 ease-in-out flex flex-col">
+        <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <div class="p-6 pt-16 flex-grow">
+            <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
+            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
+            <a href="katalog.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🛍️ Semua Katalog</a>
+            <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
+            <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
+            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
+            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
+        </div>
+    </div>
+
+    <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Penjual</h3>
+            <p class="text-sm text-gray-600 mb-4">Masukkan Kode Unik Toko Anda untuk mengelola produk.</p>
+            <input type="text" id="inputKodeUnik" class="border border-gray-300 p-3 w-full mb-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-center uppercase" placeholder="Contoh: LN01">
+            <p id="pesanErrorKode" class="text-red-500 text-xs font-semibold hidden mb-4 text-center"></p>
+            <div class="flex justify-end gap-3 mt-4">
+                <button onclick="tutupModalKodeUnik()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+                <button id="btnValidasi" onclick="validasiDanBukaAppSheet()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold transition-colors">Validasi & Masuk</button>
+            </div>
+        </div>
+    </div>
+    <nav class="bg-white shadow-sm p-4 pl-16 sticky top-0 z-[60]">
         <div class="container mx-auto max-w-6xl flex items-center justify-between">
             <a href="index.html" class="flex items-center text-green-700 hover:text-green-800 font-bold transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Kembali ke Beranda
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Beranda
             </a>
             <span class="font-semibold text-gray-500 hidden sm:block">Inovasi KKN Desa Talumae</span>
         </div>
@@ -131,22 +161,15 @@
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
+    <script src="js/sidebar.js"></script>
+    
     <script>
-        // Gunakan link CSV dari database yang ada
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
         const urlCSVProduk = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=263400492&single=true&output=csv";
 
         let dbToko = [];
         let dbProduk = [];
 
-        function formatGambarDrive(urlDrive) {
-            if (!urlDrive) return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
-            const match = urlDrive.match(/([-\w]{25,})/);
-            if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
-            return urlDrive;
-        }
-
-        // 1. Tarik Data di Latar Belakang saat Halaman Dibuka
         document.addEventListener("DOMContentLoaded", () => {
             Papa.parse(urlCSV, {
                 download: true,
@@ -156,12 +179,11 @@
                         download: true,
                         header: true,
                         complete: function(resProduk) {
-                            dbToko = resToko.data.filter(t => t["Nama Toko"]); // Hilangkan baris kosong
+                            dbToko = resToko.data.filter(t => t["Nama Toko"]); 
                             dbProduk = resProduk.data;
 
                             hitungDanTampilkanStatistik();
                             
-                            // Aktifkan tombol cari setelah data siap
                             const btnCari = document.getElementById("btn-terapkan");
                             btnCari.disabled = false;
                             btnCari.classList.remove("cursor-not-allowed", "opacity-50");
@@ -172,7 +194,6 @@
             });
         });
 
-        // 2. Fungsi Menghitung Statistik secara Instan
         function hitungDanTampilkanStatistik() {
             let totalToko = dbToko.length;
             let countMakanan = 0, countMinuman = 0, countKerajinan = 0, countPertanian = 0, countBibit = 0;
@@ -197,16 +218,20 @@
             document.getElementById("wadah-stats").classList.remove("hidden");
         }
 
-        // 3. Mesin Pencari (Jalan hanya saat tombol diklik)
         function jalankanPencarian() {
-            // Sembunyikan pesan awal
             document.getElementById("status-awal").classList.add("hidden");
             const wadahHasil = document.getElementById("wadah-hasil-pencarian");
             const statusKosong = document.getElementById("status-kosong");
             
-            // Ambil Inputan Pengguna
             const keywordNama = document.getElementById("filter-nama").value.trim().toLowerCase();
-            const keywordKategori = document.getElementById("filter-kategori").value.toLowerCase();
+            const dropdownKategori = document.getElementById("filter-kategori");
+            const keywordKategori = dropdownKategori.value.toLowerCase();
+            
+            // Mengambil TEKS dari pilihan dropdown (contoh: "Olahan Makanan") untuk ditaruh di URL
+            let teksKategoriSpesifik = "";
+            if (dropdownKategori.value !== "") {
+                teksKategoriSpesifik = dropdownKategori.options[dropdownKategori.selectedIndex].text;
+            }
             
             const valMin = parseFloat(document.getElementById("filter-min").value);
             const valMax = parseFloat(document.getElementById("filter-max").value);
@@ -214,22 +239,16 @@
             const hargaMin = isNaN(valMin) ? 0 : valMin;
             const hargaMax = isNaN(valMax) ? Infinity : valMax;
 
-            // Proses Filter
             const hasilFilter = dbToko.filter(toko => {
-                // A. Filter Nama
                 const namaToko = (toko["Nama Toko"] || "").toLowerCase();
                 if (keywordNama && !namaToko.includes(keywordNama)) return false;
 
-                // B. Filter Kategori
                 const katToko = (toko["Kategori Produk"] || "").toLowerCase();
                 if (keywordKategori && !katToko.includes(keywordKategori)) return false;
 
-                // C. Filter Harga
-                // Cari semua produk milik toko ini
                 const idToko = toko["Kode Unik Toko"];
                 const produkTokoIni = dbProduk.filter(p => p["Kode Unik Toko"] === idToko);
                 
-                // Jika user memasukkan filter harga, toko WAJIB punya produk di rentang tersebut
                 if (!isNaN(valMin) || !isNaN(valMax)) {
                     let punyaProdukSesuaiHarga = false;
                     produkTokoIni.forEach(p => {
@@ -240,11 +259,9 @@
                     });
                     if (!punyaProdukSesuaiHarga) return false;
                 }
-
-                return true; // Lolos semua filter
+                return true; 
             });
 
-            // 4. Render Hasil
             if (hasilFilter.length === 0) {
                 wadahHasil.classList.add("hidden");
                 statusKosong.classList.remove("hidden");
@@ -256,26 +273,26 @@
                 hasilFilter.forEach(toko => {
                     const namaToko = toko["Nama Toko"];
                     const kategori = toko["Kategori Produk"];
-                    const foto = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
                     const idToko = toko["Kode Unik Toko"] || namaToko;
 
-                    // Buat Link Pintar ke Katalog (Auto-Buka Popup)
-                    const urlTujuan = `katalog.html?toko=${encodeURIComponent(idToko)}`;
+                    // === LOGIKA URL MENGARAH KE KATEGORI SPESIFIK ===
+                    let urlTujuan = `katalog.html?toko=${encodeURIComponent(idToko)}`;
+                    if (teksKategoriSpesifik !== "") {
+                        // Jika dropdown tidak "Semua Kategori", tambahkan parameter jenis
+                        urlTujuan += `&jenis=${encodeURIComponent(teksKategoriSpesifik)}`;
+                    }
 
+                    // Tampilan Kartu Tanpa Gambar
                     elemenHTML += `
-                        <a href="${urlTujuan}" class="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col hover:-translate-y-1">
-                            <div class="relative h-48 w-full overflow-hidden">
-                                <img src="${foto}" alt="${namaToko}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-0 transition-colors"></div>
+                        <a href="${urlTujuan}" class="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-green-500 flex flex-col p-6 hover:-translate-y-1">
+                            <div class="flex items-start justify-between mb-3">
+                                <span class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full uppercase tracking-wider">${kategori || 'Berbagai Kategori'}</span>
                             </div>
-                            <div class="p-5">
-                                <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1 block">${kategori || 'Tanpa Kategori'}</span>
-                                <h3 class="text-xl font-bold text-gray-900 mb-2">${namaToko}</h3>
-                                <p class="text-sm text-gray-500 line-clamp-2">${toko["Deskripsi Singkat Toko"] || ''}</p>
-                                <div class="mt-4 flex items-center text-green-700 font-bold text-sm">
-                                    Lihat Etalase 
-                                    <svg class="w-4 h-4 ml-1 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">${namaToko}</h3>
+                            <p class="text-sm text-gray-500 mb-5 flex-grow line-clamp-3">${toko["Deskripsi Singkat Toko"] || 'Lapak UMKM warga Desa Talumae.'}</p>
+                            <div class="border-t border-gray-100 pt-4 mt-auto flex items-center justify-between text-green-600 font-bold text-sm">
+                                <span>Buka Etalase Toko</span>
+                                <svg class="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </div>
                         </a>
                     `;

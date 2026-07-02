@@ -9,10 +9,11 @@ const urlCSVProduk = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxI
 const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
 
 // ==========================================
-// 2. DETEKSI PARAMETER URL & JUDUL
+// 2. DETEKSI PARAMETER URL
 // ==========================================
 const urlParams = new URLSearchParams(window.location.search);
 const kategoriAktif = urlParams.get('jenis'); 
+const tokoBukaOtomatis = urlParams.get('toko'); // Menangkap perintah buka popup dari Peta
 
 document.addEventListener("DOMContentLoaded", () => {
     if (kategoriAktif) {
@@ -25,9 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function formatGambarDrive(urlDrive) {
     if (!urlDrive) return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
     const match = urlDrive.match(/([-\w]{25,})/);
-    if (match && match[1]) {
-        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
-    }
+    if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
     return urlDrive;
 }
 
@@ -66,6 +65,21 @@ Papa.parse(urlCSV, {
                     document.getElementById("wadah-katalog").classList.remove("hidden");
                     
                     renderKatalog(dataKatalogGlobal);
+
+                    // --- FITUR AUTO-OPEN POPUP DARI PETA ---
+                    if (tokoBukaOtomatis) {
+                        const indexToko = dataKatalogGlobal.findIndex(t => 
+                            t["Kode Unik Toko"] === tokoBukaOtomatis || t["Nama Toko"] === tokoBukaOtomatis
+                        );
+                        
+                        if (indexToko !== -1) {
+                            setTimeout(() => {
+                                bukaPopup(indexToko);
+                            }, 400); // Jeda transisi UI
+                        }
+                    }
+                    // ----------------------------------------
+
                 } catch (error) {
                     munculkanError("Error memproses data.");
                 }
@@ -251,7 +265,7 @@ function bukaPopup(index) {
 }
 
 // ==========================================
-// 6. FUNGSI TUTUP POPUP (Sekarang Aman di Luar)
+// 6. FUNGSI TUTUP POPUP
 // ==========================================
 function tutupPopup() {
     const modal = document.getElementById('modal-detail');

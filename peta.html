@@ -9,7 +9,6 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         .leaflet-popup-content-wrapper { padding: 0; overflow: hidden; border-radius: 0.75rem; border: 1px solid #e5e7eb; }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
@@ -17,26 +16,19 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-
     <!-- ================= SIDEBAR MENU ================= -->
-    <!-- NAVIGASI ATAS STATIS -->
     <nav class="bg-white shadow-sm p-4 relative z-[60]">
         <div class="container mx-auto max-w-6xl flex items-center">
-            
-            <!-- Tombol Hamburger Transparan -->
             <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            
             <a href="index.html" class="flex items-center text-green-700 hover:text-green-800 font-bold transition-colors">
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Kembali ke Beranda
             </a>
-            
             <span class="font-semibold text-gray-500 hidden sm:block ml-auto">Inovasi KKN Desa Talumae</span>
         </div>
     </nav>
-
     <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white shadow-2xl z-[105] transition-transform duration-300 ease-in-out flex flex-col">
         <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -51,7 +43,6 @@
             <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
-
     <!-- MODAL AKSES PENJUAL -->
     <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
@@ -66,19 +57,6 @@
         </div>
     </div>
     <!-- ============================================== -->
-    
-    
-    <nav class="bg-white shadow-sm p-4 pl-16 sticky top-0 z-[60]">
-        <div class="container mx-auto max-w-6xl flex items-center justify-between">
-            <a href="index.html" class="flex items-center text-green-700 hover:text-green-800 font-bold transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Kembali ke Beranda
-            </a>
-            <span class="font-semibold text-gray-500 hidden sm:block">Inovasi KKN Desa Talumae</span>
-        </div>
-    </nav>
 
     <header class="bg-green-700 text-white text-center py-8 px-4 shadow-md relative z-10">
         <div class="container mx-auto max-w-6xl">
@@ -86,7 +64,6 @@
             <p class="text-green-100">Temukan lokasi pasti etalase dan lapak warga Desa Talumae.</p>
         </div>
     </header>
-
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl relative z-0">
         <div class="relative w-full h-[65vh] rounded-xl shadow-xl border-4 border-white overflow-hidden bg-gray-200 mb-8">
             <div id="status-loading" class="absolute inset-0 bg-gray-50 z-[400] flex flex-col items-center justify-center text-gray-500 transition-opacity duration-500">
@@ -95,7 +72,6 @@
             </div>
             <div id="map" class="w-full h-full relative z-10"></div>
         </div>
-
         <div id="wadah-tabel" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hidden">
             <div class="bg-green-700 px-5 py-4">
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">📊 Daftar Koordinat Lapak Warga</h2>
@@ -113,28 +89,22 @@
             </div>
         </div>
     </main>
-
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-auto relative z-10">
-        <p>© 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
+        <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
-
     <script>
         const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
-
         function formatGambarDrive(urlDrive) {
             if (!urlDrive) return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
             const match = urlDrive.match(/([-\w]{25,})/);
             if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
             return urlDrive;
         }
-
         document.addEventListener("DOMContentLoaded", () => {
             const map = L.map('map').setView([-3.9253023085017644, 119.89183392373823], 15);
-
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
             }).addTo(map);
-
             const titikBatasTalumae = [
                 [-3.886944, 119.874877], [-3.887166, 119.875122], [-3.888588, 119.878560], [-3.896378, 119.882901],
                 [-3.902527, 119.902415], [-3.902608, 119.905448], [-3.906962, 119.905110], [-3.918118, 119.906554],
@@ -147,13 +117,10 @@
                 [-3.912362283782905, 119.87508853014135], [-3.9086162310653734, 119.87445429697979], 
                 [-3.9044404967132404, 119.87443122103524], [-3.8966244516041177, 119.87490767869076]
             ];
-
             const poligonDesa = L.polygon(titikBatasTalumae, {
                 color: '#90EE90', weight: 3, dashArray: '6, 6', fillColor: '#90EE90', fillOpacity: 0.05       
             }).addTo(map);
-
             map.fitBounds(poligonDesa.getBounds());
-
             Papa.parse(URL_CSV_TOKO, {
                 download: true,
                 header: true,
@@ -161,29 +128,24 @@
                     const dataToko = results.data;
                     let jumlahPin = 0;
                     let htmlBarisTabel = ""; 
-
                     dataToko.forEach(toko => {
                         const lokasi = toko["Lokasi Toko"];
                         if (lokasi && lokasi.includes(',')) {
                             const kordinat = lokasi.split(',');
                             const lat = parseFloat(kordinat[0].trim());
                             const lng = parseFloat(kordinat[1].trim());
-
                             if (!isNaN(lat) && !isNaN(lng)) {
                                 jumlahPin++;
                                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                                 const idToko = toko["Kode Unik Toko"] || namaToko; 
                                 const foto = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
                                 
-                                // === LOGIKA MEMBUAT TOMBOL KATEGORI ===
                                 const stringKategori = toko["Kategori Produk"] || "";
-                                // Pecah berdasarkan koma, lalu bersihkan spasi
                                 const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
                                 
                                 let tombolKategoriHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
                                 if(arrayKategori.length > 0) {
                                     arrayKategori.forEach(kat => {
-                                        // Kirim parameter: jenis (untuk filter kategori) & toko (untuk buka popup otomatis)
                                         const urlTujuan = `katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}`;
                                         tombolKategoriHTML += `
                                             <a href="${urlTujuan}" class="inline-block w-full bg-green-50 hover:bg-green-600 text-green-700 hover:text-white border border-green-600 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">
@@ -195,8 +157,6 @@
                                     tombolKategoriHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
                                 }
                                 tombolKategoriHTML += `</div>`;
-                                // ====================================
-
                                 const popupContent = `
                                     <div class="flex flex-col bg-white">
                                         <div class="relative h-28 w-full">
@@ -210,7 +170,6 @@
                                     </div>
                                 `;
                                 L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-
                                 htmlBarisTabel += `
                                     <tr class="hover:bg-green-50/40 transition-colors">
                                         <td class="px-6 py-4 font-semibold text-gray-900">${namaToko}</td>
@@ -222,18 +181,17 @@
                             }
                         }
                     });
-
                     if (jumlahPin > 0) {
                         document.getElementById("isi-tabel-toko").innerHTML = htmlBarisTabel;
                         document.getElementById("wadah-tabel").classList.remove("hidden");
                     }
-
                     const loadingScreen = document.getElementById("status-loading");
                     loadingScreen.style.opacity = "0";
                     setTimeout(() => { loadingScreen.style.display = "none"; }, 500);
                 }
             });
         });
+    </script>
     <script src="js/app.js"></script>
 </body>
 </html>

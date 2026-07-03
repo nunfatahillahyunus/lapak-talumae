@@ -13,7 +13,7 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
-    <!-- NAVIGASI ATAS STATIS -->
+    
     <nav class="bg-white shadow-sm p-4 relative z-[60]">
         <div class="container mx-auto max-w-6xl flex items-center">
             <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
@@ -26,6 +26,7 @@
             <span class="font-semibold text-gray-500 hidden sm:block ml-auto">Inovasi KKN Desa Talumae</span>
         </div>
     </nav>
+
     <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white shadow-2xl z-[105] transition-transform duration-300 ease-in-out flex flex-col">
         <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -40,6 +41,7 @@
             <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
+
     <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
             <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Penjual</h3>
@@ -59,6 +61,7 @@
             <p class="text-green-100">Statistik desa dan pencarian lapak warga secara spesifik.</p>
         </div>
     </header>
+
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-800 mb-4 border-l-4 border-green-600 pl-3">Statistik Lapak Warga</h2>
@@ -92,6 +95,7 @@
                 </div>
             </div>
         </div>
+
         <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-8">
             <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                 <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -128,6 +132,7 @@
                 </button>
             </div>
         </div>
+
         <div id="status-awal" class="text-center py-16 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
             <div class="text-5xl mb-4 opacity-50">🔍</div>
             <h3 class="text-xl font-bold text-gray-600">Menunggu Pencarian...</h3>
@@ -139,14 +144,95 @@
             <p class="text-red-500">Tidak ada lapak atau toko yang sesuai dengan kriteria filter Anda.</p>
         </div>
     </main>
+
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-auto">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
+
     <script>
+        // --- 1. VARIABEL DATA ---
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
         const urlCSVProduk = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=263400492&single=true&output=csv";
         let dbToko = [];
         let dbProduk = [];
+
+        // --- 2. LOGIKA SIDEBAR & MODAL PENJUAL ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarMenu');
+            if (sidebar) {
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+        }
+
+        function bukaModalKodeUnik() {
+            const sidebar = document.getElementById('sidebarMenu');
+            if(sidebar) sidebar.classList.add('-translate-x-full'); 
+            
+            const modal = document.getElementById('modalKodeUnik');
+            if(!modal) return; 
+            
+            document.getElementById('inputKodeUnik').value = "";
+            const pesanError = document.getElementById('pesanErrorKode');
+            if (pesanError) pesanError.classList.add('hidden');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-95');
+            }, 10);
+        }
+
+        function tutupModalKodeUnik() {
+            const modal = document.getElementById('modalKodeUnik');
+            if(!modal) return;
+            
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function validasiDanBukaAppSheet() {
+            const inputKode = document.getElementById('inputKodeUnik').value.trim();
+            const pesanError = document.getElementById('pesanErrorKode');
+            const btnValidasi = document.getElementById('btnValidasi');
+
+            if (!inputKode) {
+                pesanError.innerText = "Kode unik tidak boleh kosong!";
+                pesanError.classList.remove('hidden');
+                return;
+            }
+
+            btnValidasi.innerText = "Mengecek...";
+            btnValidasi.disabled = true;
+
+            const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
+
+            // Mencari langsung dari data yang sudah di-load oleh halaman list.html
+            const isValid = dbToko.some(toko => {
+                const kode = toko["Kode Unik Toko"];
+                return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
+            });
+
+            if (isValid) {
+                pesanError.classList.add('hidden');
+                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
+                window.open(urlTujuan, "_blank");
+                tutupModalKodeUnik();
+            } else {
+                pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                pesanError.classList.remove('hidden');
+            }
+            btnValidasi.innerText = "Validasi & Masuk";
+            btnValidasi.disabled = false;
+        }
+
+        // --- 3. LOGIKA TARIK DATA DAN FILTER ---
         document.addEventListener("DOMContentLoaded", () => {
             Papa.parse(urlCSV, {
                 download: true,
@@ -169,6 +255,7 @@
                 }
             });
         });
+
         function hitungDanTampilkanStatistik() {
             let totalToko = dbToko.length;
             let countMakanan = 0, countMinuman = 0, countKerajinan = 0, countPertanian = 0, countBibit = 0;
@@ -189,6 +276,7 @@
             document.getElementById("loading-stats").classList.add("hidden");
             document.getElementById("wadah-stats").classList.remove("hidden");
         }
+
         function jalankanPencarian() {
             document.getElementById("status-awal").classList.add("hidden");
             const wadahHasil = document.getElementById("wadah-hasil-pencarian");
@@ -211,8 +299,10 @@
             const hasilFilter = dbToko.filter(toko => {
                 const namaToko = (toko["Nama Toko"] || "").toLowerCase();
                 if (keywordNama && !namaToko.includes(keywordNama)) return false;
+                
                 const katToko = (toko["Kategori Produk"] || "").toLowerCase();
                 if (keywordKategori && !katToko.includes(keywordKategori)) return false;
+                
                 const idToko = toko["Kode Unik Toko"];
                 const produkTokoIni = dbProduk.filter(p => p["Kode Unik Toko"] === idToko);
                 
@@ -228,6 +318,7 @@
                 }
                 return true; 
             });
+
             if (hasilFilter.length === 0) {
                 wadahHasil.classList.add("hidden");
                 statusKosong.classList.remove("hidden");
@@ -241,6 +332,7 @@
                     const kategori = toko["Kategori Produk"];
                     const idToko = toko["Kode Unik Toko"] || namaToko;
                     let urlTujuan = `katalog.html?toko=${encodeURIComponent(idToko)}`;
+                    
                     if (teksKategoriSpesifik !== "") {
                         urlTujuan += `&jenis=${encodeURIComponent(teksKategoriSpesifik)}`;
                     }
@@ -261,6 +353,6 @@
                 wadahHasil.innerHTML = elemenHTML;
             }
         }
-    </script> <script src="js/app.js"></script>
+    </script>
 </body>
 </html>

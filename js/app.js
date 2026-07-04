@@ -32,87 +32,84 @@ function formatGambarDrive(urlDrive) {
 }
 
 // ==========================================
-// 3. MESIN PENARIKAN DATA GANDA
+// 3. MESIN PENARIKAN DATA GANDA (KHUSUS KATALOG)
 // ==========================================
-Papa.parse(urlCSV, {
-    download: true,
-    header: true,
-    complete: function(resultsToko) {
-        Papa.parse(urlCSVProduk, {
-            download: true,
-            header: true,
-            complete: function(resultsProduk) {
-                try {
-                    let dataMentahToko = resultsToko.data;
-                    dataProdukGlobal = resultsProduk.data;
-                    
-                    if (kategoriAktif) {
-                        dataKatalogGlobal = dataMentahToko.filter(toko => {
-                            const kategoriMentah = toko["Kategori Produk"];
-                            if (!kategoriMentah) return false;
-                            return kategoriMentah.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
-                        });
-                    } else {
-                        dataKatalogGlobal = dataMentahToko;
-                    }
-                    
-                    const statusEl = document.getElementById("status-loading");
-                    const wadahEl = document.getElementById("wadah-katalog");
-
-                    if (!dataKatalogGlobal || dataKatalogGlobal.length === 0) {
-                        if(statusEl) {
-                            statusEl.innerText = "Belum ada lapak/toko untuk kategori ini.";
-                            statusEl.classList.remove("animate-pulse");
-                        }
-                        return;
-                    }
-                    
-                    if(statusEl) statusEl.classList.add("hidden");
-                    if(wadahEl) {
-                        wadahEl.classList.remove("hidden");
+if (document.getElementById("wadah-katalog")) {
+    Papa.parse(urlCSV, {
+        download: true,
+        header: true,
+        complete: function(resultsToko) {
+            Papa.parse(urlCSVProduk, {
+                download: true,
+                header: true,
+                complete: function(resultsProduk) {
+                    try {
+                        let dataMentahToko = resultsToko.data;
+                        dataProdukGlobal = resultsProduk.data;
                         
-                        // ===== LOGIKA SAKLAR TAMPILAN =====
-                        // Jika masuk ke kategori spesifik, gunakan desain awal (Grid Gambar)
-                        // Jika masuk ke Semua Katalog, gunakan desain baru (Daftar A-Z)
                         if (kategoriAktif) {
-                            renderKatalogGrid(dataKatalogGlobal);
+                            dataKatalogGlobal = dataMentahToko.filter(toko => {
+                                const kategoriMentah = toko["Kategori Produk"];
+                                if (!kategoriMentah) return false;
+                                return kategoriMentah.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
+                            });
                         } else {
-                            renderKatalogList(dataKatalogGlobal);
+                            dataKatalogGlobal = dataMentahToko;
                         }
-                        // ===================================
-                    }
-
-                    if (tokoBukaOtomatis) {
-                        const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
-                        const indexToko = dataKatalogGlobal.findIndex(t => {
-                            const kode = (t["Kode Unik Toko"] || "").trim().toLowerCase();
-                            const nama = (t["Nama Toko"] || "").trim().toLowerCase();
-                            return kode === targetToko || nama === targetToko;
-                        });
                         
-                        if (indexToko !== -1) {
-                            setTimeout(() => {
-                                bukaPopup(indexToko);
-                            }, 400); 
+                        const statusEl = document.getElementById("status-loading");
+                        const wadahEl = document.getElementById("wadah-katalog");
+
+                        if (!dataKatalogGlobal || dataKatalogGlobal.length === 0) {
+                            if(statusEl) {
+                                statusEl.innerText = "Belum ada lapak/toko untuk kategori ini.";
+                                statusEl.classList.remove("animate-pulse");
+                            }
+                            return;
+                        }
+                        
+                        if(statusEl) statusEl.classList.add("hidden");
+                        if(wadahEl) {
+                            wadahEl.classList.remove("hidden");
+                            
+                            if (kategoriAktif) {
+                                renderKatalogGrid(dataKatalogGlobal);
+                            } else {
+                                renderKatalogList(dataKatalogGlobal);
+                            }
+                        }
+
+                        if (tokoBukaOtomatis) {
+                            const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
+                            const indexToko = dataKatalogGlobal.findIndex(t => {
+                                const kode = (t["Kode Unik Toko"] || "").trim().toLowerCase();
+                                const nama = (t["Nama Toko"] || "").trim().toLowerCase();
+                                return kode === targetToko || nama === targetToko;
+                            });
+                            
+                            if (indexToko !== -1) {
+                                setTimeout(() => {
+                                    bukaPopup(indexToko);
+                                }, 400); 
+                            }
+                        }
+
+                    } catch (error) {
+                        if(document.getElementById("status-loading")) {
+                            document.getElementById("status-loading").innerText = "Error memproses data.";
                         }
                     }
-
-                } catch (error) {
-                    if(document.getElementById("status-loading")) {
-                        document.getElementById("status-loading").innerText = "Error memproses data.";
-                    }
+                },
+                error: function() { 
+                    if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Produk."; 
                 }
-            },
-            error: function() { 
-                if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Produk."; 
-            }
-        });
-    },
-    error: function() { 
-        if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Toko."; 
-    }
-});
-
+            });
+        },
+        error: function() { 
+            if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Toko."; 
+        }
+    });
+}
 
 // ==============================================================
 // 4A. FUNGSI DESAIN LAMA (GRID GAMBAR - UNTUK KATEGORI SPESIFIK)
@@ -127,7 +124,6 @@ function renderKatalogGrid(data) {
     data.forEach((toko) => {
         if(!toko["Nama Toko"]) return; 
         
-        // Cari urutan asli untuk pop-up
         const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
 
         const namaToko = toko["Nama Toko"];
@@ -190,7 +186,6 @@ function renderKatalogGrid(data) {
     wadah.innerHTML = elemenHTML;
 }
 
-
 // ==============================================================
 // 4B. FUNGSI DESAIN BARU (DAFTAR A-Z - KHUSUS SEMUA KATALOG)
 // ==============================================================
@@ -252,9 +247,8 @@ function renderKatalogList(data) {
     wadah.innerHTML = elemenHTML;
 }
 
-
 // ==========================================
-// 5. FUNGSI BUKA POPUP (MODAL)
+// 5. FUNGSI BUKA POPUP (MODAL) & TUTUP
 // ==========================================
 function bukaPopup(index) {
     const toko = dataKatalogGlobal[index];
@@ -352,9 +346,6 @@ function bukaPopup(index) {
     }, 10);
 }
 
-// ==========================================
-// 6. FUNGSI TUTUP POPUP
-// ==========================================
 function tutupPopup() {
     const modal = document.getElementById('modal-detail');
     modal.classList.add('opacity-0');
@@ -367,9 +358,6 @@ function tutupPopup() {
     }, 300); 
 }
 
-// ==========================================
-// 7. TRANSAKSI WHATSAPP
-// ==========================================
 function prosesBeli(nomorWA, namaToko) {
     if (!nomorWA || nomorWA === 'undefined') {
         alert("Maaf, penjual ini belum mencantumkan nomor WhatsApp.");
@@ -379,4 +367,94 @@ function prosesBeli(nomorWA, namaToko) {
     const pesan = `Halo, saya melihat informasi dari website Lapak Desa Talumae. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
     const urlWA = `https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}`;
     window.open(urlWA, "_blank");
+}
+
+// ==========================================
+// 6. LOGIKA SIDEBAR MENU & AKSES PENJUAL (DITAMBAHKAN KEMBALI)
+// ==========================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    if (sidebar) {
+        if (sidebar.classList.contains('-translate-x-full')) {
+            sidebar.classList.remove('-translate-x-full');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+        }
+    }
+}
+
+function bukaModalKodeUnik() {
+    const sidebar = document.getElementById('sidebarMenu');
+    if(sidebar) sidebar.classList.add('-translate-x-full'); 
+    
+    const modal = document.getElementById('modalKodeUnik');
+    if(!modal) return; 
+    
+    document.getElementById('inputKodeUnik').value = "";
+    const pesanError = document.getElementById('pesanErrorKode');
+    if (pesanError) pesanError.classList.add('hidden');
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.children[0].classList.remove('scale-95');
+    }, 10);
+}
+
+function tutupModalKodeUnik() {
+    const modal = document.getElementById('modalKodeUnik');
+    if(!modal) return;
+    
+    modal.classList.add('opacity-0');
+    modal.children[0].classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function validasiDanBukaAppSheet() {
+    const inputKode = document.getElementById('inputKodeUnik').value.trim();
+    const pesanError = document.getElementById('pesanErrorKode');
+    const btnValidasi = document.getElementById('btnValidasi');
+
+    if (!inputKode) {
+        pesanError.innerText = "Kode unik tidak boleh kosong!";
+        pesanError.classList.remove('hidden');
+        return;
+    }
+
+    btnValidasi.innerText = "Mengecek...";
+    btnValidasi.disabled = true;
+
+    const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
+
+    // Pengecekan data langsung menggunakan PapaParse agar aman meski diakses dari halaman apapun
+    Papa.parse(urlCSV, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            const isValid = results.data.some(toko => {
+                const kode = toko["Kode Unik Toko"];
+                return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
+            });
+
+            if (isValid) {
+                pesanError.classList.add('hidden');
+                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
+                window.open(urlTujuan, "_blank");
+                tutupModalKodeUnik();
+            } else {
+                pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                pesanError.classList.remove('hidden');
+            }
+            btnValidasi.innerText = "Validasi & Masuk";
+            btnValidasi.disabled = false;
+        },
+        error: function(err) {
+            pesanError.innerText = "Gagal memuat data dari server.";
+            pesanError.classList.remove('hidden');
+            btnValidasi.innerText = "Validasi & Masuk";
+            btnValidasi.disabled = false;
+        }
+    });
 }

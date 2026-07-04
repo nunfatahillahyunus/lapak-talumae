@@ -6,20 +6,19 @@ let dataProdukGlobal = [];
 
 const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
 const urlCSVProduk = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=263400492&single=true&output=csv";
+const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
 
 // ==========================================
 // 2. DETEKSI PARAMETER URL
 // ==========================================
 const urlParams = new URLSearchParams(window.location.search);
 const kategoriAktif = urlParams.get('jenis'); 
-const tokoBukaOtomatis = urlParams.get('toko');
+const tokoBukaOtomatis = urlParams.get('toko'); // Menangkap perintah buka popup dari Peta
 
 document.addEventListener("DOMContentLoaded", () => {
     if (kategoriAktif) {
-        const judulEl = document.getElementById("judul-kategori");
-        const descEl = document.getElementById("deskripsi-kategori");
-        if(judulEl) judulEl.innerText = "Kategori: " + kategoriAktif;
-        if(descEl) descEl.innerText = "Menampilkan etalase warga yang menyediakan " + kategoriAktif + ".";
+        document.getElementById("judul-kategori").innerText = "Kategori: " + kategoriAktif;
+        document.getElementById("deskripsi-kategori").innerText = "Menampilkan etalase warga yang menyediakan " + kategoriAktif + ".";
         document.title = kategoriAktif + " - Lapak Desa Talumae";
     }
 });
@@ -56,26 +55,22 @@ Papa.parse(urlCSV, {
                         dataKatalogGlobal = dataMentahToko;
                     }
                     
-                    const statusEl = document.getElementById("status-loading");
-                    const wadahEl = document.getElementById("wadah-katalog");
-
                     if (!dataKatalogGlobal || dataKatalogGlobal.length === 0) {
-                        if(statusEl) {
-                            statusEl.innerText = "Belum ada lapak/toko untuk kategori ini.";
-                            statusEl.classList.remove("animate-pulse");
-                        }
+                        document.getElementById("status-loading").innerText = "Belum ada lapak/toko untuk kategori ini.";
+                        document.getElementById("status-loading").classList.remove("animate-pulse");
                         return;
                     }
                     
-                    if(statusEl) statusEl.classList.add("hidden");
-                    if(wadahEl) {
-                        wadahEl.classList.remove("hidden");
-                        renderKatalog(dataKatalogGlobal);
-                    }
+                    document.getElementById("status-loading").classList.add("hidden");
+                    document.getElementById("wadah-katalog").classList.remove("hidden");
+                    
+                    renderKatalog(dataKatalogGlobal);
 
-                    // --- FITUR AUTO-OPEN POPUP DARI TOMBOL KATEGORI ---
+                    // --- FITUR AUTO-OPEN POPUP DARI PETA ---
                     if (tokoBukaOtomatis) {
+                        // Ubah teks yang dicari menjadi huruf kecil semua dan hapus spasi berlebih
                         const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
+                        
                         const indexToko = dataKatalogGlobal.findIndex(t => {
                             const kode = (t["Kode Unik Toko"] || "").trim().toLowerCase();
                             const nama = (t["Nama Toko"] || "").trim().toLowerCase();
@@ -85,90 +80,91 @@ Papa.parse(urlCSV, {
                         if (indexToko !== -1) {
                             setTimeout(() => {
                                 bukaPopup(indexToko);
-                            }, 400); 
+                            }, 500); // Jeda transisi dinaikkan sedikit agar aman saat dirender di HP
+                        } else {
+                            console.warn("Gagal membuka popup otomatis untuk:", tokoBukaOtomatis);
                         }
                     }
+                    // ----------------------------------------
 
                 } catch (error) {
-                    if(document.getElementById("status-loading")) {
-                        document.getElementById("status-loading").innerText = "Error memproses data.";
-                    }
+                    munculkanError("Error memproses data.");
                 }
             },
-            error: function() { 
-                if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Produk."; 
-            }
+            error: function() { munculkanError("Gagal mengunduh data Produk."); }
         });
     },
-    error: function() { 
-        if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Toko."; 
-    }
+    error: function() { munculkanError("Gagal mengunduh data Toko."); }
 });
 
+function munculkanError(pesan) {
+    document.getElementById("status-loading").innerText = pesan;
+    document.getElementById("status-loading").classList.remove("animate-pulse");
+}
+
 // ==========================================
-// 4. FUNGSI MERAKIT TAMPILAN LIST KATALOG BARU
+// 4. FUNGSI MERAKIT KARTU KATALOG
 // ==========================================
 function renderKatalog(data) {
     const wadah = document.getElementById("wadah-katalog");
-    if (!wadah) return;
-
-    // Memaksa tata letak menjadi list memanjang (override grid)
-    wadah.className = "flex flex-col gap-4";
-    
     let elemenHTML = "";
 
-    // MENGURUTKAN TOKO BERDASARKAN ABJAD (A-Z)
-    const dataUrut = data.slice().sort((a, b) => {
-        const namaA = (a["Nama Toko"] || "").toLowerCase();
-        const namaB = (b["Nama Toko"] || "").toLowerCase();
-        return namaA.localeCompare(namaB);
-    });
-
-    dataUrut.forEach((toko) => {
+    data.forEach((toko, index) => {
         if(!toko["Nama Toko"]) return; 
 
         const namaToko = toko["Nama Toko"];
-        const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
-        const idToko = toko["Kode Unik Toko"] || namaToko;
+        const kategori = toko["Kategori Produk"];
+        const deskripsiSingkat = toko["Deskripsi Singkat Toko"];
+        const fotoSiapRender = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
+        const kodeUnikToko = toko["Kode Unik Toko"];
         
-        // Cari urutan index asli dari database global untuk memicu Popup yang tepat
-        const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
+        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
         
-        // MENGOLAH KATEGORI MENJADI TOMBOL ROUNDED (Kanan)
-        const stringKategori = toko["Kategori Produk"] || "";
-        const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
-        
-        let badgeKategoriHTML = "";
-        if(arrayKategori.length > 0) {
-            arrayKategori.forEach(kat => {
-                // Tautan menuju Popup spesifik kategori tersebut
-                const urlTujuan = `katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}`;
-                badgeKategoriHTML += `
-                    <a href="${urlTujuan}" class="inline-block bg-green-100 text-green-700 hover:bg-green-600 hover:text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200 shadow-sm transition-colors whitespace-nowrap">
-                        ${kat}
-                    </a>
-                `;
+        if (kategoriAktif) {
+            produkTokoIni = produkTokoIni.filter(p => {
+                const katProd = p["Kategori Produk"];
+                if (!katProd) return false;
+                return katProd.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
             });
-        } else {
-            badgeKategoriHTML = `<span class="text-xs text-gray-400 italic px-2 py-2">Tanpa kategori</span>`;
         }
 
-        // MENYUSUN TAMPILAN ROUNDED RECTANGLE KESELURUHAN
-        elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                
-                <div class="flex-grow cursor-pointer group" onclick="bukaPopup(${originalIndex})">
-                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-700 transition-colors flex items-center gap-2">
-                        ${namaToko}
-                        <svg class="w-5 h-5 text-gray-300 group-hover:text-green-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1 line-clamp-1">${deskripsiSingkat}</p>
-                </div>
-                
-                <div class="flex flex-wrap md:justify-end gap-2 shrink-0">
-                    ${badgeKategoriHTML}
-                </div>
+        let arrayHarga = [];
+        produkTokoIni.forEach(p => {
+            let nominal = parseFloat(p["Harga (Rp)"]);
+            if (!isNaN(nominal) && nominal > 0) arrayHarga.push(nominal);
+        });
 
+        let teksHarga = "Belum ada produk";
+        let labelHarga = "Harga";
+
+        if (arrayHarga.length > 0) {
+            let hargaMin = Math.min(...arrayHarga);
+            let hargaMax = Math.max(...arrayHarga);
+            
+            if (hargaMin === hargaMax) {
+                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
+            } else {
+                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
+                labelHarga = "Rentang Harga";
+            }
+        }
+
+        elemenHTML += `
+            <div class="kartu-toko bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+                <img src="${fotoSiapRender}" alt="${namaToko}" class="gambar-etalase w-full h-48 object-cover">
+                <div class="p-5 flex-grow flex flex-col bg-white relative z-10">
+                    <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">LAPAK / TOKO</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">${namaToko}</h3>
+                    <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
+                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat}</p>
+                    <div class="mb-4">
+                        <span class="text-sm text-gray-500">${labelHarga}</span><br>
+                        <span class="text-lg font-bold text-green-700">${teksHarga}</span>
+                    </div>
+                    <button onclick="bukaPopup(${index})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                        Lihat Menu & Detail
+                    </button>
+                </div>
             </div>
         `;
     });
@@ -302,4 +298,95 @@ function prosesBeli(nomorWA, namaToko) {
     const pesan = `Halo, saya melihat informasi dari website Lapak Desa Talumae. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
     const urlWA = `https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}`;
     window.open(urlWA, "_blank");
+}
+
+// ==========================================
+// 8. SISTEM SLIDER MENU & LOGIN APPSHEET
+// ==========================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    if (sidebar) {
+        if (sidebar.classList.contains('-translate-x-full')) {
+            sidebar.classList.remove('-translate-x-full');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+        }
+    }
+}
+
+function bukaModalKodeUnik() {
+    const sidebar = document.getElementById('sidebarMenu');
+    if(sidebar) sidebar.classList.add('-translate-x-full'); 
+    
+    const modal = document.getElementById('modalKodeUnik');
+    if(!modal) return; 
+    
+    document.getElementById('inputKodeUnik').value = "";
+    const pesanError = document.getElementById('pesanErrorKode');
+    if (pesanError) pesanError.classList.add('hidden');
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.children[0].classList.remove('scale-95');
+    }, 10);
+}
+
+function tutupModalKodeUnik() {
+    const modal = document.getElementById('modalKodeUnik');
+    if(!modal) return;
+    
+    modal.classList.add('opacity-0');
+    modal.children[0].classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function validasiDanBukaAppSheet() {
+    const inputKode = document.getElementById('inputKodeUnik').value.trim();
+    const pesanError = document.getElementById('pesanErrorKode');
+    const btnValidasi = document.getElementById('btnValidasi');
+
+    if (!inputKode) {
+        pesanError.innerText = "Kode unik tidak boleh kosong!";
+        pesanError.classList.remove('hidden');
+        return;
+    }
+
+    btnValidasi.innerText = "Mengecek...";
+    btnValidasi.disabled = true;
+
+    // Tarik langsung dari CSV utama
+    const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+    const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
+
+    Papa.parse(urlCSV, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            const isValid = results.data.some(toko => {
+                const kode = toko["Kode Unik Toko"];
+                return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
+            });
+
+            if (isValid) {
+                pesanError.classList.add('hidden');
+                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
+                window.open(urlTujuan, "_blank");
+                tutupModalKodeUnik();
+            } else {
+                pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                pesanError.classList.remove('hidden');
+            }
+            btnValidasi.innerText = "Validasi & Masuk";
+            btnValidasi.disabled = false;
+        },
+        error: function(error) {
+            pesanError.innerText = "Terjadi kesalahan membaca data.";
+            pesanError.classList.remove('hidden');
+            btnValidasi.innerText = "Validasi & Masuk";
+            btnValidasi.disabled = false;
+        }
+    });
 }

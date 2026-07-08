@@ -259,6 +259,33 @@ function bukaPopup(index) {
     document.getElementById('modal-deskripsi').innerText = toko["Deskripsi Singkat Toko"];
     document.getElementById('modal-foto').src = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
 
+    // ==================================================
+    // KODE BARU: LOGIKA MENAMPILKAN METODE PEMBAYARAN
+    // ==================================================
+    const stringPembayaran = toko["Metode Pembayaran"] || "Tunai"; // Default adalah Tunai jika kolomnya kosong
+    const arrayPembayaran = stringPembayaran.split(',').map(p => p.trim()).filter(p => p);
+    
+    let htmlPembayaran = "";
+    arrayPembayaran.forEach(metode => {
+        let ikon = "💵"; // Ikon dasar tunai
+        const metodeKecil = metode.toLowerCase();
+        
+        // Cek kata untuk menyesuaikan logo ikon
+        if (metodeKecil.includes("qris")) ikon = "📱";
+        else if (metodeKecil.includes("transfer") || metodeKecil.includes("bank") || metodeKecil.includes("bca") || metodeKecil.includes("bri")) ikon = "💳";
+        else if (metodeKecil.includes("ewallet") || metodeKecil.includes("dana") || metodeKecil.includes("ovo") || metodeKecil.includes("gopay") || metodeKecil.includes("shopeepay")) ikon = "👛";
+
+        htmlPembayaran += `
+            <span class="bg-white text-blue-700 border border-blue-200 shadow-sm text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <span class="text-sm">${ikon}</span> ${metode}
+            </span>
+        `;
+    });
+    
+    const wadahPembayaran = document.getElementById('modal-pembayaran');
+    if (wadahPembayaran) wadahPembayaran.innerHTML = htmlPembayaran;
+    // ==================================================
+
     const kodeUnikToko = toko["Kode Unik Toko"];
     
     const produkTokoIni = dataProdukGlobal.filter(p => {
@@ -370,7 +397,7 @@ function prosesBeli(nomorWA, namaToko) {
 }
 
 // ==========================================
-// 6. LOGIKA SIDEBAR MENU & AKSES PENJUAL (DITAMBAHKAN KEMBALI)
+// 6. LOGIKA SIDEBAR MENU & AKSES PENJUAL
 // ==========================================
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebarMenu');
@@ -428,7 +455,6 @@ function validasiDanBukaAppSheet() {
 
     const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
 
-    // Pengecekan data langsung menggunakan PapaParse agar aman meski diakses dari halaman apapun
     Papa.parse(urlCSV, {
         download: true,
         header: true,

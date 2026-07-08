@@ -162,7 +162,7 @@ function renderKatalogGrid(data) {
         produkTokoIni.forEach(p => {
             let hargaNormal = parseFloat(p["Harga (Rp)"]);
             let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo ?"] || "").toString().trim().toUpperCase();
             
             let hargaAkhir = hargaNormal; // Default pakai harga normal
 
@@ -346,7 +346,7 @@ function bukaPopup(index) {
             const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             let hargaNormal = parseFloat(p["Harga (Rp)"]);
             let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo ?"] || "").toString().trim().toUpperCase();
             
             let isPromoBerlaku = false;
             let hargaAkhir = hargaNormal;

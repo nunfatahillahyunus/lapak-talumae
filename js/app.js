@@ -54,7 +54,6 @@ function parseWaktuAppSheet(strTanggal) {
 // [BARU] MESIN PENDETEKSI JAM (REGEX) ANTI-NGEBUG
 function ekstrakJam(strWaktu) {
     if (!strWaktu) return null;
-    // Cari pola 2 angka berdampingan yang dipisah titik dua (contoh: 08:00, 14:30)
     const match = strWaktu.match(/(\d{1,2}):(\d{2})/);
     if (match) {
         return {
@@ -66,14 +65,13 @@ function ekstrakJam(strWaktu) {
     return null;
 }
 
-// ALAT BANTU: Mengecek apakah toko sedang buka atau tutup
+// ALAT BANTU: Mengecek apakah toko sedang buka atau tutup saat ini
 function cekStatusToko(stringHari, stringJamBuka, stringJamTutup) {
-    if (!stringHari || !stringJamBuka || !stringJamTutup) return null;
+    if (!stringHari || !stringJamBuka || !stringJamTutup) return null; 
 
     const waktuBuka = ekstrakJam(stringJamBuka);
     const waktuTutup = ekstrakJam(stringJamTutup);
     
-    // Jika format waktu dari sheets hancur dan gagal diekstrak, matikan fitur
     if (!waktuBuka || !waktuTutup) return null;
 
     const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];

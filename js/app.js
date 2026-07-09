@@ -31,18 +31,15 @@ function formatGambarDrive(urlDrive) {
     return urlDrive;
 }
 
-// ALAT BANTU: Mengubah teks waktu dari Google Sheets menjadi angka milidetik
 function parseWaktuAppSheet(strTanggal) {
     if (!strTanggal) return NaN;
-    // 1. Coba baca pakai format standar bawaan JS
     let ms = new Date(strTanggal).getTime();
     if (!isNaN(ms)) return ms;
 
-    // 2. Jika gagal, berarti formatnya DD/MM/YYYY HH:mm:ss (Indonesia). Kita bongkar manual!
     const parts = strTanggal.split(/[\s/:-]+/);
     if (parts.length >= 3) {
         const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1; // Di JS, bulan dimulai dari angka 0 (Januari)
+        const month = parseInt(parts[1], 10) - 1;
         const year = parseInt(parts[2], 10);
         const hours = parts[3] ? parseInt(parts[3], 10) : 0;
         const minutes = parts[4] ? parseInt(parts[4], 10) : 0;
@@ -52,6 +49,36 @@ function parseWaktuAppSheet(strTanggal) {
         return manualDate.getTime();
     }
     return NaN;
+}
+
+// ALAT BANTU BARU: Mengecek apakah toko sedang buka atau tutup saat ini
+function cekStatusToko(stringHari, stringJamBuka, stringJamTutup) {
+    if (!stringHari || !stringJamBuka || !stringJamTutup) return null; // Jika penjual belum mengisi data, abaikan
+
+    const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const waktuSekarang = new Date();
+    const hariIni = namaHari[waktuSekarang.getDay()]; // Mendapatkan hari ini (contoh: "Senin")
+    
+    // Cek Hari
+    const hariBuka = stringHari.split(',').map(h => h.trim().toLowerCase());
+    const isHariIniBuka = hariBuka.includes(hariIni.toLowerCase());
+
+    // Ekstrak jam dan menit
+    const waktuBuka = stringJamBuka.split(':');
+    const waktuTutup = stringJamTutup.split(':');
+    
+    if (waktuBuka.length < 2 || waktuTutup.length < 2) return null;
+
+    // Ubah jam menjadi total menit agar mudah dikalkulasi
+    const menitTotalSekarang = (waktuSekarang.getHours() * 60) + waktuSekarang.getMinutes();
+    const menitTotalBuka = (parseInt(waktuBuka[0]) * 60) + parseInt(waktuBuka[1]);
+    const menitTotalTutup = (parseInt(waktuTutup[0]) * 60) + parseInt(waktuTutup[1]);
+
+    if (isHariIniBuka && menitTotalSekarang >= menitTotalBuka && menitTotalSekarang <= menitTotalTutup) {
+        return { buka: true, pesan: "Buka Sekarang" };
+    } else {
+        return { buka: false, pesan: "Sedang Tutup" };
+    }
 }
 
 // ==========================================
@@ -94,15 +121,10 @@ if (document.getElementById("wadah-katalog")) {
                         if(statusEl) statusEl.classList.add("hidden");
                         if(wadahEl) {
                             wadahEl.classList.remove("hidden");
-                            
-                            if (kategoriAktif) {
-                                renderKatalogGrid(dataKatalogGlobal);
-                            } else {
-                                renderKatalogList(dataKatalogGlobal);
-                            }
+                            if (kategoriAktif) renderKatalogGrid(dataKatalogGlobal);
+                            else renderKatalogList(dataKatalogGlobal);
                         }
 
-                        // Fitur buka popup otomatis dari halaman pencarian
                         if (tokoBukaOtomatis) {
                             const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
                             const indexToko = dataKatalogGlobal.findIndex(t => {
@@ -127,7 +149,7 @@ if (document.getElementById("wadah-katalog")) {
 }
 
 // ==============================================================
-// 4A. FUNGSI DESAIN KARTU (GRID - UNTUK KATEGORI SPESIFIK)
+// 4A. FUNGSI DESAIN KARTU (GRID)
 // ==============================================================
 function renderKatalogGrid(data) {
     const wadah = document.getElementById("wadah-katalog");
@@ -138,7 +160,6 @@ function renderKatalogGrid(data) {
 
     data.forEach((toko) => {
         if(!toko["Nama Toko"]) return; 
-        
         const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
 
         const namaToko = toko["Nama Toko"];
@@ -147,6 +168,19 @@ function renderKatalogGrid(data) {
         const fotoSiapRender = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
         const kodeUnikToko = toko["Kode Unik Toko"];
         
+        // Cek Status Buka/Tutup
+        const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
+        let lencanaStatusHTML = "";
+        
+        if (statusToko) {
+            if (statusToko.buka) {
+                lencanaStatusHTML = `<div class="absolute top-3 right-3 bg-green-500 bg-opacity-90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 border border-green-400"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> BUKA</div>`;
+            } else {
+                lencanaStatusHTML = `<div class="absolute top-3 right-3 bg-red-500 bg-opacity-90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 border border-red-400"> TUTUP</div>`;
+            }
+        }
+        
+        let arrayHarga = [];
         let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
         
         if (kategoriAktif) {
@@ -157,30 +191,22 @@ function renderKatalogGrid(data) {
             });
         }
 
-        // --- LOGIKA MIN-MAX HARGA DENGAN FILTER WAKTU PROMO ---
-        let arrayHarga = [];
         produkTokoIni.forEach(p => {
             let hargaNormal = parseFloat(p["Harga (Rp)"]);
             let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo ?"] || "").toString().trim().toUpperCase();
-            
-            let hargaAkhir = hargaNormal; // Default pakai harga normal
+            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
+            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1");
+            let hargaAkhir = hargaNormal;
 
-            // Jika sakelar promo menyala dan angkanya valid
-            if (statusPromo === "TRUE" && !isNaN(hargaPromo) && hargaPromo > 0) {
+            if (isPromoAktif && !isNaN(hargaPromo) && hargaPromo > 0) {
                 let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"]);
                 let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"]);
                 let waktuSekarang = new Date().getTime();
-
-                // Cek apakah saat ini berada di dalam rentang waktu promo
                 let isMulaiValid = isNaN(waktuMulai) || waktuSekarang >= waktuMulai;
                 let isAkhirValid = isNaN(waktuAkhir) || waktuSekarang <= waktuAkhir;
 
-                if (isMulaiValid && isAkhirValid) {
-                    hargaAkhir = hargaPromo; // Timpa dengan harga promo!
-                }
+                if (isMulaiValid && isAkhirValid) hargaAkhir = hargaPromo; 
             }
-
             if (!isNaN(hargaAkhir) && hargaAkhir > 0) arrayHarga.push(hargaAkhir);
         });
 
@@ -190,21 +216,22 @@ function renderKatalogGrid(data) {
         if (arrayHarga.length > 0) {
             let hargaMin = Math.min(...arrayHarga);
             let hargaMax = Math.max(...arrayHarga);
-            
-            if (hargaMin === hargaMax) {
-                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
-            } else {
+            if (hargaMin === hargaMax) teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
+            else {
                 teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
                 labelHarga = "Rentang Harga";
             }
         }
 
         elemenHTML += `
-            <div class="kartu-toko bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300 border border-gray-100">
-                <img src="${fotoSiapRender}" alt="${namaToko}" class="gambar-etalase w-full h-48 object-cover">
+            <div class="kartu-toko bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
+                <div class="relative w-full h-48 overflow-hidden">
+                    <img src="${fotoSiapRender}" alt="${namaToko}" class="gambar-etalase w-full h-full object-cover">
+                    ${lencanaStatusHTML}
+                </div>
                 <div class="p-5 flex-grow flex flex-col bg-white relative z-10">
                     <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">LAPAK / TOKO</span>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">${namaToko}</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">${namaToko}</h3>
                     <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
                     <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat}</p>
                     <div class="mb-4">
@@ -218,12 +245,11 @@ function renderKatalogGrid(data) {
             </div>
         `;
     });
-
     wadah.innerHTML = elemenHTML;
 }
 
 // ==============================================================
-// 4B. FUNGSI DESAIN DAFTAR (LIST - KHUSUS SEMUA KATALOG)
+// 4B. FUNGSI DESAIN DAFTAR (LIST)
 // ==============================================================
 function renderKatalogList(data) {
     const wadah = document.getElementById("wadah-katalog");
@@ -240,36 +266,35 @@ function renderKatalogList(data) {
 
     dataUrut.forEach((toko) => {
         if(!toko["Nama Toko"]) return; 
-
+        const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
         const namaToko = toko["Nama Toko"];
         const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
         const idToko = toko["Kode Unik Toko"] || namaToko;
-        const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
         
+        // Status Lencana Mini
+        const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
+        let lencanaMiniHTML = "";
+        if (statusToko) {
+            if (statusToko.buka) lencanaMiniHTML = `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border border-green-200">Buka</span>`;
+            else lencanaMiniHTML = `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border border-red-200">Tutup</span>`;
+        }
+
         const stringKategori = toko["Kategori Produk"] || "";
         const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
-        
         let badgeKategoriHTML = "";
         if(arrayKategori.length > 0) {
             arrayKategori.forEach(kat => {
-                const urlTujuan = `katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}`;
-                badgeKategoriHTML += `
-                    <a href="${urlTujuan}" class="inline-block bg-green-100 text-green-700 hover:bg-green-600 hover:text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200 shadow-sm transition-colors whitespace-nowrap">
-                        ${kat}
-                    </a>
-                `;
+                badgeKategoriHTML += `<span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">${kat}</span>`;
             });
-        } else {
-            badgeKategoriHTML = `<span class="text-xs text-gray-400 italic px-2 py-2">Tanpa kategori</span>`;
         }
 
         elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="flex-grow cursor-pointer group" onclick="bukaPopup(${originalIndex})">
-                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-700 transition-colors flex items-center gap-2">
-                        ${namaToko}
-                        <svg class="w-5 h-5 text-gray-300 group-hover:text-green-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </h3>
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group" onclick="bukaPopup(${originalIndex})">
+                <div class="flex-grow">
+                    <div class="flex items-center gap-3 mb-1">
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-700 transition-colors">${namaToko}</h3>
+                        ${lencanaMiniHTML}
+                    </div>
                     <p class="text-sm text-gray-500 mt-1 line-clamp-1">${deskripsiSingkat}</p>
                 </div>
                 <div class="flex flex-wrap md:justify-end gap-2 shrink-0">
@@ -278,12 +303,11 @@ function renderKatalogList(data) {
             </div>
         `;
     });
-
     wadah.innerHTML = elemenHTML;
 }
 
 // ==========================================
-// 5. FUNGSI BUKA POPUP & LOGIKA TABEL PROMO
+// 5. FUNGSI BUKA POPUP & DETAIL TOKO
 // ==========================================
 function bukaPopup(index) {
     const toko = dataKatalogGlobal[index];
@@ -294,10 +318,8 @@ function bukaPopup(index) {
     document.getElementById('modal-deskripsi').innerText = toko["Deskripsi Singkat Toko"];
     document.getElementById('modal-foto').src = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
 
-    // Render Metode Pembayaran
     const stringPembayaran = toko["Metode Pembayaran"] || "Tunai";
     const arrayPembayaran = stringPembayaran.split(',').map(p => p.trim()).filter(p => p);
-    
     let htmlPembayaran = "";
     arrayPembayaran.forEach(metode => {
         let ikon = "💵"; 
@@ -306,14 +328,33 @@ function bukaPopup(index) {
         else if (metodeKecil.includes("transfer") || metodeKecil.includes("bank") || metodeKecil.includes("bca") || metodeKecil.includes("bri")) ikon = "🏦";
         else if (metodeKecil.includes("ewallet") || metodeKecil.includes("dana") || metodeKecil.includes("ovo") || metodeKecil.includes("gopay") || metodeKecil.includes("shopeepay")) ikon = "📲";
 
-        htmlPembayaran += `
-            <span class="bg-white text-blue-700 border border-blue-200 shadow-sm text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <span class="text-sm">${ikon}</span> ${metode}
-            </span>
-        `;
+        htmlPembayaran += `<span class="bg-white text-blue-700 border border-blue-200 shadow-sm text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5"><span class="text-sm">${ikon}</span> ${metode}</span>`;
     });
     const wadahPembayaran = document.getElementById('modal-pembayaran');
     if (wadahPembayaran) wadahPembayaran.innerHTML = htmlPembayaran;
+
+    // --- RENDER JADWAL OPERASIONAL DI POPUP ---
+    const wadahJadwal = document.getElementById('modal-jadwal');
+    const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
+    
+    if (statusToko && wadahJadwal) {
+        let jamBukaTeks = toko["Jam Buka"].substring(0, 5); // Potong detiknya (08:00:00 jadi 08:00)
+        let jamTutupTeks = toko["Jam Tutup"].substring(0, 5);
+        let warnaTeks = statusToko.buka ? "text-green-600" : "text-red-500";
+        let ikonStatus = statusToko.buka ? "🟢" : "🔴";
+
+        wadahJadwal.innerHTML = `
+            <div class="mb-5 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider flex items-center gap-1">🕒 Info Operasional Lapak</p>
+                <p class="text-base font-bold ${warnaTeks} mb-1">${ikonStatus} ${statusToko.pesan}</p>
+                <p class="text-sm text-gray-700"><strong>Hari:</strong> ${toko["Hari Operasional"]}</p>
+                <p class="text-sm text-gray-700"><strong>Jam:</strong> ${jamBukaTeks} WITA - ${jamTutupTeks} WITA</p>
+            </div>
+        `;
+        wadahJadwal.classList.remove("hidden");
+    } else if (wadahJadwal) {
+        wadahJadwal.classList.add("hidden"); // Sembunyikan box jadwal jika penjual tidak mengisinya
+    }
 
     const kodeUnikToko = toko["Kode Unik Toko"];
     const produkTokoIni = dataProdukGlobal.filter(p => {
@@ -340,18 +381,18 @@ function bukaPopup(index) {
     `;
 
     let arrayHarga = [];
-
     if (produkTokoIni.length > 0) {
         produkTokoIni.forEach((p, i) => {
             const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             let hargaNormal = parseFloat(p["Harga (Rp)"]);
             let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo ?"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
+            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1");
             
             let isPromoBerlaku = false;
             let hargaAkhir = hargaNormal;
 
-            if (statusPromo === "TRUE" && !isNaN(hargaPromo) && hargaPromo > 0) {
+            if (isPromoAktif && !isNaN(hargaPromo) && hargaPromo > 0) {
                 let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"]);
                 let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"]);
                 let waktuSekarang = new Date().getTime();
@@ -367,7 +408,6 @@ function bukaPopup(index) {
 
             if (!isNaN(hargaAkhir) && hargaAkhir > 0) arrayHarga.push(hargaAkhir);
 
-            // --- DESAIN CORET HARGA DI TABEL ---
             let tampilanHarga = "";
             if (isPromoBerlaku) {
                 tampilanHarga = `
@@ -389,27 +429,19 @@ function bukaPopup(index) {
             `;
         });
     } else {
-        htmlTabel += `
-            <tr class="bg-white">
-                <td colspan="2" class="px-4 py-6 text-center text-gray-500 italic">Belum ada produk yang diunggah untuk kategori ini.</td>
-            </tr>
-        `;
+        htmlTabel += `<tr><td colspan="2" class="px-4 py-6 text-center text-gray-500 italic">Belum ada produk yang diunggah.</td></tr>`;
     }
 
     htmlTabel += `</tbody></table></div>`;
     document.getElementById('modal-list-barang').innerHTML = htmlTabel;
     
-    // Perbarui label Rentang Harga di Modal
     let teksHargaModal = "Rp 0";
     let teksLabelModal = "Harga";
-    
     if (arrayHarga.length > 0) {
         let hargaMin = Math.min(...arrayHarga);
         let hargaMax = Math.max(...arrayHarga);
-        
-        if (hargaMin === hargaMax) {
-            teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID');
-        } else {
+        if (hargaMin === hargaMax) teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID');
+        else {
             teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
             teksLabelModal = "Rentang Harga:";
         }
@@ -453,9 +485,6 @@ function prosesBeli(nomorWA, namaToko) {
     window.open(urlWA, "_blank");
 }
 
-// ==========================================
-// 6. LOGIKA SIDEBAR MENU & AKSES PENJUAL
-// ==========================================
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebarMenu');
     if (sidebar) {
@@ -467,19 +496,13 @@ function toggleSidebar() {
 function bukaModalKodeUnik() {
     const sidebar = document.getElementById('sidebarMenu');
     if(sidebar) sidebar.classList.add('-translate-x-full'); 
-    
     const modal = document.getElementById('modalKodeUnik');
     if(!modal) return; 
-    
     document.getElementById('inputKodeUnik').value = "";
     const pesanError = document.getElementById('pesanErrorKode');
     if (pesanError) pesanError.classList.add('hidden');
-    
     modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.children[0].classList.remove('scale-95');
-    }, 10);
+    setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
 }
 
 function tutupModalKodeUnik() {
@@ -500,7 +523,6 @@ function validasiDanBukaAppSheet() {
         pesanError.classList.remove('hidden');
         return;
     }
-
     btnValidasi.innerText = "Mengecek...";
     btnValidasi.disabled = true;
 

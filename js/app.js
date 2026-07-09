@@ -51,33 +51,46 @@ function parseWaktuAppSheet(strTanggal) {
     return NaN;
 }
 
-// ALAT BANTU BARU: Mengecek apakah toko sedang buka atau tutup saat ini
+// [BARU] MESIN PENDETEKSI JAM (REGEX) ANTI-NGEBUG
+function ekstrakJam(strWaktu) {
+    if (!strWaktu) return null;
+    // Cari pola 2 angka berdampingan yang dipisah titik dua (contoh: 08:00, 14:30)
+    const match = strWaktu.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+        return {
+            jam: parseInt(match[1], 10),
+            menit: parseInt(match[2], 10),
+            teksBersih: `${match[1].padStart(2, '0')}:${match[2]}`
+        };
+    }
+    return null;
+}
+
+// ALAT BANTU: Mengecek apakah toko sedang buka atau tutup
 function cekStatusToko(stringHari, stringJamBuka, stringJamTutup) {
-    if (!stringHari || !stringJamBuka || !stringJamTutup) return null; // Jika penjual belum mengisi data, abaikan
+    if (!stringHari || !stringJamBuka || !stringJamTutup) return null;
+
+    const waktuBuka = ekstrakJam(stringJamBuka);
+    const waktuTutup = ekstrakJam(stringJamTutup);
+    
+    // Jika format waktu dari sheets hancur dan gagal diekstrak, matikan fitur
+    if (!waktuBuka || !waktuTutup) return null;
 
     const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const waktuSekarang = new Date();
-    const hariIni = namaHari[waktuSekarang.getDay()]; // Mendapatkan hari ini (contoh: "Senin")
+    const hariIni = namaHari[waktuSekarang.getDay()]; 
     
-    // Cek Hari
     const hariBuka = stringHari.split(',').map(h => h.trim().toLowerCase());
     const isHariIniBuka = hariBuka.includes(hariIni.toLowerCase());
 
-    // Ekstrak jam dan menit
-    const waktuBuka = stringJamBuka.split(':');
-    const waktuTutup = stringJamTutup.split(':');
-    
-    if (waktuBuka.length < 2 || waktuTutup.length < 2) return null;
-
-    // Ubah jam menjadi total menit agar mudah dikalkulasi
     const menitTotalSekarang = (waktuSekarang.getHours() * 60) + waktuSekarang.getMinutes();
-    const menitTotalBuka = (parseInt(waktuBuka[0]) * 60) + parseInt(waktuBuka[1]);
-    const menitTotalTutup = (parseInt(waktuTutup[0]) * 60) + parseInt(waktuTutup[1]);
+    const menitTotalBuka = (waktuBuka.jam * 60) + waktuBuka.menit;
+    const menitTotalTutup = (waktuTutup.jam * 60) + waktuTutup.menit;
 
     if (isHariIniBuka && menitTotalSekarang >= menitTotalBuka && menitTotalSekarang <= menitTotalTutup) {
-        return { buka: true, pesan: "Buka Sekarang" };
+        return { buka: true, pesan: "Buka Sekarang", bukaTeks: waktuBuka.teksBersih, tutupTeks: waktuTutup.teksBersih };
     } else {
-        return { buka: false, pesan: "Sedang Tutup" };
+        return { buka: false, pesan: "Sedang Tutup", bukaTeks: waktuBuka.teksBersih, tutupTeks: waktuTutup.teksBersih };
     }
 }
 
@@ -338,8 +351,6 @@ function bukaPopup(index) {
     const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
     
     if (statusToko && wadahJadwal) {
-        let jamBukaTeks = toko["Jam Buka"].substring(0, 5); // Potong detiknya (08:00:00 jadi 08:00)
-        let jamTutupTeks = toko["Jam Tutup"].substring(0, 5);
         let warnaTeks = statusToko.buka ? "text-green-600" : "text-red-500";
         let ikonStatus = statusToko.buka ? "🟢" : "🔴";
 
@@ -348,12 +359,12 @@ function bukaPopup(index) {
                 <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider flex items-center gap-1">🕒 Info Operasional Lapak</p>
                 <p class="text-base font-bold ${warnaTeks} mb-1">${ikonStatus} ${statusToko.pesan}</p>
                 <p class="text-sm text-gray-700"><strong>Hari:</strong> ${toko["Hari Operasional"]}</p>
-                <p class="text-sm text-gray-700"><strong>Jam:</strong> ${jamBukaTeks} WITA - ${jamTutupTeks} WITA</p>
+                <p class="text-sm text-gray-700"><strong>Jam:</strong> ${statusToko.bukaTeks} WITA - ${statusToko.tutupTeks} WITA</p>
             </div>
         `;
         wadahJadwal.classList.remove("hidden");
     } else if (wadahJadwal) {
-        wadahJadwal.classList.add("hidden"); // Sembunyikan box jadwal jika penjual tidak mengisinya
+        wadahJadwal.classList.add("hidden"); 
     }
 
     const kodeUnikToko = toko["Kode Unik Toko"];

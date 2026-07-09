@@ -12,7 +12,7 @@
 - **Peta Sebaran UMKM Interaktif:** Memanfaatkan Leaflet.js untuk memvisualisasikan titik koordinat pasti setiap lapak/etalase warga desa, lengkap dengan fitur penyaringan (*filter*) kategori toko secara *real-time*.
 - **Katalog Etalase Dinamis:** Menampilkan kartu produk warga dengan antarmuka yang bersih dan responsif (didukung oleh Tailwind CSS).
 - **Sistem Harga Coret & Diskon (Waktu Terbatas):** Mesin JavaScript kustom yang membaca rentang waktu kalender. Jika penjual mengatur promo, *website* otomatis mencoret harga asli dan menampilkan lencana diskon selama periode promo berlangsung.
-- **Indikator Buka/Tutup Real-time:** Sistem akan melacak jam di HP pengunjung web, lalu mencocokkannya dengan hari dan jadwal operasional toko untuk menampilkan status **🟢 Buka** atau **Tutup**.
+- **Indikator Buka/Tutup Real-time:** Sistem akan melacak jam di HP pengunjung web, lalu mencocokkannya dengan hari dan jadwal operasional toko untuk menampilkan status **Buka** atau **Tutup**.
 - **Dasbor Penjual Terintegrasi AppSheet:** Warga (penjual) dapat menambah, mengedit, dan mengatur etalase mereka langsung dari *smartphone* melalui aplikasi Google AppSheet menggunakan sistem "Kode Unik Toko".
 - **Checkout via WhatsApp:** Terhubung secara mulus dengan API WhatsApp untuk memfasilitasi transaksi langsung antara pembeli dan penjual tanpa biaya potongan aplikasi.
 

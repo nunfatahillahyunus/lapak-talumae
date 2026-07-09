@@ -16,6 +16,7 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+    
     <nav class="bg-white shadow-sm p-4 relative z-[60]">
         <div class="container mx-auto max-w-6xl flex items-center">
             <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
@@ -28,24 +29,21 @@
             <span class="font-semibold text-gray-500 hidden sm:block ml-auto">Inovasi KKN Desa Talumae</span>
         </div>
     </nav>
+    
     <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white shadow-2xl z-[105] transition-transform duration-300 ease-in-out flex flex-col">
         <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
         <div class="p-6 pt-16 flex-grow">
             <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
-            
             <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
-            
             <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
-            
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
-            
             <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
-            
             <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
+    
     <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
             <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Penjual</h3>
@@ -58,13 +56,31 @@
             </div>
         </div>
     </div>
+    
     <header class="bg-green-700 text-white text-center py-8 px-4 shadow-md relative z-10">
         <div class="container mx-auto max-w-6xl">
             <h1 class="text-3xl md:text-4xl font-bold mb-2">Peta Sebaran UMKM</h1>
             <p class="text-green-100">Temukan lokasi pasti etalase dan lapak warga Desa Talumae.</p>
         </div>
     </header>
+
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl relative z-0">
+        
+        <div class="mb-4 bg-white p-4 rounded-xl shadow-md border border-gray-200 flex flex-col sm:flex-row items-center gap-4">
+            <label for="filter-kategori-peta" class="font-bold text-gray-700 whitespace-nowrap flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Saring Peta:
+            </label>
+            <select id="filter-kategori-peta" onchange="terapkanFilterPeta()" class="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:outline-none w-full sm:w-auto flex-grow font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors">
+                <option value="Semua">Tampilkan Semua Kategori</option>
+                <option value="Makanan">🍲 Olahan Makanan</option>
+                <option value="Minuman">🍹 Olahan Minuman</option>
+                <option value="Kerajinan">🧺 Kerajinan</option>
+                <option value="Pertanian">🌾 Hasil Pertanian & Perkebunan</option>
+                <option value="Bibit">🌱 Bibit & Sarana Tani</option>
+            </select>
+        </div>
+
         <div class="relative w-full h-[65vh] rounded-xl shadow-xl border-4 border-white overflow-hidden bg-gray-200 mb-8">
             <div id="status-loading" class="absolute inset-0 bg-gray-50 z-[400] flex flex-col items-center justify-center text-gray-500 transition-opacity duration-500">
                 <div class="text-4xl mb-3 animate-bounce">🛰️</div>
@@ -72,6 +88,7 @@
             </div>
             <div id="map" class="w-full h-full relative z-10"></div>
         </div>
+        
         <div id="wadah-tabel" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hidden">
             <div class="bg-green-700 px-5 py-4">
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">📊 Daftar Koordinat Lapak Warga</h2>
@@ -81,7 +98,7 @@
                     <thead class="bg-gray-100 text-xs uppercase text-gray-700 border-b">
                         <tr>
                             <th scope="col" class="px-6 py-3 font-bold">Toko</th>
-                            <th scope="col" class="px-6 py-3 font-bold text-center">Lokasi</th>
+                            <th scope="col" class="px-6 py-3 font-bold text-center">Lokasi Google Maps</th>
                         </tr>
                     </thead>
                     <tbody id="isi-tabel-toko" class="divide-y divide-gray-200 bg-white"></tbody>
@@ -89,30 +106,41 @@
             </div>
         </div>
     </main>
+
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-auto relative z-10">
         <p>© 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
+
     <script>
         const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+        
+        // VARIABEL GLOBAL PETA
+        let petaLeaflet;
+        let layerGrupMarker;
+        let dataTokoGlobal = [];
+
         function formatGambarDrive(urlDrive) {
             if (!urlDrive) return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
             const match = urlDrive.match(/([-\w]{25,})/);
             if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
             return urlDrive;
         }
+
         document.addEventListener("DOMContentLoaded", () => {
-            const map = L.map('map').setView([-3.9253023085017644, 119.89183392373823], 15);
+            // 1. Inisialisasi Peta
+            petaLeaflet = L.map('map').setView([-3.9253023085017644, 119.89183392373823], 15);
             
-            // ==============================================================
-            // KODE BARU: MENGGUNAKAN SATELIT GOOGLE MAPS HYBRID (lyrs=y)
-            // ==============================================================
+            // Layer Satelit Google Maps
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
                 maxZoom: 20,
                 subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
                 attribution: '© Google Maps'
-            }).addTo(map);
-            // ==============================================================
+            }).addTo(petaLeaflet);
 
+            // Layer Khusus untuk Pin/Marker (Agar gampang dihapus saat difilter)
+            layerGrupMarker = L.layerGroup().addTo(petaLeaflet);
+
+            // Poligon Batas Desa (Dimasukkan langsung ke peta agar tidak hilang saat filter aktif)
             const titikBatasTalumae = [
                 [-3.886944, 119.874877], [-3.887166, 119.875122], [-3.888588, 119.878560], [-3.896378, 119.882901],
                 [-3.902527, 119.902415], [-3.902608, 119.905448], [-3.906962, 119.905110], [-3.918118, 119.906554],
@@ -125,83 +153,127 @@
                 [-3.912362283782905, 119.87508853014135], [-3.9086162310653734, 119.87445429697979], 
                 [-3.9044404967132404, 119.87443122103524], [-3.8966244516041177, 119.87490767869076]
             ];
-            
-            // Memberikan sedikit pewarnaan putih agar garis hijau lebih kontras dengan satelit
             const poligonDesa = L.polygon(titikBatasTalumae, {
                 color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1       
-            }).addTo(map);
-            
-            map.fitBounds(poligonDesa.getBounds());
+            }).addTo(petaLeaflet);
+            petaLeaflet.fitBounds(poligonDesa.getBounds());
+
+            // 2. Tarik Data CSV
             Papa.parse(URL_CSV_TOKO, {
                 download: true,
                 header: true,
                 complete: function(results) {
-                    const dataToko = results.data;
-                    let jumlahPin = 0;
-                    let htmlBarisTabel = ""; 
-                    dataToko.forEach(toko => {
-                        const lokasi = toko["Lokasi Toko"];
-                        if (lokasi && lokasi.includes(',')) {
-                            const kordinat = lokasi.split(',');
-                            const lat = parseFloat(kordinat[0].trim());
-                            const lng = parseFloat(kordinat[1].trim());
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                jumlahPin++;
-                                const namaToko = toko["Nama Toko"] || "Toko Warga";
-                                const idToko = toko["Kode Unik Toko"] || namaToko; 
-                                const foto = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
-                                
-                                const stringKategori = toko["Kategori Produk"] || "";
-                                const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
-                                
-                                let tombolKategoriHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
-                                if(arrayKategori.length > 0) {
-                                    arrayKategori.forEach(kat => {
-                                        const urlTujuan = `katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}`;
-                                        tombolKategoriHTML += `
-                                            <a href="${urlTujuan}" class="inline-block w-full bg-green-50 hover:bg-green-600 text-green-700 hover:text-white border border-green-600 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">
-                                                Produk ${kat}
-                                            </a>
-                                        `;
-                                    });
-                                } else {
-                                    tombolKategoriHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
-                                }
-                                tombolKategoriHTML += `</div>`;
-                                const popupContent = `
-                                    <div class="flex flex-col bg-white">
-                                        <div class="relative h-28 w-full">
-                                            <img src="${foto}" alt="${namaToko}" class="w-full h-full object-cover">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                            <h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${namaToko}</h3>
-                                        </div>
-                                        <div class="p-3 text-center bg-white">
-                                            ${tombolKategoriHTML}
-                                        </div>
-                                    </div>
-                                `;
-                                L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                                htmlBarisTabel += `
-                                    <tr class="hover:bg-green-50/40 transition-colors">
-                                        <td class="px-6 py-4 font-semibold text-gray-900">${namaToko}</td>
-                                        <td class="px-6 py-4 text-center">
-                                            <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank" class="text-2xl hover:scale-125 inline-block transition-transform" title="Buka di Google Maps">📍</a>
-                                        </td>
-                                    </tr>
-                                `;
-                            }
-                        }
-                    });
-                    if (jumlahPin > 0) {
-                        document.getElementById("isi-tabel-toko").innerHTML = htmlBarisTabel;
-                        document.getElementById("wadah-tabel").classList.remove("hidden");
-                    }
+                    dataTokoGlobal = results.data; // Simpan ke variabel global
+                    
+                    // Render untuk pertama kali (Posisi Dropdown = Semua)
+                    terapkanFilterPeta();
+
+                    // Matikan layar loading
                     const loadingScreen = document.getElementById("status-loading");
                     loadingScreen.style.opacity = "0";
                     setTimeout(() => { loadingScreen.style.display = "none"; }, 500);
                 }
             });
         });
+
+        // ==========================================
+        // [BARU] LOGIKA FILTER PETA DINAMIS
+        // ==========================================
+        function terapkanFilterPeta() {
+            // 1. Dapatkan kategori yang dipilih user
+            const nilaiFilter = document.getElementById("filter-kategori-peta").value;
+
+            // 2. Bersihkan semua pin di peta dan tabel
+            layerGrupMarker.clearLayers();
+            let htmlBarisTabel = ""; 
+            let jumlahPin = 0;
+
+            // 3. Saring dan gambar ulang
+            dataTokoGlobal.forEach(toko => {
+                const stringKategori = toko["Kategori Produk"] || "";
+                
+                // Cek apakah toko ini sesuai dengan filter dropdown
+                let masukKriteria = false;
+                if (nilaiFilter === "Semua") {
+                    masukKriteria = true;
+                } else if (stringKategori.toLowerCase().includes(nilaiFilter.toLowerCase())) {
+                    masukKriteria = true;
+                }
+
+                if (masukKriteria) {
+                    const lokasi = toko["Lokasi Toko"];
+                    if (lokasi && lokasi.includes(',')) {
+                        const kordinat = lokasi.split(',');
+                        const lat = parseFloat(kordinat[0].trim());
+                        const lng = parseFloat(kordinat[1].trim());
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            jumlahPin++;
+                            const namaToko = toko["Nama Toko"] || "Toko Warga";
+                            const idToko = toko["Kode Unik Toko"] || namaToko; 
+                            const foto = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
+                            
+                            const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
+                            
+                            let tombolKategoriHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
+                            if(arrayKategori.length > 0) {
+                                arrayKategori.forEach(kat => {
+                                    const urlTujuan = `katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}`;
+                                    tombolKategoriHTML += `
+                                        <a href="${urlTujuan}" class="inline-block w-full bg-green-50 hover:bg-green-600 text-green-700 hover:text-white border border-green-600 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">
+                                            Produk ${kat}
+                                        </a>
+                                    `;
+                                });
+                            } else {
+                                tombolKategoriHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
+                            }
+                            tombolKategoriHTML += `</div>`;
+
+                            const popupContent = `
+                                <div class="flex flex-col bg-white">
+                                    <div class="relative h-28 w-full">
+                                        <img src="${foto}" alt="${namaToko}" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                        <h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${namaToko}</h3>
+                                    </div>
+                                    <div class="p-3 text-center bg-white">
+                                        ${tombolKategoriHTML}
+                                    </div>
+                                </div>
+                            `;
+
+                            // Masukkan Pin ke dalam Grup Leaflet
+                            const marker = L.marker([lat, lng]).bindPopup(popupContent);
+                            layerGrupMarker.addLayer(marker);
+
+                            // Tambahkan baris ke Tabel dengan perbaikan link navigasi
+                            htmlBarisTabel += `
+                                <tr class="hover:bg-green-50/40 transition-colors">
+                                    <td class="px-6 py-4 font-semibold text-gray-900">${namaToko}</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="text-2xl hover:scale-125 inline-block transition-transform" title="Buka Rute di Google Maps">📍</a>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
+                }
+            });
+
+            // 4. Perbarui Tampilan Tabel
+            const wadahTabel = document.getElementById("wadah-tabel");
+            const isiTabel = document.getElementById("isi-tabel-toko");
+
+            if (jumlahPin > 0) {
+                isiTabel.innerHTML = htmlBarisTabel;
+                wadahTabel.classList.remove("hidden");
+            } else {
+                // Jika tidak ada data toko pada kategori yang dipilih
+                isiTabel.innerHTML = `<tr><td colspan="2" class="px-6 py-8 text-center text-red-500 font-semibold italic border-t border-gray-200">Belum ada titik koordinat lapak untuk kategori ini.</td></tr>`;
+                wadahTabel.classList.remove("hidden");
+            }
+        }
     </script>
     <script src="js/app.js"></script>
 </body>

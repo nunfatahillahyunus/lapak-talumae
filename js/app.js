@@ -31,6 +31,15 @@ function formatGambarDrive(urlDrive) {
     return urlDrive;
 }
 
+// [BARU] PEMBERSIH ANGKA RUPIAH DARI GOOGLE SHEETS
+function bersihkanAngka(str) {
+    if (!str) return 0;
+    // Hapus semua huruf, spasi, titik, koma, dll. Sisakan hanya angka murni
+    let bersih = str.toString().replace(/[^0-9]/g, '');
+    let hasil = parseInt(bersih, 10);
+    return isNaN(hasil) ? 0 : hasil;
+}
+
 function parseWaktuAppSheet(strTanggal) {
     if (!strTanggal) return NaN;
     let ms = new Date(strTanggal).getTime();
@@ -51,7 +60,7 @@ function parseWaktuAppSheet(strTanggal) {
     return NaN;
 }
 
-// [BARU] MESIN PENDETEKSI JAM (REGEX) ANTI-NGEBUG
+// MESIN PENDETEKSI JAM (REGEX)
 function ekstrakJam(strWaktu) {
     if (!strWaktu) return null;
     const match = strWaktu.match(/(\d{1,2}):(\d{2})/);
@@ -65,7 +74,7 @@ function ekstrakJam(strWaktu) {
     return null;
 }
 
-// ALAT BANTU: Mengecek apakah toko sedang buka atau tutup saat ini
+// ALAT BANTU: Mengecek apakah toko sedang buka atau tutup
 function cekStatusToko(stringHari, stringJamBuka, stringJamTutup) {
     if (!stringHari || !stringJamBuka || !stringJamTutup) return null; 
 
@@ -179,7 +188,6 @@ function renderKatalogGrid(data) {
         const fotoSiapRender = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
         const kodeUnikToko = toko["Kode Unik Toko"];
         
-        // Cek Status Buka/Tutup
         const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
         let lencanaStatusHTML = "";
         
@@ -203,22 +211,25 @@ function renderKatalogGrid(data) {
         }
 
         produkTokoIni.forEach(p => {
-            let hargaNormal = parseFloat(p["Harga (Rp)"]);
-            let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
-            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1");
+            // [DIUBAH] Penggunaan pembersih angka dan pencarian kolom ganda
+            let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
+            let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            
+            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             let hargaAkhir = hargaNormal;
 
-            if (isPromoAktif && !isNaN(hargaPromo) && hargaPromo > 0) {
-                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"]);
-                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"]);
+            if (isPromoAktif && hargaPromo > 0) {
+                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"] || p["Waktu Mulai"]);
+                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"] || p["Waktu Berakhir"]);
                 let waktuSekarang = new Date().getTime();
+                
                 let isMulaiValid = isNaN(waktuMulai) || waktuSekarang >= waktuMulai;
                 let isAkhirValid = isNaN(waktuAkhir) || waktuSekarang <= waktuAkhir;
 
                 if (isMulaiValid && isAkhirValid) hargaAkhir = hargaPromo; 
             }
-            if (!isNaN(hargaAkhir) && hargaAkhir > 0) arrayHarga.push(hargaAkhir);
+            if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
         });
 
         let teksHarga = "Belum ada produk";
@@ -282,7 +293,6 @@ function renderKatalogList(data) {
         const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
         const idToko = toko["Kode Unik Toko"] || namaToko;
         
-        // Status Lencana Mini
         const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
         let lencanaMiniHTML = "";
         if (statusToko) {
@@ -344,7 +354,6 @@ function bukaPopup(index) {
     const wadahPembayaran = document.getElementById('modal-pembayaran');
     if (wadahPembayaran) wadahPembayaran.innerHTML = htmlPembayaran;
 
-    // --- RENDER JADWAL OPERASIONAL DI POPUP ---
     const wadahJadwal = document.getElementById('modal-jadwal');
     const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
     
@@ -393,17 +402,20 @@ function bukaPopup(index) {
     if (produkTokoIni.length > 0) {
         produkTokoIni.forEach((p, i) => {
             const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-            let hargaNormal = parseFloat(p["Harga (Rp)"]);
-            let hargaPromo = parseFloat(p["Harga Promo (Rp)"]);
-            let statusPromo = (p["Ada Promo?"] || "").toString().trim().toUpperCase();
-            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1");
+            
+            // [DIUBAH] Penggunaan pembersih angka dan pencarian kolom ganda
+            let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
+            let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            
+            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             
             let isPromoBerlaku = false;
             let hargaAkhir = hargaNormal;
 
-            if (isPromoAktif && !isNaN(hargaPromo) && hargaPromo > 0) {
-                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"]);
-                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"]);
+            if (isPromoAktif && hargaPromo > 0) {
+                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"] || p["Waktu Mulai"]);
+                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"] || p["Waktu Berakhir"]);
                 let waktuSekarang = new Date().getTime();
 
                 let isMulaiValid = isNaN(waktuMulai) || waktuSekarang >= waktuMulai;
@@ -415,7 +427,7 @@ function bukaPopup(index) {
                 }
             }
 
-            if (!isNaN(hargaAkhir) && hargaAkhir > 0) arrayHarga.push(hargaAkhir);
+            if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
 
             let tampilanHarga = "";
             if (isPromoBerlaku) {
@@ -548,6 +560,7 @@ function validasiDanBukaAppSheet() {
 
             if (isValid) {
                 pesanError.classList.add('hidden');
+                // Mengembalikan link tujuan menjadi form default tanpa memanggil menu Ketersediaan Produk
                 const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
                 window.open(urlTujuan, "_blank");
                 tutupModalKodeUnik();

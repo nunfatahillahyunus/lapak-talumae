@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pusat Data UMKM - Lapak Desa Talumae</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Papa Parse untuk baca CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
@@ -58,34 +56,81 @@
     <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
         <div class="container mx-auto max-w-6xl">
             <h1 class="text-3xl md:text-4xl font-bold mb-2">Pusat Data UMKM</h1>
-            <p class="text-green-100">Cari dan pantau direktori lapak warga Desa Talumae.</p>
+            <p class="text-green-100">Cari dan pantau direktori lapak warga Desa Talumae secara spesifik.</p>
         </div>
     </header>
 
     <!-- AREA KONTEN UTAMA -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
         
-        <!-- DASHBOARD STATISTIK -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl">🏪</div>
+        <!-- DASHBOARD STATISTIK (BARU) -->
+        <div class="mb-8">
+            <!-- Kartu Total Utama -->
+            <div class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-lg p-6 flex items-center justify-between text-white mb-4">
                 <div>
-                    <p class="text-sm font-semibold text-gray-500">Total UMKM Terdaftar</p>
-                    <p class="text-3xl font-extrabold text-gray-900" id="stat-total">0</p>
+                    <p class="text-green-100 font-semibold mb-1 text-sm md:text-base">Total UMKM Terdaftar</p>
+                    <p class="text-4xl md:text-5xl font-extrabold" id="stat-total">0</p>
                 </div>
+                <div class="text-5xl md:text-6xl opacity-80">🏪</div>
             </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl">🛍️</div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-500">Kategori Aktif</p>
-                    <p class="text-3xl font-extrabold text-gray-900" id="stat-kategori">0</p>
+
+            <!-- Grid Rincian per Kategori -->
+            <h3 class="text-gray-700 font-bold mb-3 text-sm md:text-base px-1">Sebaran UMKM Berdasarkan Kategori:</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <!-- 1 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-green-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Makanan</span>
+                    <span class="bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded text-xs" id="count-makanan">0</span>
                 </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl">📍</div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-500">Cakupan Wilayah</p>
-                    <p class="text-xl font-extrabold text-gray-900 leading-tight mt-1">Desa<br>Talumae</p>
+                <!-- 2 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-blue-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Minuman</span>
+                    <span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-xs" id="count-minuman">0</span>
+                </div>
+                <!-- 3 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-gray-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Bengkel</span>
+                    <span class="bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded text-xs" id="count-bengkel">0</span>
+                </div>
+                <!-- 4 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-yellow-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kelontong</span>
+                    <span class="bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kelontong">0</span>
+                </div>
+                <!-- 5 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-indigo-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">K. Pulsa</span>
+                    <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded text-xs" id="count-konter">0</span>
+                </div>
+                <!-- 6 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-cyan-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Laundry</span>
+                    <span class="bg-cyan-100 text-cyan-700 font-bold px-2 py-0.5 rounded text-xs" id="count-laundry">0</span>
+                </div>
+                <!-- 7 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">TIK</span>
+                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-tik">0</span>
+                </div>
+                <!-- 8 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-amber-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Mak. Hewan</span>
+                    <span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded text-xs" id="count-hewan">0</span>
+                </div>
+                <!-- 9 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-pink-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kosmetik</span>
+                    <span class="bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kosmetik">0</span>
+                </div>
+                <!-- 10 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-emerald-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pertanian</span>
+                    <span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pertanian">0</span>
+                </div>
+                <!-- 11 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-rose-300 transition-colors">
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pakaian</span>
+                    <span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pakaian">0</span>
                 </div>
             </div>
         </div>
@@ -193,18 +238,43 @@
                     // Filter hanya toko yang memiliki nama (tidak kosong)
                     dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
                     
-                    // --- Kalkulasi Statistik Otomatis ---
+                    // --- Kalkulasi Statistik per Kategori ---
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
-                    let himpunanKategori = new Set();
+                    let hitunganKategori = {
+                        "Makanan": 0, "Minuman": 0, "Bengkel": 0, "Kelontong": 0,
+                        "Konter Pulsa": 0, "Laundry": 0, "TIK": 0, "Makanan Hewan": 0,
+                        "Kosmetik": 0, "Alat & Bahan Pertanian": 0, "Pakaian": 0
+                    };
+
+                    let idKategori = {
+                        "Makanan": "count-makanan", "Minuman": "count-minuman", 
+                        "Bengkel": "count-bengkel", "Kelontong": "count-kelontong",
+                        "Konter Pulsa": "count-konter", "Laundry": "count-laundry", 
+                        "TIK": "count-tik", "Makanan Hewan": "count-hewan",
+                        "Kosmetik": "count-kosmetik", "Alat & Bahan Pertanian": "count-pertanian", 
+                        "Pakaian": "count-pakaian"
+                    };
+
+                    // Hitung jumlah toko di setiap kategori
                     dataTokoMaster.forEach(toko => {
                         let kats = (toko["Kategori Produk"] || "").split(',');
                         kats.forEach(k => {
-                            if (k.trim()) himpunanKategori.add(k.trim());
+                            let nama = k.trim().toLowerCase();
+                            for (let namaAsli in hitunganKategori) {
+                                if (nama === namaAsli.toLowerCase()) {
+                                    hitunganKategori[namaAsli]++;
+                                }
+                            }
                         });
                     });
-                    document.getElementById('stat-kategori').innerText = himpunanKategori.size;
-                    // ------------------------------------
+
+                    // Tampilkan angka ke layar HTML
+                    for (let kat in idKategori) {
+                        let el = document.getElementById(idKategori[kat]);
+                        if (el) el.innerText = hitunganKategori[kat];
+                    }
+                    // ----------------------------------------
 
                     // Sembunyikan loading
                     document.getElementById("status-loading").classList.add("hidden");
@@ -288,7 +358,6 @@
                             ${badgeHTML}
                         </td>
                         <td class="p-4 align-middle text-center">
-                            <!-- [DIUBAH] Tombol ini sekarang mengarah langsung ke peta.html -->
                             <a href="peta.html" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold px-4 py-2 rounded text-sm transition-colors shadow-sm inline-flex items-center gap-1 cursor-pointer">
                                 📍 Buka Peta
                             </a>

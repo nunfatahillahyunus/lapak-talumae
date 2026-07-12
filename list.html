@@ -63,9 +63,8 @@
     <!-- AREA KONTEN UTAMA -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
         
-        <!-- DASHBOARD STATISTIK (BARU) -->
+        <!-- DASHBOARD STATISTIK -->
         <div class="mb-8">
-            <!-- Kartu Total Utama -->
             <div class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-lg p-6 flex items-center justify-between text-white mb-4">
                 <div>
                     <p class="text-green-100 font-semibold mb-1 text-sm md:text-base">Total UMKM Terdaftar</p>
@@ -74,60 +73,48 @@
                 <div class="text-5xl md:text-6xl opacity-80">🏪</div>
             </div>
 
-            <!-- Grid Rincian per Kategori -->
             <h3 class="text-gray-700 font-bold mb-3 text-sm md:text-base px-1">Sebaran UMKM Berdasarkan Kategori:</h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <!-- 1 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-green-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Makanan</span>
                     <span class="bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded text-xs" id="count-makanan">0</span>
                 </div>
-                <!-- 2 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-blue-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Minuman</span>
                     <span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-xs" id="count-minuman">0</span>
                 </div>
-                <!-- 3 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-gray-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Bengkel</span>
                     <span class="bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded text-xs" id="count-bengkel">0</span>
                 </div>
-                <!-- 4 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-yellow-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kelontong</span>
                     <span class="bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kelontong">0</span>
                 </div>
-                <!-- 5 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-indigo-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">K. Pulsa</span>
                     <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded text-xs" id="count-konter">0</span>
                 </div>
-                <!-- 6 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-cyan-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Laundry</span>
                     <span class="bg-cyan-100 text-cyan-700 font-bold px-2 py-0.5 rounded text-xs" id="count-laundry">0</span>
                 </div>
-                <!-- 7 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">TIK</span>
                     <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-tik">0</span>
                 </div>
-                <!-- 8 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-amber-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Mak. Hewan</span>
                     <span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded text-xs" id="count-hewan">0</span>
                 </div>
-                <!-- 9 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-pink-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kosmetik</span>
                     <span class="bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kosmetik">0</span>
                 </div>
-                <!-- 10 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-emerald-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pertanian</span>
                     <span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pertanian">0</span>
                 </div>
-                <!-- 11 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-rose-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pakaian</span>
                     <span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pakaian">0</span>
@@ -138,15 +125,13 @@
         <!-- KOTAK PENCARIAN & FILTER -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-8 flex flex-col md:flex-row gap-4">
             
-            <!-- Input Pencarian Teks -->
             <div class="flex-grow relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                <input type="text" id="input-cari" placeholder="Cari nama toko atau pemilik..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition-shadow">
+                <input type="text" id="input-cari" placeholder="Cari nama lapak atau pemilik..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition-shadow">
             </div>
 
-            <!-- 11 Kategori Baru -->
             <div class="w-full md:w-64 shrink-0">
                 <select id="filter-kategori" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50 cursor-pointer font-semibold text-gray-700">
                     <option value="Semua">Semua Kategori</option>
@@ -176,7 +161,7 @@
                 <thead class="bg-green-50 text-green-800 border-b-2 border-green-200">
                     <tr>
                         <th class="p-4 font-bold">Nama Lapak / Toko</th>
-                        <th class="p-4 font-bold">Kategori</th>
+                        <th class="p-4 font-bold">Kategori Lapak</th>
                         <th class="p-4 font-bold text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -202,7 +187,6 @@
 
     <!-- SCRIPT HALAMAN PUSAT DATA -->
     <script>
-        // Logika Navigasi Sidebar & Modal
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
             if (sidebar.classList.contains('-translate-x-full')) sidebar.classList.remove('-translate-x-full');
@@ -225,20 +209,16 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        // Variabel Database CSV
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
         let dataTokoMaster = [];
 
-        // Inisiasi Fetch Data
         document.addEventListener("DOMContentLoaded", () => {
             Papa.parse(urlCSV, {
                 download: true,
                 header: true,
                 complete: function(results) {
-                    // Filter hanya toko yang memiliki nama (tidak kosong)
                     dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
                     
-                    // --- Kalkulasi Statistik per Kategori ---
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
                     let hitunganKategori = {
@@ -256,7 +236,6 @@
                         "Pakaian": "count-pakaian"
                     };
 
-                    // Hitung jumlah toko di setiap kategori
                     dataTokoMaster.forEach(toko => {
                         let kats = (toko["Kategori Produk"] || "").split(',');
                         kats.forEach(k => {
@@ -269,17 +248,12 @@
                         });
                     });
 
-                    // Tampilkan angka ke layar HTML
                     for (let kat in idKategori) {
                         let el = document.getElementById(idKategori[kat]);
                         if (el) el.innerText = hitunganKategori[kat];
                     }
-                    // ----------------------------------------
 
-                    // Sembunyikan loading
                     document.getElementById("status-loading").classList.add("hidden");
-                    
-                    // Render awal
                     renderTabelData(dataTokoMaster);
                 },
                 error: function(err) {
@@ -287,28 +261,28 @@
                 }
             });
 
-            // Pasang pendengar kejadian (event listener) pada input pencarian dan dropdown
             document.getElementById('input-cari').addEventListener('input', saringData);
             document.getElementById('filter-kategori').addEventListener('change', saringData);
         });
 
-        // Fungsi Penyaringan Data
+        // [DIUBAH] Logika Filter yang lebih Spesifik (Pemisahan Koma)
         function saringData() {
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
-            const kategoriPilih = document.getElementById('filter-kategori').value;
+            const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
 
             const dataTersaring = dataTokoMaster.filter(toko => {
                 const namaToko = (toko["Nama Toko"] || "").toLowerCase();
                 const namaPemilik = (toko["Nama Pemilik"] || "").toLowerCase();
-                const kategoriToko = toko["Kategori Produk"] || "";
+                const kategoriTokoMentah = toko["Kategori Produk"] || "";
 
                 // Cek pencarian teks
                 const cocokTeks = namaToko.includes(teksCari) || namaPemilik.includes(teksCari);
                 
-                // Cek dropdown kategori
+                // Cek dropdown kategori yang dipisah dengan koma
                 let cocokKategori = true;
-                if (kategoriPilih !== "Semua") {
-                    cocokKategori = kategoriToko.toLowerCase().includes(kategoriPilih.toLowerCase());
+                if (kategoriPilih !== "semua") {
+                    const arrayKategori = kategoriTokoMentah.split(',').map(k => k.trim().toLowerCase());
+                    cocokKategori = arrayKategori.includes(kategoriPilih);
                 }
 
                 return cocokTeks && cocokKategori;
@@ -317,7 +291,6 @@
             renderTabelData(dataTersaring);
         }
 
-        // Fungsi Render HTML ke Tabel
         function renderTabelData(data) {
             const wadahTabel = document.getElementById('wadah-tabel');
             const isiTabel = document.getElementById('isi-tabel');
@@ -340,11 +313,16 @@
                 const namaToko = toko["Nama Toko"];
                 const kategori = toko["Kategori Produk"] || "-";
                 
-                // Buat Badge Kategori Estetik
+                // [DIUBAH] Membuat badge untuk SELURUH kategori yang dipilih
                 const arrayKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 let badgeHTML = "";
-                if(arrayKat.length > 0) {
-                    badgeHTML = `<span class="inline-block bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-md font-semibold border border-green-200">${arrayKat[0]}</span>`;
+                
+                if (arrayKat.length > 0) {
+                    badgeHTML = `<div class="flex flex-wrap gap-1">`;
+                    arrayKat.forEach(k => {
+                        badgeHTML += `<span class="inline-block bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-md font-semibold border border-green-200">${k}</span>`;
+                    });
+                    badgeHTML += `</div>`;
                 } else {
                     badgeHTML = `<span class="text-gray-400 italic text-xs">Belum ada kategori</span>`;
                 }
@@ -369,7 +347,6 @@
             isiTabel.innerHTML = kodinganHTML;
         }
         
-        // Logika Validasi AppSheet 
         function validasiDanBukaAppSheet() {
             const inputKode = document.getElementById('inputKodeUnik').value.trim();
             const pesanError = document.getElementById('pesanErrorKode');

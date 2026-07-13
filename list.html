@@ -99,10 +99,12 @@
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Laundry</span>
                     <span class="bg-cyan-100 text-cyan-700 font-bold px-2 py-0.5 rounded text-xs" id="count-laundry">0</span>
                 </div>
+                <!-- INI YANG DIUBAH (TIK -> ATK) -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">TIK</span>
-                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-tik">0</span>
+                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">ATK</span>
+                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-atk">0</span>
                 </div>
+                <!-- --------------------------- -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-amber-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Mak. Hewan</span>
                     <span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded text-xs" id="count-hewan">0</span>
@@ -141,7 +143,7 @@
                     <option value="Kelontong">Kelontong</option>
                     <option value="Konter Pulsa">Konter Pulsa</option>
                     <option value="Laundry">Laundry</option>
-                    <option value="TIK">TIK</option>
+                    <option value="ATK">ATK</option> <!-- INI YANG DIUBAH -->
                     <option value="Makanan Hewan">Makanan Hewan</option>
                     <option value="Kosmetik">Kosmetik</option>
                     <option value="Alat & Bahan Pertanian">Alat & Bahan Pertanian</option>
@@ -221,9 +223,10 @@
                     
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
+                    // [DIUBAH] Javascript sekarang mencari data "ATK", bukan "TIK"
                     let hitunganKategori = {
                         "Makanan": 0, "Minuman": 0, "Bengkel": 0, "Kelontong": 0,
-                        "Konter Pulsa": 0, "Laundry": 0, "TIK": 0, "Makanan Hewan": 0,
+                        "Konter Pulsa": 0, "Laundry": 0, "ATK": 0, "Makanan Hewan": 0,
                         "Kosmetik": 0, "Alat & Bahan Pertanian": 0, "Pakaian": 0
                     };
 
@@ -231,7 +234,7 @@
                         "Makanan": "count-makanan", "Minuman": "count-minuman", 
                         "Bengkel": "count-bengkel", "Kelontong": "count-kelontong",
                         "Konter Pulsa": "count-konter", "Laundry": "count-laundry", 
-                        "TIK": "count-tik", "Makanan Hewan": "count-hewan",
+                        "ATK": "count-atk", "Makanan Hewan": "count-hewan",
                         "Kosmetik": "count-kosmetik", "Alat & Bahan Pertanian": "count-pertanian", 
                         "Pakaian": "count-pakaian"
                     };
@@ -265,7 +268,6 @@
             document.getElementById('filter-kategori').addEventListener('change', saringData);
         });
 
-        // [DIUBAH] Logika Filter yang lebih Spesifik (Pemisahan Koma)
         function saringData() {
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
             const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
@@ -275,10 +277,8 @@
                 const namaPemilik = (toko["Nama Pemilik"] || "").toLowerCase();
                 const kategoriTokoMentah = toko["Kategori Produk"] || "";
 
-                // Cek pencarian teks
                 const cocokTeks = namaToko.includes(teksCari) || namaPemilik.includes(teksCari);
                 
-                // Cek dropdown kategori yang dipisah dengan koma
                 let cocokKategori = true;
                 if (kategoriPilih !== "semua") {
                     const arrayKategori = kategoriTokoMentah.split(',').map(k => k.trim().toLowerCase());
@@ -313,7 +313,6 @@
                 const namaToko = toko["Nama Toko"];
                 const kategori = toko["Kategori Produk"] || "-";
                 
-                // [DIUBAH] Membuat badge untuk SELURUH kategori yang dipilih
                 const arrayKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 let badgeHTML = "";
                 

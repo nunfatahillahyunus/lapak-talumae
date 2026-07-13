@@ -150,7 +150,7 @@
             </div>
         </div>
 
-        <!-- BANNER KHUSUS KELONTONG (BARU) -->
+        <!-- BANNER KHUSUS KELONTONG -->
         <div id="banner-kelontong" class="hidden mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
             <div>
                 <h3 class="font-bold text-yellow-800 text-lg">Mencari Toko Kelontong?</h3>
@@ -229,12 +229,11 @@
                 header: true,
                 complete: function(results) {
                     
-                    // [DIUBAH] Filter pencekal toko yang bernama "Toko Kelontong"
-                    dataTokoMaster = results.data.filter(toko => {
-                        const namaToko = toko["Nama Toko"] ? toko["Nama Toko"].trim() : "";
-                        return namaToko !== "" && namaToko.toLowerCase() !== "toko kelontong";
-                    });
+                    // [DIUBAH KEMBALI] Ambil SEMUA data toko yang memiliki nama (Termasuk Toko Kelontong)
+                    // Ini agar kalkulasi statistik tetap memasukkan mereka
+                    dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
                     
+                    // --- Kalkulasi Statistik ---
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
                     let hitunganKategori = {
@@ -268,9 +267,13 @@
                         let el = document.getElementById(idKategori[kat]);
                         if (el) el.innerText = hitunganKategori[kat];
                     }
+                    // ---------------------------
 
                     document.getElementById("status-loading").classList.add("hidden");
-                    renderTabelData(dataTokoMaster);
+                    
+                    // Langsung jalankan saringData saat pertama kali dimuat
+                    // agar "Toko Kelontong" langsung disembunyikan dari tabel
+                    saringData(); 
                 },
                 error: function(err) {
                     document.getElementById("status-loading").innerText = "Gagal memuat data dari server.";
@@ -285,7 +288,7 @@
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
             const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
 
-            // [DIUBAH] Logika Pemunculan Banner Kelontong
+            // Logika Pemunculan Banner Kelontong
             const bannerKelontong = document.getElementById('banner-kelontong');
             if (kategoriPilih === "kelontong" || teksCari.includes("kelontong")) {
                 bannerKelontong.classList.remove('hidden');
@@ -293,8 +296,15 @@
                 bannerKelontong.classList.add('hidden');
             }
 
+            // Menyaring data hanya untuk TABEL
             const dataTersaring = dataTokoMaster.filter(toko => {
-                const namaToko = (toko["Nama Toko"] || "").toLowerCase();
+                const namaToko = (toko["Nama Toko"] || "").toLowerCase().trim();
+                
+                // [BARU] Sembunyikan "Toko Kelontong" dari TABEL PENCARIAN
+                if (namaToko === "toko kelontong") {
+                    return false; 
+                }
+
                 const namaPemilik = (toko["Nama Pemilik"] || "").toLowerCase();
                 const kategoriTokoMentah = toko["Kategori Produk"] || "";
 

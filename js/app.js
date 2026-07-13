@@ -117,7 +117,8 @@ if (document.getElementById("wadah-katalog")) {
                             dataKatalogGlobal = dataMentahToko.filter(toko => {
                                 const kategoriMentah = toko["Kategori Produk"];
                                 if (!kategoriMentah) return false;
-                                return kategoriMentah.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
+                                const arrayKat = kategoriMentah.split(',').map(k => k.trim().toLowerCase());
+                                return arrayKat.includes(kategoriAktif.trim().toLowerCase());
                             });
                         } else {
                             dataKatalogGlobal = dataMentahToko;
@@ -199,7 +200,8 @@ function renderKatalogGrid(data) {
             produkTokoIni = produkTokoIni.filter(p => {
                 const katProd = p["Kategori Produk"];
                 if (!katProd) return false;
-                return katProd.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
+                const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
+                return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
             });
         }
 
@@ -224,8 +226,8 @@ function renderKatalogGrid(data) {
             if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
         });
 
-        let teksHarga = "Hubungi Penjual";
-        let labelHarga = "Informasi Harga";
+        let teksHarga = "Informasi Belum Tersedia";
+        let labelHarga = "Harga Produk";
 
         if (arrayHarga.length > 0) {
             let hargaMin = Math.min(...arrayHarga);
@@ -235,6 +237,29 @@ function renderKatalogGrid(data) {
                 teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
                 labelHarga = "Rentang Harga";
             }
+        }
+
+        // [DIUBAH] Logika Tombol Aksi Berdasarkan Ketersediaan Produk
+        let tombolAksiHTML = "";
+        if (produkTokoIni.length > 0) {
+            tombolAksiHTML = `
+                <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 shadow-sm">
+                    Lihat Detail Lapak
+                </button>
+            `;
+        } else {
+            // Jika kosong, siapkan parameter filter untuk dikirim ke peta.html
+            let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
+            if (!kategoriAktif && kategori) {
+                const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
+                if (arrKat.length > 0) parameterFilter = arrKat[0];
+            }
+            
+            tombolAksiHTML = `
+                <button onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}'" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm">
+                    📍 Lihat di Peta
+                </button>
+            `;
         }
 
         elemenHTML += `
@@ -247,14 +272,12 @@ function renderKatalogGrid(data) {
                     <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">LAPAK / TOKO</span>
                     <h3 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">${namaToko}</h3>
                     <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
-                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat}</p>
+                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat || 'Belum ada deskripsi.'}</p>
                     <div class="mb-4">
                         <span class="text-sm text-gray-500">${labelHarga}</span><br>
                         <span class="text-lg font-bold text-green-700">${teksHarga}</span>
                     </div>
-                    <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
-                        Lihat Detail Lapak
-                    </button>
+                    ${tombolAksiHTML}
                 </div>
             </div>
         `;
@@ -280,7 +303,7 @@ function renderKatalogList(data) {
         const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
         const namaToko = toko["Nama Toko"];
         const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
-        const idToko = toko["Kode Unik Toko"] || namaToko;
+        const kodeUnikToko = toko["Kode Unik Toko"];
         
         const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
         let lencanaMiniHTML = "";
@@ -298,12 +321,34 @@ function renderKatalogList(data) {
             });
         }
 
+        // [DIUBAH] Mengecek jumlah produk untuk Tampilan List
+        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
+        if (kategoriAktif) {
+            produkTokoIni = produkTokoIni.filter(p => {
+                const katProd = p["Kategori Produk"];
+                if (!katProd) return false;
+                const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
+                return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
+            });
+        }
+
+        let aksiKlikBaris = `onclick="bukaPopup(${originalIndex})"`;
+        if (produkTokoIni.length === 0) {
+            let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
+            if (!kategoriAktif && stringKategori) {
+                const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
+                if (arrKat.length > 0) parameterFilter = arrKat[0];
+            }
+            aksiKlikBaris = `onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}'" title="Menuju Peta Lokasi"`;
+        }
+
         elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group" onclick="bukaPopup(${originalIndex})">
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group" ${aksiKlikBaris}>
                 <div class="flex-grow">
                     <div class="flex items-center gap-3 mb-1">
                         <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-700 transition-colors">${namaToko}</h3>
                         ${lencanaMiniHTML}
+                        ${produkTokoIni.length === 0 ? '<span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">📍 Lihat Peta</span>' : ''}
                     </div>
                     <p class="text-sm text-gray-500 mt-1 line-clamp-1">${deskripsiSingkat}</p>
                 </div>
@@ -343,7 +388,6 @@ function bukaPopup(index) {
     const wadahPembayaran = document.getElementById('modal-pembayaran');
     if (wadahPembayaran) wadahPembayaran.innerHTML = htmlPembayaran;
 
-    // [DIUBAH] Hilangkan Jadwal jika data tidak lengkap / kosong
     const wadahJadwal = document.getElementById('modal-jadwal');
     const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
     
@@ -371,7 +415,8 @@ function bukaPopup(index) {
         if (kategoriAktif) {
             const katProd = p["Kategori Produk"];
             if (!katProd) return false;
-            return katProd.toLowerCase().includes(kategoriAktif.trim().toLowerCase());
+            const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
+            return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
         }
         return true; 
     });
@@ -380,9 +425,8 @@ function bukaPopup(index) {
     let arrayHarga = [];
     const wadahTabelProduk = document.getElementById('modal-list-barang');
 
-    // [DIUBAH] Jika ada produk, tampilkan tabelnya. Jika tidak ada (seperti toko Kelontong), hilangkan seluruh blok tabel
     if (produkTokoIni.length > 0) {
-        wadahTabelProduk.parentElement.classList.remove('hidden'); // Memunculkan pembungkus tabel
+        wadahTabelProduk.parentElement.classList.remove('hidden');
         htmlTabel = `
             <div class="overflow-x-auto rounded-lg">
                 <table class="w-full text-sm text-left text-gray-600">
@@ -445,12 +489,10 @@ function bukaPopup(index) {
         htmlTabel += `</tbody></table></div>`;
         wadahTabelProduk.innerHTML = htmlTabel;
     } else {
-        // Sembunyikan pembungkus tabel sepenuhnya jika kosong
         wadahTabelProduk.parentElement.classList.add('hidden');
         wadahTabelProduk.innerHTML = "";
     }
     
-    // Setel Harga Modal
     let teksHargaModal = "Harga Tersedia";
     let teksLabelModal = "Informasi Harga:";
     if (arrayHarga.length > 0) {
@@ -465,20 +507,17 @@ function bukaPopup(index) {
     document.getElementById('modal-harga').innerText = teksHargaModal;
     if (document.getElementById('modal-label-harga')) document.getElementById('modal-label-harga').innerText = teksLabelModal;
 
-    // [DIUBAH] Logika Tombol Aksi (WhatsApp / Peta Lokasi)
     const tombolAksi = document.getElementById('btn-modal-wa');
     const nomorWA = toko["Nomor Whatsapp (62)"];
     const lokasiToko = toko["Lokasi Toko"];
     const namaAman = toko["Nama Toko"].replace(/'/g, "\\'"); 
 
     if (nomorWA && nomorWA.toString().trim() !== '' && nomorWA !== 'undefined') {
-        // Jika nomor WA tersedia, munculkan tombol WA Hijau
         tombolAksi.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Hubungi Penjual`;
         tombolAksi.className = "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition-colors flex items-center shadow-md shadow-green-200";
         tombolAksi.setAttribute('onclick', `prosesBeli('${nomorWA}', '${namaAman}')`);
         tombolAksi.style.display = 'flex';
     } else if (lokasiToko && lokasiToko.includes(',')) {
-        // Jika tidak ada WA tapi ada lokasi, munculkan tombol Lokasi Biru
         const kordinat = lokasiToko.split(',');
         const lat = kordinat[0].trim();
         const lng = kordinat[1].trim();
@@ -487,7 +526,6 @@ function bukaPopup(index) {
         tombolAksi.setAttribute('onclick', `window.open('https://www.google.com/maps?q=${lat},${lng}', '_blank')`);
         tombolAksi.style.display = 'flex';
     } else {
-        // Jika WA dan Lokasi sama-sama kosong, hilangkan tombol
         tombolAksi.style.display = 'none';
     }
 

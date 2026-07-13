@@ -199,7 +199,7 @@ function renderKatalogGrid(data) {
         produkTokoIni.forEach(p => {
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             let hargaAkhir = hargaNormal;
@@ -217,7 +217,6 @@ function renderKatalogGrid(data) {
             if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
         });
 
-        // [DIUBAH] Hanya memunculkan blok teks harga jika ada produknya
         let blokHargaHTML = "";
         let tombolAksiHTML = "";
 
@@ -235,7 +234,6 @@ function renderKatalogGrid(data) {
                 }
             }
             
-            // Masukkan teks harga ke dalam variabel blokHargaHTML
             blokHargaHTML = `
                 <div class="mb-4">
                     <span class="text-sm text-gray-500">${labelHarga}</span><br>
@@ -249,16 +247,16 @@ function renderKatalogGrid(data) {
                 </button>
             `;
         } else {
-            // Jika kosong, blokHargaHTML tetap kosong dan kita hanya menyiapkan tombol Peta
             let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
             if (!kategoriAktif && kategori) {
                 const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 if (arrKat.length > 0) parameterFilter = arrKat[0];
             }
+            // [DIUBAH] Menambahkan ID Toko ke dalam parameter URL Peta
+            let parameterToko = kodeUnikToko || namaToko;
             
-            // Tambahkan mt-auto agar tombol tetap berada di bagian paling bawah kartu meskipun blok harga dihapus
             tombolAksiHTML = `
-                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}" class="w-full mt-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
+                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}" class="w-full mt-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
                     📍 Lihat di Peta
                 </a>
             `;
@@ -331,7 +329,9 @@ function renderKatalogList(data) {
                 const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
                 if (arrKat.length > 0) parameterFilter = arrKat[0];
             }
-            aksiKlikBaris = `onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}'" title="Menuju Peta Lokasi"`;
+            // [DIUBAH] Menambahkan ID Toko ke dalam parameter URL Peta
+            let parameterToko = kodeUnikToko || namaToko;
+            aksiKlikBaris = `onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}'" title="Menuju Peta Lokasi"`;
         }
 
         elemenHTML += `
@@ -426,7 +426,7 @@ function bukaPopup(index) {
             
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             
             let isPromoBerlaku = false;

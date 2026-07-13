@@ -229,11 +229,8 @@
                 header: true,
                 complete: function(results) {
                     
-                    // [DIUBAH KEMBALI] Ambil SEMUA data toko yang memiliki nama (Termasuk Toko Kelontong)
-                    // Ini agar kalkulasi statistik tetap memasukkan mereka
                     dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
                     
-                    // --- Kalkulasi Statistik ---
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
                     let hitunganKategori = {
@@ -267,12 +264,9 @@
                         let el = document.getElementById(idKategori[kat]);
                         if (el) el.innerText = hitunganKategori[kat];
                     }
-                    // ---------------------------
 
                     document.getElementById("status-loading").classList.add("hidden");
                     
-                    // Langsung jalankan saringData saat pertama kali dimuat
-                    // agar "Toko Kelontong" langsung disembunyikan dari tabel
                     saringData(); 
                 },
                 error: function(err) {
@@ -288,7 +282,6 @@
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
             const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
 
-            // Logika Pemunculan Banner Kelontong
             const bannerKelontong = document.getElementById('banner-kelontong');
             if (kategoriPilih === "kelontong" || teksCari.includes("kelontong")) {
                 bannerKelontong.classList.remove('hidden');
@@ -296,11 +289,9 @@
                 bannerKelontong.classList.add('hidden');
             }
 
-            // Menyaring data hanya untuk TABEL
             const dataTersaring = dataTokoMaster.filter(toko => {
                 const namaToko = (toko["Nama Toko"] || "").toLowerCase().trim();
                 
-                // [BARU] Sembunyikan "Toko Kelontong" dari TABEL PENCARIAN
                 if (namaToko === "toko kelontong") {
                     return false; 
                 }
@@ -342,12 +333,17 @@
             data.forEach((toko, index) => {
                 const bgColor = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 const namaToko = toko["Nama Toko"];
+                const kodeUnikToko = toko["Kode Unik Toko"];
                 const kategori = toko["Kategori Produk"] || "-";
                 
                 const arrayKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 let badgeHTML = "";
                 
+                // [DIUBAH] Menyiapkan parameter filter dan nama toko untuk dikirim ke peta
+                let parameterFilter = "Semua";
                 if (arrayKat.length > 0) {
+                    parameterFilter = arrayKat[0]; // Ambil kategori pertama sebagai filter utama
+                    
                     badgeHTML = `<div class="flex flex-wrap gap-1">`;
                     arrayKat.forEach(k => {
                         badgeHTML += `<span class="inline-block bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-md font-semibold border border-green-200">${k}</span>`;
@@ -356,6 +352,9 @@
                 } else {
                     badgeHTML = `<span class="text-gray-400 italic text-xs">Belum ada kategori</span>`;
                 }
+                
+                let parameterToko = kodeUnikToko || namaToko;
+                let linkPeta = `peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}`;
 
                 kodinganHTML += `
                     <tr class="${bgColor} hover:bg-green-100 transition-colors">
@@ -366,7 +365,8 @@
                             ${badgeHTML}
                         </td>
                         <td class="p-4 align-middle text-center">
-                            <a href="peta.html" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold px-4 py-2 rounded text-sm transition-colors shadow-sm inline-flex items-center gap-1 cursor-pointer">
+                            <!-- [DIUBAH] Link tombol Buka Peta sekarang mengirimkan ID/Nama Toko -->
+                            <a href="${linkPeta}" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold px-4 py-2 rounded text-sm transition-colors shadow-sm inline-flex items-center gap-1 cursor-pointer">
                                 📍 Buka Peta
                             </a>
                         </td>

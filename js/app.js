@@ -142,6 +142,7 @@ if (document.getElementById("wadah-katalog")) {
                             else renderKatalogList(dataKatalogGlobal);
                         }
 
+                        // [DIUBAH] Mengecek produk sebelum melakukan auto-popup
                         if (tokoBukaOtomatis) {
                             const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
                             const indexToko = dataKatalogGlobal.findIndex(t => {
@@ -151,7 +152,15 @@ if (document.getElementById("wadah-katalog")) {
                             });
                             
                             if (indexToko !== -1) {
-                                setTimeout(() => { bukaPopup(indexToko); }, 400); 
+                                // Hitung produk untuk toko spesifik ini
+                                const tokoTarget = dataKatalogGlobal[indexToko];
+                                const kodeUnikTarget = tokoTarget["Kode Unik Toko"];
+                                const produkTokoTarget = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikTarget);
+                                
+                                // Hanya buka popup otomatis JIKA produk > 0
+                                if (produkTokoTarget.length > 0) {
+                                    setTimeout(() => { bukaPopup(indexToko); }, 400); 
+                                }
                             }
                         }
                     } catch (error) {
@@ -199,7 +208,7 @@ function renderKatalogGrid(data) {
         produkTokoIni.forEach(p => {
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             let hargaAkhir = hargaNormal;
@@ -252,7 +261,6 @@ function renderKatalogGrid(data) {
                 const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 if (arrKat.length > 0) parameterFilter = arrKat[0];
             }
-            // [DIUBAH] Menambahkan ID Toko ke dalam parameter URL Peta
             let parameterToko = kodeUnikToko || namaToko;
             
             tombolAksiHTML = `
@@ -329,7 +337,6 @@ function renderKatalogList(data) {
                 const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
                 if (arrKat.length > 0) parameterFilter = arrKat[0];
             }
-            // [DIUBAH] Menambahkan ID Toko ke dalam parameter URL Peta
             let parameterToko = kodeUnikToko || namaToko;
             aksiKlikBaris = `onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}'" title="Menuju Peta Lokasi"`;
         }
@@ -426,7 +433,7 @@ function bukaPopup(index) {
             
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             
             let isPromoBerlaku = false;

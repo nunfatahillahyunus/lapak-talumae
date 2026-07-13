@@ -199,7 +199,7 @@ function renderKatalogGrid(data) {
         produkTokoIni.forEach(p => {
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             let hargaAkhir = hargaNormal;
@@ -426,7 +426,7 @@ function bukaPopup(index) {
             
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             
             let isPromoBerlaku = false;

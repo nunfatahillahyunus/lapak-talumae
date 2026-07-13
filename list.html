@@ -99,12 +99,10 @@
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Laundry</span>
                     <span class="bg-cyan-100 text-cyan-700 font-bold px-2 py-0.5 rounded text-xs" id="count-laundry">0</span>
                 </div>
-                <!-- INI YANG DIUBAH (TIK -> ATK) -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">ATK</span>
                     <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-atk">0</span>
                 </div>
-                <!-- --------------------------- -->
                 <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-amber-300 transition-colors">
                     <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Mak. Hewan</span>
                     <span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded text-xs" id="count-hewan">0</span>
@@ -125,7 +123,7 @@
         </div>
 
         <!-- KOTAK PENCARIAN & FILTER -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-8 flex flex-col md:flex-row gap-4">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
             
             <div class="flex-grow relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -143,13 +141,24 @@
                     <option value="Kelontong">Kelontong</option>
                     <option value="Konter Pulsa">Konter Pulsa</option>
                     <option value="Laundry">Laundry</option>
-                    <option value="ATK">ATK</option> <!-- INI YANG DIUBAH -->
+                    <option value="ATK">ATK</option>
                     <option value="Makanan Hewan">Makanan Hewan</option>
                     <option value="Kosmetik">Kosmetik</option>
                     <option value="Alat & Bahan Pertanian">Alat & Bahan Pertanian</option>
                     <option value="Pakaian">Pakaian</option>
                 </select>
             </div>
+        </div>
+
+        <!-- BANNER KHUSUS KELONTONG (BARU) -->
+        <div id="banner-kelontong" class="hidden mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+            <div>
+                <h3 class="font-bold text-yellow-800 text-lg">Mencari Toko Kelontong?</h3>
+                <p class="text-yellow-700 text-sm">Toko kelontong memiliki beragam jenis barang. Agar lebih mudah, mari lihat sebaran lokasinya langsung di peta.</p>
+            </div>
+            <a href="peta.html?filter=Kelontong" class="shrink-0 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
+                📍 Buka Peta Kelontong
+            </a>
         </div>
 
         <!-- STATUS LOADING -->
@@ -219,11 +228,15 @@
                 download: true,
                 header: true,
                 complete: function(results) {
-                    dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
+                    
+                    // [DIUBAH] Filter pencekal toko yang bernama "Toko Kelontong"
+                    dataTokoMaster = results.data.filter(toko => {
+                        const namaToko = toko["Nama Toko"] ? toko["Nama Toko"].trim() : "";
+                        return namaToko !== "" && namaToko.toLowerCase() !== "toko kelontong";
+                    });
                     
                     document.getElementById('stat-total').innerText = dataTokoMaster.length;
                     
-                    // [DIUBAH] Javascript sekarang mencari data "ATK", bukan "TIK"
                     let hitunganKategori = {
                         "Makanan": 0, "Minuman": 0, "Bengkel": 0, "Kelontong": 0,
                         "Konter Pulsa": 0, "Laundry": 0, "ATK": 0, "Makanan Hewan": 0,
@@ -271,6 +284,14 @@
         function saringData() {
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
             const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
+
+            // [DIUBAH] Logika Pemunculan Banner Kelontong
+            const bannerKelontong = document.getElementById('banner-kelontong');
+            if (kategoriPilih === "kelontong" || teksCari.includes("kelontong")) {
+                bannerKelontong.classList.remove('hidden');
+            } else {
+                bannerKelontong.classList.add('hidden');
+            }
 
             const dataTersaring = dataTokoMaster.filter(toko => {
                 const namaToko = (toko["Nama Toko"] || "").toLowerCase();

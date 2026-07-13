@@ -194,14 +194,12 @@ function renderKatalogGrid(data) {
         }
         
         let arrayHarga = [];
-        
-        // [PERBAIKAN UTAMA] Tarik semua produk tanpa melihat kategori untuk mengecek apakah toko ini KOSONG atau TIDAK
         let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
 
         produkTokoIni.forEach(p => {
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             let hargaAkhir = hargaNormal;
@@ -219,38 +217,48 @@ function renderKatalogGrid(data) {
             if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
         });
 
-        let teksHarga = "Informasi Belum Tersedia";
-        let labelHarga = "Harga Produk";
-
-        if (arrayHarga.length > 0) {
-            let hargaMin = Math.min(...arrayHarga);
-            let hargaMax = Math.max(...arrayHarga);
-            if (hargaMin === hargaMax) teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
-            else {
-                teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
-                labelHarga = "Rentang Harga";
-            }
-        }
-
-        // [PERBAIKAN UTAMA] Logika Tombol Aksi Berdasarkan Ada/Tidaknya Produk
+        // [DIUBAH] Hanya memunculkan blok teks harga jika ada produknya
+        let blokHargaHTML = "";
         let tombolAksiHTML = "";
+
         if (produkTokoIni.length > 0) {
-            // JIKA ADA PRODUK: Tampilkan tombol biasa untuk membuka Popup
+            let teksHarga = "Informasi Harga Belum Tersedia";
+            let labelHarga = "Harga Produk";
+
+            if (arrayHarga.length > 0) {
+                let hargaMin = Math.min(...arrayHarga);
+                let hargaMax = Math.max(...arrayHarga);
+                if (hargaMin === hargaMax) teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
+                else {
+                    teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
+                    labelHarga = "Rentang Harga";
+                }
+            }
+            
+            // Masukkan teks harga ke dalam variabel blokHargaHTML
+            blokHargaHTML = `
+                <div class="mb-4">
+                    <span class="text-sm text-gray-500">${labelHarga}</span><br>
+                    <span class="text-lg font-bold text-green-700">${teksHarga}</span>
+                </div>
+            `;
+
             tombolAksiHTML = `
-                <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 shadow-sm">
+                <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 shadow-sm mt-auto">
                     Lihat Detail Lapak
                 </button>
             `;
         } else {
-            // JIKA TIDAK ADA PRODUK: Tampilkan LINK ASLI (Tag <a>) menuju Peta
+            // Jika kosong, blokHargaHTML tetap kosong dan kita hanya menyiapkan tombol Peta
             let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
             if (!kategoriAktif && kategori) {
                 const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
                 if (arrKat.length > 0) parameterFilter = arrKat[0];
             }
             
+            // Tambahkan mt-auto agar tombol tetap berada di bagian paling bawah kartu meskipun blok harga dihapus
             tombolAksiHTML = `
-                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
+                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}" class="w-full mt-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
                     📍 Lihat di Peta
                 </a>
             `;
@@ -267,11 +275,10 @@ function renderKatalogGrid(data) {
                     <h3 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">${namaToko}</h3>
                     <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
                     <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat || 'Belum ada deskripsi.'}</p>
-                    <div class="mb-4">
-                        <span class="text-sm text-gray-500">${labelHarga}</span><br>
-                        <span class="text-lg font-bold text-green-700">${teksHarga}</span>
-                    </div>
+                    
+                    ${blokHargaHTML}
                     ${tombolAksiHTML}
+                    
                 </div>
             </div>
         `;
@@ -315,7 +322,6 @@ function renderKatalogList(data) {
             });
         }
 
-        // Mengecek jumlah produk untuk Tampilan List
         let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
         
         let aksiKlikBaris = `onclick="bukaPopup(${originalIndex})"`;
@@ -395,7 +401,6 @@ function bukaPopup(index) {
     }
 
     const kodeUnikToko = toko["Kode Unik Toko"];
-    // Tarik semua produk milik toko untuk ditampilkan di dalam Popup (Modal)
     const produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
 
     let htmlTabel = "";
@@ -421,7 +426,7 @@ function bukaPopup(index) {
             
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
             let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo ?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
+            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
             let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
             
             let isPromoBerlaku = false;

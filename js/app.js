@@ -194,16 +194,9 @@ function renderKatalogGrid(data) {
         }
         
         let arrayHarga = [];
-        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
         
-        if (kategoriAktif) {
-            produkTokoIni = produkTokoIni.filter(p => {
-                const katProd = p["Kategori Produk"];
-                if (!katProd) return false;
-                const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
-                return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
-            });
-        }
+        // [PERBAIKAN UTAMA] Tarik semua produk tanpa melihat kategori untuk mengecek apakah toko ini KOSONG atau TIDAK
+        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
 
         produkTokoIni.forEach(p => {
             let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
@@ -239,16 +232,17 @@ function renderKatalogGrid(data) {
             }
         }
 
-        // [DIUBAH] Logika Tombol Aksi Berdasarkan Ketersediaan Produk
+        // [PERBAIKAN UTAMA] Logika Tombol Aksi Berdasarkan Ada/Tidaknya Produk
         let tombolAksiHTML = "";
         if (produkTokoIni.length > 0) {
+            // JIKA ADA PRODUK: Tampilkan tombol biasa untuk membuka Popup
             tombolAksiHTML = `
                 <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 shadow-sm">
                     Lihat Detail Lapak
                 </button>
             `;
         } else {
-            // Jika kosong, siapkan parameter filter untuk dikirim ke peta.html
+            // JIKA TIDAK ADA PRODUK: Tampilkan LINK ASLI (Tag <a>) menuju Peta
             let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
             if (!kategoriAktif && kategori) {
                 const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
@@ -256,9 +250,9 @@ function renderKatalogGrid(data) {
             }
             
             tombolAksiHTML = `
-                <button onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}'" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm">
+                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
                     📍 Lihat di Peta
-                </button>
+                </a>
             `;
         }
 
@@ -304,6 +298,7 @@ function renderKatalogList(data) {
         const namaToko = toko["Nama Toko"];
         const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
         const kodeUnikToko = toko["Kode Unik Toko"];
+        const stringKategori = toko["Kategori Produk"] || "";
         
         const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
         let lencanaMiniHTML = "";
@@ -312,7 +307,6 @@ function renderKatalogList(data) {
             else lencanaMiniHTML = `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border border-red-200">Tutup</span>`;
         }
 
-        const stringKategori = toko["Kategori Produk"] || "";
         const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
         let badgeKategoriHTML = "";
         if(arrayKategori.length > 0) {
@@ -321,17 +315,9 @@ function renderKatalogList(data) {
             });
         }
 
-        // [DIUBAH] Mengecek jumlah produk untuk Tampilan List
+        // Mengecek jumlah produk untuk Tampilan List
         let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
-        if (kategoriAktif) {
-            produkTokoIni = produkTokoIni.filter(p => {
-                const katProd = p["Kategori Produk"];
-                if (!katProd) return false;
-                const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
-                return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
-            });
-        }
-
+        
         let aksiKlikBaris = `onclick="bukaPopup(${originalIndex})"`;
         if (produkTokoIni.length === 0) {
             let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
@@ -409,17 +395,8 @@ function bukaPopup(index) {
     }
 
     const kodeUnikToko = toko["Kode Unik Toko"];
-    const produkTokoIni = dataProdukGlobal.filter(p => {
-        const matchKode = p["Kode Unik Toko"] === kodeUnikToko;
-        if (!matchKode) return false;
-        if (kategoriAktif) {
-            const katProd = p["Kategori Produk"];
-            if (!katProd) return false;
-            const arrayKatProd = katProd.split(',').map(k => k.trim().toLowerCase());
-            return arrayKatProd.includes(kategoriAktif.trim().toLowerCase());
-        }
-        return true; 
-    });
+    // Tarik semua produk milik toko untuk ditampilkan di dalam Popup (Modal)
+    const produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
 
     let htmlTabel = "";
     let arrayHarga = [];

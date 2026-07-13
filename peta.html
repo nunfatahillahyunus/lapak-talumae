@@ -113,6 +113,10 @@
         let petaLeaflet;
         let layerGrupMarker;
         let dataTokoGlobal = [];
+        
+        // [BARU] Menangkap pesan (parameter) dari halaman katalog
+        const urlParamsPeta = new URLSearchParams(window.location.search);
+        let targetTokoBukaPopup = urlParamsPeta.get('toko'); 
 
         function formatGambarDrive(urlDrive) {
             if (!urlDrive) return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
@@ -122,8 +126,6 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // [DIUBAH] Menangkap parameter URL (Contoh: peta.html?filter=Makanan)
-            const urlParamsPeta = new URLSearchParams(window.location.search);
             const filterDariURL = urlParamsPeta.get('filter');
 
             if (filterDariURL) {
@@ -170,7 +172,7 @@
                 header: true,
                 complete: function(results) {
                     dataTokoGlobal = results.data; 
-                    terapkanFilterPeta(); // Saat dipanggil, otomatis membaca Dropdown yang sudah tersetel parameter
+                    terapkanFilterPeta(); 
                     const loadingScreen = document.getElementById("status-loading");
                     loadingScreen.style.opacity = "0";
                     setTimeout(() => { loadingScreen.style.display = "none"; }, 500);
@@ -189,7 +191,6 @@
                 if (nilaiFilter === "Semua") {
                     masukKriteria = true;
                 } else {
-                    // [DIUBAH] Pencarian presisi dengan koma agar tidak tercampur
                     const arrayKat = stringKategori.split(',').map(k => k.trim().toLowerCase());
                     if (arrayKat.includes(nilaiFilter.toLowerCase())) {
                         masukKriteria = true;
@@ -243,6 +244,24 @@
 
                             const marker = L.marker([lat, lng]).bindPopup(popupContent);
                             layerGrupMarker.addLayer(marker);
+                            
+                            // [BARU] Buka popup otomatis jika URL memiliki parameter nama/kode toko
+                            if (targetTokoBukaPopup) {
+                                if (idToko.toLowerCase() === targetTokoBukaPopup.toLowerCase() || namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase()) {
+                                    let latZoom = lat;
+                                    let lngZoom = lng;
+                                    let markerAktif = marker;
+                                    
+                                    // Beri jeda sedikit agar peta selesai menggambar titik
+                                    setTimeout(() => {
+                                        petaLeaflet.setView([latZoom, lngZoom], 18); 
+                                        markerAktif.openPopup();
+                                    }, 600); 
+                                    
+                                    // Kosongkan agar tidak terpanggil ulang jika user mengganti filter dropdown manual
+                                    targetTokoBukaPopup = null; 
+                                }
+                            }
                         }
                     }
                 }

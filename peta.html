@@ -122,6 +122,22 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
+            // [DIUBAH] Menangkap parameter URL (Contoh: peta.html?filter=Makanan)
+            const urlParamsPeta = new URLSearchParams(window.location.search);
+            const filterDariURL = urlParamsPeta.get('filter');
+
+            if (filterDariURL) {
+                const selectPeta = document.getElementById('filter-kategori-peta');
+                if (selectPeta) {
+                    for (let i = 0; i < selectPeta.options.length; i++) {
+                        if (selectPeta.options[i].value.toLowerCase() === filterDariURL.toLowerCase()) {
+                            selectPeta.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
             petaLeaflet = L.map('map').setView([-3.9253023085017644, 119.89183392373823], 15);
             
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
@@ -154,7 +170,7 @@
                 header: true,
                 complete: function(results) {
                     dataTokoGlobal = results.data; 
-                    terapkanFilterPeta();
+                    terapkanFilterPeta(); // Saat dipanggil, otomatis membaca Dropdown yang sudah tersetel parameter
                     const loadingScreen = document.getElementById("status-loading");
                     loadingScreen.style.opacity = "0";
                     setTimeout(() => { loadingScreen.style.display = "none"; }, 500);
@@ -162,7 +178,6 @@
             });
         });
 
-        // [DIUBAH] Tombol Maps sekarang ada di dalam Popup, tabel dihilangkan
         function terapkanFilterPeta() {
             const nilaiFilter = document.getElementById("filter-kategori-peta").value;
             layerGrupMarker.clearLayers();
@@ -173,8 +188,12 @@
                 let masukKriteria = false;
                 if (nilaiFilter === "Semua") {
                     masukKriteria = true;
-                } else if (stringKategori.toLowerCase().includes(nilaiFilter.toLowerCase())) {
-                    masukKriteria = true;
+                } else {
+                    // [DIUBAH] Pencarian presisi dengan koma agar tidak tercampur
+                    const arrayKat = stringKategori.split(',').map(k => k.trim().toLowerCase());
+                    if (arrayKat.includes(nilaiFilter.toLowerCase())) {
+                        masukKriteria = true;
+                    }
                 }
 
                 if (masukKriteria) {

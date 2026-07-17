@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <!-- HEADER HALAMAN (Diubah menjadi hijau flat konsisten) -->
+    <!-- HEADER HALAMAN -->
     <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
         <div class="container mx-auto max-w-6xl">
             <h1 class="text-3xl md:text-4xl font-bold mb-2">Hasil Tani</h1>
@@ -67,27 +67,23 @@
             </div>
         </div>
 
-        <!-- SPANDUK / BANNER KEMENDAG (Diubah menjadi full clickable area) -->
-        <a href="https://sp2kp.kemendag.go.id/" target="_blank" class="block bg-white rounded-xl shadow-md hover:shadow-lg border-l-8 border-l-blue-600 p-6 mb-8 transition-all group cursor-pointer">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-grow">
-                    <!-- Ikon/Logo Instansi -->
-                    <div class="bg-blue-50 p-3 rounded-full shrink-0 group-hover:scale-110 group-hover:bg-blue-100 transition-all duration-300">
-                        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">Cek Harga Pangan Live</h3>
-                        <p class="text-gray-600 text-sm mb-3">Klik di sini untuk melihat acuan harga pasar resmi dari Sistem Pemantauan Pasar dan Kebutuhan Pokok (SP2KP) Kementerian Perdagangan RI.</p>
-                        <!-- Instruksi Khusus -->
-                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs md:text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-2">
-                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Instruksi: Pilih Provinsi <strong>Sulawesi Selatan</strong> dan Kabupaten <strong>Sidenreng Rappang</strong> pada website tujuan.</span>
-                        </div>
-                    </div>
+        <!-- SPANDUK / BANNER KEMENDAG (Diperbarui dengan Gradasi, Gambar & Tanpa Tombol) -->
+        <a href="https://sp2kp.kemendag.go.id/" target="_blank" class="block bg-gradient-to-r from-blue-800 to-blue-500 rounded-xl shadow-md hover:shadow-lg hover:from-blue-900 hover:to-blue-600 p-6 mb-8 transition-all duration-300 group cursor-pointer border border-blue-400/30">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-grow">
+                <!-- Gambar Logo SP2KP -->
+                <div class="bg-white p-2 rounded-xl shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 flex items-center justify-center w-16 h-16 md:w-20 md:h-20">
+                    <img src="sp2kp.png" alt="Logo SP2KP" class="max-w-full max-h-full object-contain">
                 </div>
-                <!-- Tombol semu (UI Button saja, karena keseluruhan area sudah link) -->
-                <div class="shrink-0 bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-md group-hover:bg-blue-700 group-hover:shadow-lg transition-all flex items-center gap-2 w-full lg:w-auto justify-center">
-                    Buka Portal SP2KP ↗
+                
+                <div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-1 group-hover:text-blue-100 transition-colors">Cek Harga Pangan Live</h3>
+                    <p class="text-blue-100 text-sm md:text-base mb-3 leading-relaxed">Klik di sini untuk melihat acuan harga pasar resmi dari Sistem Pemantauan Pasar dan Kebutuhan Pokok (SP2KP) Kementerian Perdagangan RI.</p>
+                    
+                    <!-- Instruksi Khusus -->
+                    <div class="bg-white/20 border border-white/30 backdrop-blur-sm text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-lg inline-flex items-center gap-2 shadow-sm">
+                        <svg class="w-5 h-5 shrink-0 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Instruksi: Pilih Provinsi <strong class="text-yellow-300">Sulawesi Selatan</strong> dan Kabupaten <strong class="text-yellow-300">Sidenreng Rappang</strong> pada website tujuan.</span>
+                    </div>
                 </div>
             </div>
         </a>
@@ -176,9 +172,9 @@
     <!-- SCRIPT LOGIKA HALAMAN TANI -->
     <script>
         // ==========================================
-        // GANTI LINK DI BAWAH INI DENGAN LINK SHEET "DATA_TANI" ANDA!
+        // DATABASE DATA TANI (Terhubung langsung ke CSV)
         // ==========================================
-        const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=987654321&single=true&output=csv"; 
+        const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
         
         let dataTaniGlobal = [];
 
@@ -196,26 +192,20 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Membaca Data CSV
-            if (URL_CSV_TANI.includes("987654321")) {
-                document.getElementById("status-loading").innerHTML = `
-                    <span class="text-red-500 font-bold">Menunggu Integrasi Database.</span><br>
-                    <span class="text-sm">Silakan masukkan link CSV Data Tani ke dalam kodingan HTML.</span>
-                `;
-                return;
-            }
-
+            // Membaca Data CSV langsung saat halaman dimuat
             Papa.parse(URL_CSV_TANI, {
                 download: true,
                 header: true,
                 complete: function(results) {
                     dataTaniGlobal = results.data.filter(tani => tani["Nama Komoditas"] && tani["Nama Komoditas"].trim() !== "");
-                    
                     document.getElementById("status-loading").classList.add("hidden");
                     saringDataTani();
                 },
                 error: function(err) {
-                    document.getElementById("status-loading").innerText = "Gagal memuat data dari server.";
+                    document.getElementById("status-loading").innerHTML = `
+                        <span class="text-red-500 font-bold">Gagal memuat data hasil tani.</span><br>
+                        <span class="text-sm">Silakan muat ulang halaman.</span>
+                    `;
                 }
             });
 

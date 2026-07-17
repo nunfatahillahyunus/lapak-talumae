@@ -312,7 +312,21 @@
             document.getElementById('modal-foto').src = formatGambarDrive(tani["Foto Hasil Tani"]);
             
             // Mengambil Bulan Panen dari CSV
-            document.getElementById('modal-bulan').innerText = tani["Bulan Panen"] || "Belum ditentukan";
+                // Mengambil dan memformat Bulan Panen dari CSV (Mendukung banyak bulan dengan koma)
+            const stringBulan = tani["Bulan Panen"] || "Belum ditentukan";
+            const wadahBulan = document.getElementById('modal-bulan');
+
+            if (stringBulan === "Belum ditentukan" || stringBulan.trim() === "") {
+                wadahBulan.innerHTML = "Belum ditentukan";
+            } else {
+                const arrayBulan = stringBulan.split(',').map(b => b.trim()).filter(b => b);
+                let htmlBulan = `<div class="flex flex-wrap gap-1 mt-0.5">`;
+                arrayBulan.forEach(b => {
+                    htmlBulan += `<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-200 shadow-sm">${b}</span>`;
+                });
+                htmlBulan += `</div>`;
+                wadahBulan.innerHTML = htmlBulan;
+            }
 
             document.getElementById('modal-rata').innerText = tani["Rata-rata Panen"] || "-";
             document.getElementById('modal-saatini').innerText = tani["Panen Saat Ini"] || "-";

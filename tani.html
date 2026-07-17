@@ -31,17 +31,17 @@
         <div class="p-6 pt-16 flex-grow">
             <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
             <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
-            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🌾 Bursa Hasil Tani</a>
+            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🌾 Hasil Tani</a>
             <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors mt-2">🗺️ Peta Lokasi UMKM</a>
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
         </div>
     </div>
 
-    <!-- HEADER HALAMAN -->
-    <header class="bg-green-800 text-white text-center py-10 px-4 shadow-md bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+    <!-- HEADER HALAMAN (Diubah menjadi hijau flat konsisten) -->
+    <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
         <div class="container mx-auto max-w-6xl">
-            <h1 class="text-3xl md:text-5xl font-bold mb-3 tracking-tight">Bursa Hasil Tani</h1>
-            <p class="text-green-100 text-lg">Informasi komoditas dan ketersediaan panen warga Desa Talumae.</p>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Hasil Tani</h1>
+            <p class="text-green-100">Informasi komoditas dan ketersediaan panen warga Desa Talumae.</p>
         </div>
     </header>
 
@@ -58,7 +58,7 @@
             <div class="w-full md:w-64 shrink-0">
                 <select id="filter-jenis" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50 cursor-pointer font-semibold text-gray-700">
                     <option value="Semua">Semua Jenis</option>
-                    <option value="Pangan">Pangan (Beras, Jagung, dll)</option>
+                    <option value="Pangan">Pangan</option>
                     <option value="Sayur">Sayur-sayuran</option>
                     <option value="Buah">Buah-buahan</option>
                     <option value="Palawija">Palawija & Rempah</option>
@@ -67,27 +67,30 @@
             </div>
         </div>
 
-        <!-- SPANDUK / BANNER KEMENDAG (Sesuai Konsep) -->
-        <div class="bg-white rounded-xl shadow-md border-l-8 border-blue-600 p-6 mb-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-grow">
-                <!-- Ikon/Logo Instansi (Placeholder) -->
-                <div class="bg-blue-50 p-3 rounded-full shrink-0">
-                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Cek Harga Pangan Live</h3>
-                    <p class="text-gray-600 text-sm mb-3">Klik tombol di samping untuk melihat acuan harga pasar resmi dari Sistem Pemantauan Pasar dan Kebutuhan Pokok (SP2KP) Kementerian Perdagangan RI.</p>
-                    <!-- Instruksi Khusus -->
-                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs md:text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-2">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>Instruksi: Pilih Provinsi <strong>Sulawesi Selatan</strong> dan Kabupaten <strong>Sidenreng Rappang</strong> pada website tujuan.</span>
+        <!-- SPANDUK / BANNER KEMENDAG (Diubah menjadi full clickable area) -->
+        <a href="https://sp2kp.kemendag.go.id/" target="_blank" class="block bg-white rounded-xl shadow-md hover:shadow-lg border-l-8 border-l-blue-600 p-6 mb-8 transition-all group cursor-pointer">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-grow">
+                    <!-- Ikon/Logo Instansi -->
+                    <div class="bg-blue-50 p-3 rounded-full shrink-0 group-hover:scale-110 group-hover:bg-blue-100 transition-all duration-300">
+                        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">Cek Harga Pangan Live</h3>
+                        <p class="text-gray-600 text-sm mb-3">Klik di sini untuk melihat acuan harga pasar resmi dari Sistem Pemantauan Pasar dan Kebutuhan Pokok (SP2KP) Kementerian Perdagangan RI.</p>
+                        <!-- Instruksi Khusus -->
+                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs md:text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-2">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Instruksi: Pilih Provinsi <strong>Sulawesi Selatan</strong> dan Kabupaten <strong>Sidenreng Rappang</strong> pada website tujuan.</span>
+                        </div>
                     </div>
                 </div>
+                <!-- Tombol semu (UI Button saja, karena keseluruhan area sudah link) -->
+                <div class="shrink-0 bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-md group-hover:bg-blue-700 group-hover:shadow-lg transition-all flex items-center gap-2 w-full lg:w-auto justify-center">
+                    Buka Portal SP2KP ↗
+                </div>
             </div>
-            <a href="https://sp2kp.kemendag.go.id/" target="_blank" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 w-full lg:w-auto justify-center">
-                Buka Portal SP2KP ↗
-            </a>
-        </div>
+        </a>
 
         <!-- STATUS LOADING -->
         <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse">
@@ -133,7 +136,7 @@
                     </div>
                 </div>
 
-                <!-- Box Statistik (Sesuai Permintaan) -->
+                <!-- Box Statistik -->
                 <h4 class="font-bold text-gray-800 mb-3 border-b pb-2">Informasi Statistik Panen</h4>
                 <div class="grid grid-cols-2 gap-3 mb-6">
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
@@ -173,11 +176,10 @@
     <!-- SCRIPT LOGIKA HALAMAN TANI -->
     <script>
         // ==========================================
-        // SILAKAN GANTI LINK CSV DI BAWAH INI DENGAN LINK SHEET "DATA_TANI" ANDA!
+        // GANTI LINK DI BAWAH INI DENGAN LINK SHEET "DATA_TANI" ANDA!
         // ==========================================
-        const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
+        const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=987654321&single=true&output=csv"; 
         
-        // (Untuk sementara, kita pakai struktur dummy kosong jika link belum diganti agar tidak error)
         let dataTaniGlobal = [];
 
         function toggleSidebar() {
@@ -195,7 +197,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             // Membaca Data CSV
-            if (URL_CSV_TANI.includes("ISI_DENGAN")) {
+            if (URL_CSV_TANI.includes("987654321")) {
                 document.getElementById("status-loading").innerHTML = `
                     <span class="text-red-500 font-bold">Menunggu Integrasi Database.</span><br>
                     <span class="text-sm">Silakan masukkan link CSV Data Tani ke dalam kodingan HTML.</span>
@@ -207,7 +209,6 @@
                 download: true,
                 header: true,
                 complete: function(results) {
-                    // Filter baris yang kosong
                     dataTaniGlobal = results.data.filter(tani => tani["Nama Komoditas"] && tani["Nama Komoditas"].trim() !== "");
                     
                     document.getElementById("status-loading").classList.add("hidden");
@@ -260,7 +261,6 @@
 
             let elemenHTML = "";
             data.forEach((tani) => {
-                // Mencari index asli di array global untuk dipakai di popup
                 const originalIndex = dataTaniGlobal.findIndex(t => t === tani);
 
                 const komoditas = tani["Nama Komoditas"];
@@ -296,23 +296,19 @@
             const tani = dataTaniGlobal[index];
             if (!tani) return;
 
-            // Memasukkan Teks Umum
             document.getElementById('modal-komoditas').innerText = tani["Nama Komoditas"];
             document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
             document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
             document.getElementById('modal-foto').src = formatGambarDrive(tani["Foto Hasil Tani"]);
 
-            // Memasukkan Angka Statistik
             document.getElementById('modal-rata').innerText = tani["Rata-rata Panen"] || "-";
             document.getElementById('modal-saatini').innerText = tani["Panen Saat Ini"] || "-";
             document.getElementById('modal-sisa').innerText = tani["Sisa Pangan Tersedia"] || "0";
 
-            // Update Label Satuan
             const satuan = tani["Satuan"] || "";
             const elSatuans = document.querySelectorAll('.satuan-teks');
             elSatuans.forEach(el => el.innerText = satuan);
 
-            // Logika Tombol Peta
             const btnPeta = document.getElementById('btn-modal-peta');
             const lokasi = tani["Lokasi Lahan"];
             if (lokasi && lokasi.includes(',')) {
@@ -325,7 +321,6 @@
                 btnPeta.style.display = 'none';
             }
 
-            // Logika Tombol WA
             const btnWA = document.getElementById('btn-modal-wa');
             const nomorWA = tani["Nomor Whatsapp (62)"];
             if (nomorWA) {
@@ -337,7 +332,6 @@
                 btnWA.style.display = 'none';
             }
 
-            // Animasi Buka Modal
             const modal = document.getElementById('modal-tani');
             modal.classList.remove('hidden');
             setTimeout(() => {

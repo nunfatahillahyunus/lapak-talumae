@@ -23,7 +23,7 @@
         </div>
     </nav>
 
-    <!-- SIDEBAR MENU -->
+    <!-- SIDEBAR MENU (Telah diselaraskan) -->
     <div id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full w-64 bg-white shadow-2xl z-[105] transition-transform duration-300 ease-in-out flex flex-col">
         <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -34,6 +34,22 @@
             <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🌾 Hasil Tani</a>
             <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors mt-2">🗺️ Peta Lokasi UMKM</a>
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
+            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
+            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
+        </div>
+    </div>
+
+    <!-- MODAL AKSES PENJUAL -->
+    <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Penjual</h3>
+            <p class="text-sm text-gray-600 mb-4">Masukkan Kode Unik Toko/Tani Anda untuk mengelola produk.</p>
+            <input type="text" id="inputKodeUnik" class="border border-gray-300 p-3 w-full mb-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-center uppercase" placeholder="Contoh: TLM01">
+            <p id="pesanErrorKode" class="text-red-500 text-xs font-semibold hidden mb-4 text-center"></p>
+            <div class="flex justify-end gap-3 mt-4">
+                <button onclick="tutupModalKodeUnik()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
+                <button id="btnValidasi" onclick="validasiDanBukaAppSheet()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold transition-colors">Validasi & Masuk</button>
+            </div>
         </div>
     </div>
 
@@ -67,10 +83,9 @@
             </div>
         </div>
 
-        <!-- SPANDUK / BANNER KEMENDAG (Diperbarui dengan Gradasi, Gambar & Tanpa Tombol) -->
+        <!-- SPANDUK / BANNER KEMENDAG -->
         <a href="https://sp2kp.kemendag.go.id/" target="_blank" class="block bg-gradient-to-r from-blue-800 to-blue-500 rounded-xl shadow-md hover:shadow-lg hover:from-blue-900 hover:to-blue-600 p-6 mb-8 transition-all duration-300 group cursor-pointer border border-blue-400/30">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-grow">
-                <!-- Gambar Logo SP2KP -->
                 <div class="bg-white p-2 rounded-xl shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 flex items-center justify-center w-16 h-16 md:w-20 md:h-20">
                     <img src="sp2kp.png" alt="Logo SP2KP" class="max-w-full max-h-full object-contain">
                 </div>
@@ -78,8 +93,6 @@
                 <div>
                     <h3 class="text-xl md:text-2xl font-bold text-white mb-1 group-hover:text-blue-100 transition-colors">Cek Harga Pangan Live</h3>
                     <p class="text-blue-100 text-sm md:text-base mb-3 leading-relaxed">Klik di sini untuk melihat acuan harga pasar resmi dari Sistem Pemantauan Pasar dan Kebutuhan Pokok (SP2KP) Kementerian Perdagangan RI.</p>
-                    
-                    <!-- Instruksi Khusus -->
                     <div class="bg-white/20 border border-white/30 backdrop-blur-sm text-white text-xs md:text-sm font-semibold px-4 py-2.5 rounded-lg inline-flex items-center gap-2 shadow-sm">
                         <svg class="w-5 h-5 shrink-0 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <span>Instruksi: Pilih Provinsi <strong class="text-yellow-300">Sulawesi Selatan</strong> dan Kabupaten <strong class="text-yellow-300">Sidenreng Rappang</strong> pada website tujuan.</span>
@@ -124,11 +137,22 @@
 
             <!-- Konten Modal Scrollable -->
             <div class="p-5 overflow-y-auto flex-grow bg-white">
-                <div class="flex items-center gap-2 mb-6 text-gray-700">
-                    <div class="bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
+                <div class="flex items-center gap-3 mb-5 text-gray-700">
+                    <div class="bg-gray-100 p-2.5 rounded-full"><svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
                     <div>
                         <p class="text-xs text-gray-500 font-semibold uppercase">Petani / Pengelola</p>
-                        <p id="modal-petani" class="font-bold text-lg leading-tight">Nama Petani</p>
+                        <p id="modal-petani" class="font-bold text-lg leading-tight text-gray-900">Nama Petani</p>
+                    </div>
+                </div>
+
+                <!-- [BARU] Info Bulan Panen -->
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6 flex items-center gap-3">
+                    <div class="bg-blue-100 p-2 rounded-full shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-blue-600 font-semibold uppercase">Bulan Panen</p>
+                        <p id="modal-bulan" class="font-bold text-gray-800 leading-tight">Belum ditentukan</p>
                     </div>
                 </div>
 
@@ -155,10 +179,10 @@
             <!-- Footer Action Modal -->
             <div class="p-4 bg-gray-50 border-t flex flex-col sm:flex-row gap-3 shrink-0">
                 <button id="btn-modal-peta" class="w-full sm:w-auto bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    📍 Cek Lokasi Lahan
+                    📍 Lokasi Lahan
                 </button>
                 <button id="btn-modal-wa" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md">
-                    Hubungi Petani (WA)
+                    Hubungi Petani
                 </button>
             </div>
         </div>
@@ -171,9 +195,6 @@
 
     <!-- SCRIPT LOGIKA HALAMAN TANI -->
     <script>
-        // ==========================================
-        // DATABASE DATA TANI (Terhubung langsung ke CSV)
-        // ==========================================
         const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
         
         let dataTaniGlobal = [];
@@ -192,7 +213,6 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Membaca Data CSV langsung saat halaman dimuat
             Papa.parse(URL_CSV_TANI, {
                 download: true,
                 header: true,
@@ -290,6 +310,9 @@
             document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
             document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
             document.getElementById('modal-foto').src = formatGambarDrive(tani["Foto Hasil Tani"]);
+            
+            // Mengambil Bulan Panen dari CSV
+            document.getElementById('modal-bulan').innerText = tani["Bulan Panen"] || "Belum ditentukan";
 
             document.getElementById('modal-rata').innerText = tani["Rata-rata Panen"] || "-";
             document.getElementById('modal-saatini').innerText = tani["Panen Saat Ini"] || "-";
@@ -340,6 +363,82 @@
                 modal.classList.add('hidden');
                 document.getElementById('modal-foto').src = ""; 
             }, 300); 
+        }
+
+        // =====================================
+        // FUNGSI UNTUK MODAL APPSHEET DI SIDEBAR
+        // =====================================
+        function bukaModalKodeUnik() {
+            const sidebar = document.getElementById('sidebarMenu');
+            if(sidebar) sidebar.classList.add('-translate-x-full'); 
+            const modal = document.getElementById('modalKodeUnik');
+            if(!modal) return; 
+            document.getElementById('inputKodeUnik').value = "";
+            const pesanError = document.getElementById('pesanErrorKode');
+            if (pesanError) pesanError.classList.add('hidden');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
+        }
+
+        function tutupModalKodeUnik() {
+            const modal = document.getElementById('modalKodeUnik');
+            if(!modal) return;
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function validasiDanBukaAppSheet() {
+            const inputKode = document.getElementById('inputKodeUnik').value.trim();
+            const pesanError = document.getElementById('pesanErrorKode');
+            const btnValidasi = document.getElementById('btnValidasi');
+
+            if (!inputKode) {
+                pesanError.innerText = "Kode unik tidak boleh kosong!";
+                pesanError.classList.remove('hidden');
+                return;
+            }
+            btnValidasi.innerText = "Mengecek...";
+            btnValidasi.disabled = true;
+
+            const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
+            // Ambil dari database toko utama untuk validasi Appsheet UMKM
+            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+
+            Papa.parse(URL_CSV_TOKO, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const isValidToko = results.data.some(toko => {
+                        const kode = toko["Kode Unik Toko"];
+                        return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
+                    });
+
+                    // Cek juga apakah ada kecocokan di data Tani
+                    const isValidTani = dataTaniGlobal.some(tani => {
+                        const kode = tani["Kode Unik Tani"] || tani["Kode Unik Toko"]; 
+                        return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
+                    });
+
+                    if (isValidToko || isValidTani) {
+                        pesanError.classList.add('hidden');
+                        const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
+                        window.open(urlTujuan, "_blank");
+                        tutupModalKodeUnik();
+                    } else {
+                        pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                        pesanError.classList.remove('hidden');
+                    }
+                    btnValidasi.innerText = "Validasi & Masuk";
+                    btnValidasi.disabled = false;
+                },
+                error: function(err) {
+                    pesanError.innerText = "Gagal menghubungi server validasi.";
+                    pesanError.classList.remove('hidden');
+                    btnValidasi.innerText = "Validasi & Masuk";
+                    btnValidasi.disabled = false;
+                }
+            });
         }
     </script>
 </body>

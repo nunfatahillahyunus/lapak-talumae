@@ -52,7 +52,7 @@
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl flex flex-col">
         
-        <!-- PANEL FILTER KOTAK CUSTOM (Sesuai Permintaan) -->
+        <!-- PANEL FILTER KOTAK CUSTOM -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 relative z-[20]">
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -61,7 +61,7 @@
             <div class="flex flex-wrap gap-2.5" id="wadah-filter-kategori">
                 <!-- Tombol-tombol di-generate otomatis oleh JS -->
             </div>
-            <p class="text-[11px] text-gray-400 mt-3 italic">*Anda bisa memilih lebih dari satu kategori.</p>
+            <p class="text-[11px] text-gray-400 mt-3 italic">*Anda bisa memilih lebih dari satu kategori untuk ditampilkan sekaligus.</p>
         </div>
 
         <!-- STATUS LOADING PETA -->
@@ -92,16 +92,22 @@
         let dataTokoGlobal = [];
         let dataTaniGlobal = [];
         
-        // KONFIGURASI WARNA KATEGORI
+        // KONFIGURASI WARNA KATEGORI (UPDATE SESUAI LIST TERBARU)
         const KATEGORI_WARNA = {
-            "Pangan": "#ef4444",      // Merah
-            "Minuman": "#3b82f6",     // Biru
-            "Kerajinan": "#f59e0b",   // Kuning/Amber
-            "Pakaian": "#ec4899",     // Pink
-            "Jasa": "#8b5cf6",        // Ungu
-            "Hasil Tani": "#22c55e"   // Hijau
+            "Makanan": "#ef4444",               // Merah
+            "Minuman": "#3b82f6",               // Biru
+            "Bengkel": "#4b5563",               // Abu-abu Gelap
+            "Kelontong": "#eab308",             // Kuning
+            "Konter Pulsa": "#8b5cf6",          // Ungu
+            "Laundry": "#0ea5e9",               // Cyan / Biru Muda
+            "ATK": "#d946ef",                   // Fuchsia
+            "Makanan Hewan": "#f97316",         // Oranye
+            "Kosmetik": "#ec4899",              // Pink
+            "Alat & Bahan Pertanian": "#14b8a6",// Teal / Tosca
+            "Pakaian": "#f43f5e",               // Rose
+            "Hasil Tani": "#22c55e"             // Hijau (Tetap dipertahankan untuk lahan)
         };
-        const WARNA_DEFAULT = "#6b7280"; // Abu-abu
+        const WARNA_DEFAULT = "#6b7280"; // Warna Abu-abu jika kategori tidak dikenali
 
         // STATE FILTER MULTI-SELECT
         let filterAktif = new Set(["Semua"]);
@@ -130,8 +136,8 @@
                           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${warnaHex}" stroke="#ffffff" stroke-width="1.5"/>
                        </svg>`,
                 iconSize: [36, 36],
-                iconAnchor: [18, 36], // Titik jangkar di ujung bawah pin
-                popupAnchor: [0, -32] // Titik popup muncul (di atas pin)
+                iconAnchor: [18, 36], 
+                popupAnchor: [0, -32] 
             });
         }
 
@@ -144,12 +150,11 @@
             const isSemua = filterAktif.has("Semua");
             html += `<button onclick="klikFilter('Semua')" class="px-4 py-1.5 rounded-full text-sm font-bold border transition-colors shadow-sm ${isSemua ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">Semua Lokasi</button>`;
 
-            // Tombol Kategori Lainnya
+            // Tombol Kategori Berdasarkan KATEGORI_WARNA
             Object.keys(KATEGORI_WARNA).forEach(kat => {
                 const isAktif = filterAktif.has(kat);
                 const warna = KATEGORI_WARNA[kat];
                 
-                // Logika Desain: Jika aktif, background penuh. Jika tidak, transparan border warna.
                 let styleInline = isAktif 
                     ? `background-color: ${warna}; border-color: ${warna}; color: white;` 
                     : `background-color: white; border-color: ${warna}; color: ${warna};`;
@@ -173,26 +178,26 @@
                 filterAktif.clear();
                 filterAktif.add("Semua");
             } else {
-                filterAktif.delete("Semua"); // Matikan "Semua" jika memilih spesifik
+                filterAktif.delete("Semua"); 
                 
                 if (filterAktif.has(kategoriPilihan)) {
-                    filterAktif.delete(kategoriPilihan); // Uncheck
+                    filterAktif.delete(kategoriPilihan); // Matikan filter kategori ini
                 } else {
-                    filterAktif.add(kategoriPilihan); // Check
+                    filterAktif.add(kategoriPilihan); // Hidupkan filter kategori ini
                 }
                 
-                // Jika kosong setelah di-uncheck, kembalikan ke "Semua"
+                // Jika semua di-uncheck, otomatis kembalikan ke "Semua"
                 if (filterAktif.size === 0) {
                     filterAktif.add("Semua");
                 }
             }
             
-            renderFilterUI(); // Update warna tombol
-            terapkanFilterPeta(); // Update titik peta
+            renderFilterUI(); // Perbarui tampilan tombol
+            terapkanFilterPeta(); // Perbarui marker di peta
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Cek URL Param apakah ada filter bawaan
+            // Cek URL Param apakah ada filter bawaan dari halaman lain
             const filterDariURL = urlParamsPeta.get('filter');
             if (filterDariURL) {
                 const dicari = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === filterDariURL.toLowerCase());
@@ -202,7 +207,7 @@
                 }
             }
 
-            renderFilterUI(); // Buat tombol pertama kali
+            renderFilterUI(); // Tampilkan tombol filter pertama kali
 
             // Inisialisasi Peta
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
@@ -226,7 +231,7 @@
                 })
                 .catch(err => console.log("Batas GeoJSON opsional tidak ditemukan."));
 
-            // LOAD DATA (TOKO lalu TANI)
+            // LOAD DATA CSV (TOKO lalu TANI)
             Papa.parse(URL_CSV_TOKO, {
                 download: true, header: true,
                 complete: function(resToko) {
@@ -248,12 +253,14 @@
             });
         });
 
-        // FUNGSI MENGGAMBAR TITIK KE PETA
+        // FUNGSI MENGGAMBAR TITIK KE PETA (UPDATE BERDASARKAN FILTER)
         function terapkanFilterPeta() {
             layerGrupMarker.clearLayers();
             const tampilSemua = filterAktif.has("Semua");
 
+            // ======================================
             // 1. RENDER TITIK UMKM / TOKO
+            // ======================================
             dataTokoGlobal.forEach(toko => {
                 const stringKategori = toko["Kategori Produk"] || "";
                 const arrayKategori = stringKategori.split(',').map(k => k.trim()).filter(k => k);
@@ -266,12 +273,12 @@
                     // Ambil kategori pertama sebagai warna acuan, atau warna default
                     kategoriUtamaMatched = arrayKategori.length > 0 ? arrayKategori[0] : "Lainnya";
                 } else {
-                    // Cek apakah UMKM ini memiliki kategori yang sedang diceklis di filter
+                    // Cek apakah UMKM ini memiliki kategori yang sedang diceklis
                     for (let kat of arrayKategori) {
                         const catKey = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === kat.toLowerCase());
                         if (catKey && filterAktif.has(catKey)) {
                             isVisible = true;
-                            kategoriUtamaMatched = catKey; // Pakai warna ini
+                            kategoriUtamaMatched = catKey; // Pakai warna tombol yang dicentang
                             break; 
                         }
                     }
@@ -291,7 +298,7 @@
                             
                             // Tentukan warna marker berdasar kategori
                             let warnaMarker = WARNA_DEFAULT;
-                            const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === kategoriUtamaMatched.toLowerCase());
+                            const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === (kategoriUtamaMatched || "").toLowerCase());
                             if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
                             
                             let tombolKategoriHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
@@ -319,10 +326,10 @@
                                 </div>
                             `;
 
-                            // Pasang marker dengan icon kustom SVG
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popupContent);
                             layerGrupMarker.addLayer(marker);
                             
+                            // Logika otomatis buka popup dari URL
                             if (targetTokoBukaPopup && (idToko.toLowerCase() === targetTokoBukaPopup.toLowerCase() || namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); }, 600); 
                                 targetTokoBukaPopup = null; 
@@ -332,7 +339,9 @@
                 }
             });
 
-            // 2. RENDER TITIK HASIL TANI (Hanya jika "Semua" atau "Hasil Tani" terpilih)
+            // ======================================
+            // 2. RENDER TITIK HASIL TANI
+            // ======================================
             if (tampilSemua || filterAktif.has("Hasil Tani")) {
                 const warnaTani = KATEGORI_WARNA["Hasil Tani"];
                 

@@ -101,8 +101,9 @@
         </a>
 
         <!-- STATUS LOADING -->
-        <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse">
-            Mengumpulkan data hasil bumi...
+        <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse flex flex-col items-center justify-center">
+            <svg class="w-10 h-10 mb-3 text-green-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Menggabungkan data profil dan produk...
         </div>
 
         <!-- WADAH KARTU HASIL TANI -->
@@ -170,9 +171,7 @@
                 </div>
             </div>
 
-            <!-- Footer Action Modal -->
             <div class="p-4 bg-gray-50 border-t flex flex-col gap-2 shrink-0">
-                <!-- Tombol Penawaran Baru -->
                 <button id="btn-modal-penawaran" onclick="bukaModalPenawaran()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md">
                     🤝 Ajukan Penawaran Langsung
                 </button>
@@ -188,7 +187,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM PENAWARAN (BARU) -->
+    <!-- MODAL FORM PENAWARAN (Bidding) -->
     <div id="modal-penawaran" class="fixed inset-0 bg-black bg-opacity-75 z-[110] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
         <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[95vh]">
             
@@ -208,7 +207,6 @@
                 <p class="text-gray-500 mb-4 text-xs">Silakan lengkapi data berikut. Sistem akan menyusunnya menjadi pesan WhatsApp yang siap dikirim.</p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Kuantitas & Harga -->
                     <div>
                         <label class="block text-gray-700 font-bold mb-1">Kuantitas Diminta (<span id="label-satuan-penawaran" class="text-green-600">Satuan</span>)*</label>
                         <input type="number" id="form-kuantitas" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="Contoh: 10">
@@ -218,7 +216,6 @@
                         <input type="number" id="form-harga" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="Contoh: 1500000">
                     </div>
                     
-                    <!-- Profil Perusahaan -->
                     <div class="sm:col-span-2 border-t pt-4 mt-2">
                         <label class="block text-gray-700 font-bold mb-1">Nama Perusahaan / Instansi*</label>
                         <input type="text" id="form-perusahaan" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="Misal: PT Maju Tani">
@@ -232,7 +229,6 @@
                         <input type="tel" id="form-telepon" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none" placeholder="0812...">
                     </div>
 
-                    <!-- Alamat -->
                     <div class="sm:col-span-2 border-t pt-4 mt-2 text-gray-700 font-bold">Lokasi Pengiriman / Perusahaan:</div>
                     <div>
                         <label class="block text-gray-600 mb-1 text-xs font-semibold">Provinsi*</label>
@@ -269,12 +265,14 @@
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
-    <!-- SCRIPT LOGIKA -->
+    <!-- SCRIPT LOGIKA UTAMA -->
     <script>
-        const URL_CSV_TANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
+        // LINK DATABASE TERBARU YANG SUDAH DIPISAH (Induk & Anak)
+        const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
+        const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv"; 
         
-        let dataTaniGlobal = [];
-        let indexTaniAktif = null; // Menyimpan data petani mana yang sedang dibuka popup-nya
+        let dataTaniGlobal = []; // Akan menyimpan gabungan Profil dan Produk
+        let indexTaniAktif = null; 
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -289,27 +287,62 @@
             return urlDrive;
         }
 
+        function tampilkanErrorLoading() {
+            document.getElementById("status-loading").innerHTML = `
+                <span class="text-red-500 font-bold">Gagal memuat data hasil tani.</span><br>
+                <span class="text-sm text-gray-500">Silakan periksa koneksi internet atau muat ulang halaman.</span>
+            `;
+            document.getElementById("status-loading").classList.remove("animate-pulse");
+        }
+
+        // ==========================================
+        // SISTEM PENGAMBILAN & PENGGABUNGAN 2 DATA
+        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
-            Papa.parse(URL_CSV_TANI, {
+            // 1. Ambil Profil Petani terlebih dahulu (Tabel Induk)
+            Papa.parse(URL_CSV_PETANI, {
                 download: true,
                 header: true,
-                complete: function(results) {
-                    dataTaniGlobal = results.data.filter(tani => tani["Nama Komoditas"] && tani["Nama Komoditas"].trim() !== "");
-                    document.getElementById("status-loading").classList.add("hidden");
-                    saringDataTani();
+                complete: function(resPetani) {
+                    const dataProfilPetani = resPetani.data;
+
+                    // 2. Setelah Profil selesai, ambil Data Katalog Produknya (Tabel Anak)
+                    Papa.parse(URL_CSV_PRODUK, {
+                        download: true,
+                        header: true,
+                        complete: function(resProduk) {
+                            // Filter baris kosong dari Google Sheets
+                            const dataProdukMentah = resProduk.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
+
+                            // 3. JAHIT / GABUNGKAN DATA
+                            dataTaniGlobal = [];
+                            dataProdukMentah.forEach(produk => {
+                                // Cari profil induk yang kodenya sama
+                                const profilCocok = dataProfilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
+
+                                if (profilCocok) {
+                                    // Gabungkan seluruh data menjadi satu objek untuk ditampilkan di web
+                                    const dataGabungan = { ...profilCocok, ...produk };
+                                    dataTaniGlobal.push(dataGabungan);
+                                }
+                            });
+
+                            document.getElementById("status-loading").classList.add("hidden");
+                            saringDataTani();
+                        },
+                        error: function() { tampilkanErrorLoading(); }
+                    });
                 },
-                error: function(err) {
-                    document.getElementById("status-loading").innerHTML = `
-                        <span class="text-red-500 font-bold">Gagal memuat data hasil tani.</span><br>
-                        <span class="text-sm">Silakan muat ulang halaman.</span>
-                    `;
-                }
+                error: function() { tampilkanErrorLoading(); }
             });
 
             document.getElementById('input-cari').addEventListener('input', saringDataTani);
             document.getElementById('filter-jenis').addEventListener('change', saringDataTani);
         });
 
+        // ==========================================
+        // LOGIKA PENYARINGAN & RENDER KARTU
+        // ==========================================
         function saringDataTani() {
             const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
             const jenisPilih = document.getElementById('filter-jenis').value.toLowerCase();
@@ -386,14 +419,13 @@
             const tani = dataTaniGlobal[index];
             if (!tani) return;
             
-            indexTaniAktif = index; // Simpan untuk referensi saat membuat penawaran
+            indexTaniAktif = index; 
 
             document.getElementById('modal-komoditas').innerText = tani["Nama Komoditas"];
             document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
             document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
             document.getElementById('modal-foto').src = formatGambarDrive(tani["Foto Hasil Tani"]);
             
-            // Format Bulan Panen dengan Badge
             const stringBulan = tani["Bulan Panen"] || "Belum ditentukan";
             const wadahBulan = document.getElementById('modal-bulan');
 
@@ -417,7 +449,6 @@
             const elSatuans = document.querySelectorAll('.satuan-teks');
             elSatuans.forEach(el => el.innerText = satuan);
 
-            // Logika Tombol Peta
             const btnPeta = document.getElementById('btn-modal-peta');
             const lokasi = tani["Lokasi Lahan"];
             if (lokasi && lokasi.includes(',')) {
@@ -430,7 +461,6 @@
                 btnPeta.style.display = 'none';
             }
 
-            // Logika Tombol WA Biasa
             const btnWA = document.getElementById('btn-modal-wa');
             const nomorWA = tani["Nomor Whatsapp (62)"];
             if (nomorWA) {
@@ -438,8 +468,6 @@
                 const pesan = `Halo Bapak/Ibu ${tani["Nama Petani"]}, saya melihat informasi di website Lapak Desa Talumae. Saya tertarik dengan ketersediaan ${tani["Nama Komoditas"]} Anda. Apakah bisa dibantu informasinya?`;
                 btnWA.setAttribute('onclick', `window.open('https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}', '_blank')`);
                 btnWA.style.display = 'flex';
-                
-                // Tampilkan juga tombol Penawaran jika WA ada
                 document.getElementById('btn-modal-penawaran').style.display = 'flex';
             } else {
                 btnWA.style.display = 'none';
@@ -474,12 +502,9 @@
             if (indexTaniAktif === null) return;
             const tani = dataTaniGlobal[indexTaniAktif];
             
-            // Siapkan label form sesuai data petani
             document.getElementById('penawaran-target-petani').innerText = tani["Nama Petani"] || "Petani";
             document.getElementById('penawaran-target-komoditas').innerText = tani["Nama Komoditas"] || "Komoditas";
             document.getElementById('label-satuan-penawaran').innerText = tani["Satuan"] || "Unit";
-            
-            // Sembunyikan pesan error sebelumnya
             document.getElementById('error-penawaran').classList.add('hidden');
             
             const modal = document.getElementById('modal-penawaran');
@@ -496,9 +521,7 @@
             modal.classList.add('opacity-0');
             modal.children[0].classList.remove('scale-100');
             modal.children[0].classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300); 
+            setTimeout(() => { modal.classList.add('hidden'); }, 300); 
         }
 
         function formatRupiah(angka) {
@@ -511,7 +534,6 @@
             const nomorWA = tani["Nomor Whatsapp (62)"];
             if (!nomorWA) return;
 
-            // Ambil Nilai dari Form
             const qty = document.getElementById('form-kuantitas').value.trim();
             const hrg = document.getElementById('form-harga').value.trim();
             const prsh = document.getElementById('form-perusahaan').value.trim();
@@ -520,9 +542,8 @@
             const prov = document.getElementById('form-provinsi').value.trim();
             const kab = document.getElementById('form-kabupaten').value.trim();
             const kec = document.getElementById('form-kecamatan').value.trim();
-            const pos = document.getElementById('form-kodepos').value.trim(); // Opsional
+            const pos = document.getElementById('form-kodepos').value.trim();
 
-            // Validasi Dasar (Cek Kolom Wajib)
             if (!qty || !hrg || !prsh || !eml || !telp || !prov || !kab || !kec) {
                 document.getElementById('error-penawaran').classList.remove('hidden');
                 return;
@@ -532,7 +553,6 @@
             const satuan = tani["Satuan"] || "";
             const hrgFormat = formatRupiah(hrg);
             
-            // Menyusun Pesan WA yang Rapi
             const teksPesan = `Halo Bapak/Ibu *${tani["Nama Petani"]}*,
 
 Perkenalkan, saya dari *${prsh}*. Saya melihat informasi hasil tani Anda di Lapak Desa Talumae dan bermaksud mengajukan penawaran untuk komoditas *${tani["Nama Komoditas"]}*.
@@ -548,7 +568,6 @@ Berikut adalah rincian penawaran kami:
 
 Apakah penawaran ini bisa didiskusikan lebih lanjut? Terima kasih.`;
 
-            // Buka WhatsApp
             window.open(`https://wa.me/${nomorBersih}?text=${encodeURIComponent(teksPesan)}`, '_blank');
             tutupModalPenawaran();
         }
@@ -601,24 +620,34 @@ Apakah penawaran ini bisa didiskusikan lebih lanjut? Terima kasih.`;
                         return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
                     });
 
+                    // Kita cek dari dataTaniGlobal (yang sudah menggabungkan data profil dan produk)
                     const isValidTani = dataTaniGlobal.some(tani => {
-                        const kode = tani["Kode Unik Tani"] || tani["Kode Unik Toko"]; 
+                        const kode = tani["Kode Unik Toko"]; 
                         return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
                     });
 
-                    if (isValidToko || isValidTani) {
-                        pesanError.classList.add('hidden');
-                        const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
-                        window.open(urlTujuan, "_blank");
-                        tutupModalKodeUnik();
-                    } else {
-                        pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
-                        pesanError.classList.remove('hidden');
-                    }
-                    btnValidasi.innerText = "Validasi & Masuk";
-                    btnValidasi.disabled = false;
+                    // Tambahan Pengecekan Khusus: Jika petani punya profil tapi belum isi produk sama sekali
+                    let isPetaniTanpaProduk = false;
+                    Papa.parse(URL_CSV_PETANI, {
+                        download: true, header: true,
+                        complete: function(resPet) {
+                            isPetaniTanpaProduk = resPet.data.some(p => p["Kode Unik Toko"] && p["Kode Unik Toko"].trim().toLowerCase() === inputKode.toLowerCase());
+                            
+                            if (isValidToko || isValidTani || isPetaniTanpaProduk) {
+                                pesanError.classList.add('hidden');
+                                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
+                                window.open(urlTujuan, "_blank");
+                                tutupModalKodeUnik();
+                            } else {
+                                pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                                pesanError.classList.remove('hidden');
+                            }
+                            btnValidasi.innerText = "Validasi & Masuk";
+                            btnValidasi.disabled = false;
+                        }
+                    });
                 },
-                error: function(err) {
+                error: function() {
                     pesanError.innerText = "Gagal menghubungi server validasi.";
                     pesanError.classList.remove('hidden');
                     btnValidasi.innerText = "Validasi & Masuk";

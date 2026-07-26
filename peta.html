@@ -52,19 +52,31 @@
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl flex flex-col">
         
-        <!-- PANEL PENCARIAN PETA -->
+        <!-- PANEL PENCARIAN & FILTER PETA -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 relative z-[20]">
+            
+            <!-- Pencarian Teks -->
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                Cari Lokasi
+                Cari Lokasi Spesifik
             </h3>
-            <div class="relative">
+            <div class="relative mb-5">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <input type="text" id="input-cari-peta" placeholder="Cari nama toko, UMKM, komoditas, atau petani..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition-shadow text-sm">
             </div>
-            <p class="text-[11px] text-gray-400 mt-3 italic">*Ketikkan kata kunci untuk langsung menyaring titik lokasi (pin) yang tampil di peta.</p>
+
+            <!-- Filter Kategori -->
+            <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Saring Kategori Peta
+            </h3>
+            <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5">
+                <!-- Tombol Kategori Di-generate oleh JavaScript -->
+            </div>
+
+            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik lokasi (pin) pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih salah satu kategori di atas.</p>
         </div>
 
         <!-- STATUS LOADING PETA -->
@@ -73,7 +85,7 @@
         </div>
 
         <!-- WADAH PETA -->
-        <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[60vh] md:min-h-[70vh]">
+        <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[50vh] md:min-h-[70vh]">
             <div id="map" class="absolute inset-0 z-[10]"></div>
         </div>
 
@@ -95,7 +107,10 @@
         let dataTokoGlobal = [];
         let dataTaniGlobal = [];
         
-        // KONFIGURASI WARNA MARKER (Tetap dipertahankan untuk pin di peta)
+        // VARIABEL FILTER AKTIF
+        let kategoriAktif = ""; 
+
+        // KONFIGURASI WARNA KATEGORI
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444",
             "Minuman": "#3b82f6",
@@ -142,11 +157,55 @@
             });
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // Jika ada parameter filter dari URL, isikan otomatis ke kolom pencarian
-            if (filterDariURL) {
-                document.getElementById('input-cari-peta').value = filterDariURL;
+        // RENDER UI TOMBOL KATEGORI
+        function renderTombolKategori() {
+            const wadah = document.getElementById('wadah-kategori-peta');
+            let html = "";
+            
+            Object.keys(KATEGORI_WARNA).forEach(kat => {
+                const warnaPin = KATEGORI_WARNA[kat];
+                const isAktif = (kategoriAktif === kat);
+                
+                // Jika aktif, background berwarna. Jika tidak, transparan border berwarna.
+                const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
+                const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
+                
+                html += `
+                    <button onclick="pilihKategori('${kat}')" 
+                        class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none"
+                        style="${isAktif ? styleAktif : styleNormal}">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>
+                        ${kat}
+                    </button>
+                `;
+            });
+            wadah.innerHTML = html;
+        }
+
+        // FUNGSI SAAT KATEGORI DIKLIK
+        function pilihKategori(katDipilih) {
+            // Jika diklik ulang, matikan filternya
+            if (kategoriAktif === katDipilih) {
+                kategoriAktif = "";
+            } else {
+                kategoriAktif = katDipilih;
             }
+            renderTombolKategori();
+            terapkanFilterPeta();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Cek parameter dari index.html (Misal diklik dari kartu makanan)
+            if (filterDariURL) {
+                // Cek apakah itu cocok dengan daftar Kategori
+                if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) {
+                    kategoriAktif = filterDariURL;
+                } else {
+                    document.getElementById('input-cari-peta').value = filterDariURL;
+                }
+            }
+
+            renderTombolKategori();
 
             // Inisialisasi Peta
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
@@ -170,7 +229,7 @@
                 })
                 .catch(err => console.log("Batas GeoJSON opsional tidak ditemukan."));
 
-            // LOAD DATA CSV (TOKO lalu TANI)
+            // LOAD DATA CSV
             Papa.parse(URL_CSV_TOKO, {
                 download: true, header: true,
                 complete: function(resToko) {
@@ -181,6 +240,7 @@
                         complete: function(resTani) {
                             dataTaniGlobal = resTani.data.filter(t => t["Nama Komoditas"] && t["Nama Komoditas"].trim() !== "");
                             
+                            // Render peta sesuai status filter saat diload
                             terapkanFilterPeta(); 
                             
                             const loadingScreen = document.getElementById("status-loading");
@@ -191,14 +251,19 @@
                 }
             });
 
-            // Event listener untuk kolom pencarian
+            // Event listener untuk kolom pencarian teks
             document.getElementById('input-cari-peta').addEventListener('input', terapkanFilterPeta);
         });
 
-        // FUNGSI MENGGAMBAR TITIK KE PETA (UPDATE BERDASARKAN PENCARIAN)
+        // FUNGSI MENGGAMBAR TITIK KE PETA (HANYA MUNCUL JIKA DICARI / DIFILTER)
         function terapkanFilterPeta() {
             layerGrupMarker.clearLayers();
             const teksCari = document.getElementById('input-cari-peta').value.toLowerCase().trim();
+
+            // LOGIKA UTAMA: JIKA PENCARIAN & KATEGORI KOSONG = PETA KOSONG (RETURN)
+            if (teksCari === "" && kategoriAktif === "") {
+                return;
+            }
 
             // ======================================
             // 1. RENDER TITIK UMKM / TOKO
@@ -207,8 +272,20 @@
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
                 
-                // Cek apakah pencarian cocok dengan nama toko atau kategorinya
-                if (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari)) {
+                const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
+                const cocokKategori = (kategoriAktif === "") ? true : stringKategori.toLowerCase().includes(kategoriAktif.toLowerCase());
+
+                // Keputusan tampil
+                let tampilkan = false;
+                if (teksCari !== "" && kategoriAktif !== "") {
+                    tampilkan = cocokTeks && cocokKategori; // Harus cocok keduanya
+                } else if (teksCari !== "") {
+                    tampilkan = cocokTeks;
+                } else if (kategoriAktif !== "") {
+                    tampilkan = cocokKategori;
+                }
+
+                if (tampilkan) {
                     const lokasi = toko["Lokasi Toko"];
                     if (lokasi && lokasi.includes(',')) {
                         const kordinat = lokasi.split(',');
@@ -222,7 +299,6 @@
                             const arrayKategori = stringKategori.split(',').map(k => k.trim()).filter(k => k);
                             const kategoriUtamaMatched = arrayKategori.length > 0 ? arrayKategori[0] : "Lainnya";
 
-                            // Tentukan warna marker berdasar kategori pertama
                             let warnaMarker = WARNA_DEFAULT;
                             const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === kategoriUtamaMatched.toLowerCase());
                             if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
@@ -255,7 +331,6 @@
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popupContent);
                             layerGrupMarker.addLayer(marker);
                             
-                            // Logika otomatis buka popup dari URL
                             if (targetTokoBukaPopup && (idToko.toLowerCase() === targetTokoBukaPopup.toLowerCase() || namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); }, 600); 
                                 targetTokoBukaPopup = null; 
@@ -274,8 +349,19 @@
                 const komoditas = tani["Nama Komoditas"] || "Hasil Bumi";
                 const petani = tani["Nama Petani"] || "Petani Lokal";
 
-                // Cek apakah pencarian cocok dengan nama komoditas atau petani
-                if (komoditas.toLowerCase().includes(teksCari) || petani.toLowerCase().includes(teksCari)) {
+                const cocokTeks = (komoditas.toLowerCase().includes(teksCari) || petani.toLowerCase().includes(teksCari));
+                const cocokKategori = (kategoriAktif === "") ? true : (kategoriAktif.toLowerCase() === "hasil tani");
+
+                let tampilkan = false;
+                if (teksCari !== "" && kategoriAktif !== "") {
+                    tampilkan = cocokTeks && cocokKategori;
+                } else if (teksCari !== "") {
+                    tampilkan = cocokTeks;
+                } else if (kategoriAktif !== "") {
+                    tampilkan = cocokKategori;
+                }
+
+                if (tampilkan) {
                     const lokasi = tani["Lokasi Lahan"];
                     if (lokasi && lokasi.includes(',')) {
                         const kordinat = lokasi.split(',');

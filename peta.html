@@ -87,6 +87,11 @@
         <!-- WADAH PETA -->
         <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[50vh] md:min-h-[70vh]">
             <div id="map" class="absolute inset-0 z-[10]"></div>
+            
+            <!-- TOMBOL LIVE LOCATION -->
+            <button onclick="cariLokasiSaya()" class="absolute bottom-6 right-6 z-[1000] bg-white text-blue-600 p-3.5 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all flex items-center justify-center group" title="Temukan Lokasi Saya">
+                <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
         </div>
 
     </main>
@@ -107,8 +112,12 @@
         let dataTokoGlobal = [];
         let dataTaniGlobal = [];
         
-        // VARIABEL FILTER AKTIF (Diubah menjadi Array untuk Multi-Select)
+        // VARIABEL FILTER AKTIF 
         let kategoriAktif = []; 
+
+        // VARIABEL LOKASI SAYA
+        let markerLokasiSaya = null;
+        let circleLokasiSaya = null;
 
         // KONFIGURASI WARNA KATEGORI
         const KATEGORI_WARNA = {
@@ -129,7 +138,7 @@
 
         const urlParamsPeta = new URLSearchParams(window.location.search);
         let targetTokoBukaPopup = urlParamsPeta.get('toko'); 
-        const filterDariURL = urlParamsPeta.get('filter'); // Jika diarahkan dari index
+        const filterDariURL = urlParamsPeta.get('filter');
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -144,7 +153,6 @@
             return urlDrive;
         }
 
-        // FUNGSI MEMBUAT PIN MARKER DENGAN WARNA KHUSUS (SVG)
         function buatMarkerSVG(warnaHex) {
             return L.divIcon({
                 className: "bg-transparent",
@@ -157,7 +165,6 @@
             });
         }
 
-        // RENDER UI TOMBOL KATEGORI (Mendukung visual banyak tombol aktif)
         function renderTombolKategori() {
             const wadah = document.getElementById('wadah-kategori-peta');
             let html = "";
@@ -166,7 +173,6 @@
                 const warnaPin = KATEGORI_WARNA[kat];
                 const isAktif = kategoriAktif.includes(kat);
                 
-                // Jika aktif, background berwarna. Jika tidak, transparan border berwarna.
                 const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
                 const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
                 
@@ -182,25 +188,33 @@
             wadah.innerHTML = html;
         }
 
-        // FUNGSI SAAT KATEGORI DIKLIK (Logika Toggle Array)
         function pilihKategori(katDipilih) {
             const index = kategoriAktif.indexOf(katDipilih);
             if (index > -1) {
-                // Jika kategori sudah ada di array (sedang aktif), hapus (Matikan)
                 kategoriAktif.splice(index, 1);
             } else {
-                // Jika belum ada di array, tambahkan (Nyalakan)
                 kategoriAktif.push(katDipilih);
             }
             renderTombolKategori();
             terapkanFilterPeta();
         }
 
+        // ======================================
+        // FUNGSI LIVE LOCATION
+        // ======================================
+        function cariLokasiSaya() {
+            if (navigator.geolocation) {
+                // Memerintahkan peta mencari lokasi dan melakukan zoom otomatis
+                petaLeaflet.locate({setView: true, maxZoom: 16});
+            } else {
+                alert("Maaf, browser atau perangkat Anda tidak mendukung fitur lokasi GPS.");
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
-            // Cek parameter dari index.html
             if (filterDariURL) {
                 if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) {
-                    kategoriAktif.push(filterDariURL); // Langsung masukkan ke array aktif
+                    kategoriAktif.push(filterDariURL); 
                 } else {
                     document.getElementById('input-cari-peta').value = filterDariURL;
                 }
@@ -218,6 +232,40 @@
             }).addTo(petaLeaflet);
 
             layerGrupMarker = L.layerGroup().addTo(petaLeaflet);
+
+            // Event saat lokasi berhasil didapatkan
+            petaLeaflet.on('locationfound', function(e) {
+                const radiusAkurasi = e.accuracy / 2;
+
+                // Hapus penanda lokasi sebelumnya jika ada
+                if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
+                if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
+
+                // Buat Titik Biru Khas "Live Location"
+                const ikonLokasi = L.divIcon({
+                    className: "bg-transparent",
+                    html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8],
+                    popupAnchor: [0, -10]
+                });
+
+                markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet)
+                    .bindPopup(`<strong>Lokasi Anda Saat Ini</strong><br><span class="text-xs text-gray-500">Akurasi: ± ${radiusAkurasi.toFixed(0)} meter</span>`).openPopup();
+                
+                // Buat bayangan akurasi
+                circleLokasiSaya = L.circle(e.latlng, radiusAkurasi, {
+                    color: '#3b82f6',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.15,
+                    weight: 1
+                }).addTo(petaLeaflet);
+            });
+
+            // Event jika lokasi gagal (Ditolak pengguna atau error)
+            petaLeaflet.on('locationerror', function(e) {
+                alert("Gagal mengakses lokasi. Pastikan GPS/Lokasi di HP Anda menyala dan Anda telah memberikan izin 'Allow' pada browser.");
+            });
 
             // MENGAMBIL BATAS DUSUN DARI GEOJSON
             fetch('data/Batas_Dusun_Talumae.geojson')
@@ -241,7 +289,6 @@
                         complete: function(resTani) {
                             dataTaniGlobal = resTani.data.filter(t => t["Nama Komoditas"] && t["Nama Komoditas"].trim() !== "");
                             
-                            // Render peta sesuai status filter saat diload
                             terapkanFilterPeta(); 
                             
                             const loadingScreen = document.getElementById("status-loading");
@@ -252,7 +299,6 @@
                 }
             });
 
-            // Event listener untuk kolom pencarian teks
             document.getElementById('input-cari-peta').addEventListener('input', terapkanFilterPeta);
         });
 
@@ -264,7 +310,6 @@
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
-            // LOGIKA UTAMA: JIKA PENCARIAN & KATEGORI KOSONG = PETA KOSONG
             if (!filterTeksAda && !filterKategoriAda) {
                 return;
             }
@@ -277,13 +322,11 @@
                 const stringKategori = toko["Kategori Produk"] || "";
                 
                 const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
-                
-                // Cek apakah kategori UMKM ini cocok dengan SALAH SATU kategori yang sedang aktif (Array)
                 const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
                 let tampilkan = false;
                 if (filterTeksAda && filterKategoriAda) {
-                    tampilkan = cocokTeks && cocokKategori; // Harus sesuai teks DAN masuk di kategori yg dipilih
+                    tampilkan = cocokTeks && cocokKategori;
                 } else if (filterTeksAda) {
                     tampilkan = cocokTeks;
                 } else if (filterKategoriAda) {

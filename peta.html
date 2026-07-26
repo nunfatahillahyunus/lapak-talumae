@@ -76,7 +76,7 @@
                 <!-- Tombol Kategori Di-generate oleh JavaScript -->
             </div>
 
-            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik lokasi (pin) pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih salah satu kategori di atas.</p>
+            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik lokasi (pin) pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih satu/beberapa kategori di atas.</p>
         </div>
 
         <!-- STATUS LOADING PETA -->
@@ -107,8 +107,8 @@
         let dataTokoGlobal = [];
         let dataTaniGlobal = [];
         
-        // VARIABEL FILTER AKTIF
-        let kategoriAktif = ""; 
+        // VARIABEL FILTER AKTIF (Diubah menjadi Array untuk Multi-Select)
+        let kategoriAktif = []; 
 
         // KONFIGURASI WARNA KATEGORI
         const KATEGORI_WARNA = {
@@ -157,14 +157,14 @@
             });
         }
 
-        // RENDER UI TOMBOL KATEGORI
+        // RENDER UI TOMBOL KATEGORI (Mendukung visual banyak tombol aktif)
         function renderTombolKategori() {
             const wadah = document.getElementById('wadah-kategori-peta');
             let html = "";
             
             Object.keys(KATEGORI_WARNA).forEach(kat => {
                 const warnaPin = KATEGORI_WARNA[kat];
-                const isAktif = (kategoriAktif === kat);
+                const isAktif = kategoriAktif.includes(kat);
                 
                 // Jika aktif, background berwarna. Jika tidak, transparan border berwarna.
                 const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
@@ -182,24 +182,25 @@
             wadah.innerHTML = html;
         }
 
-        // FUNGSI SAAT KATEGORI DIKLIK
+        // FUNGSI SAAT KATEGORI DIKLIK (Logika Toggle Array)
         function pilihKategori(katDipilih) {
-            // Jika diklik ulang, matikan filternya
-            if (kategoriAktif === katDipilih) {
-                kategoriAktif = "";
+            const index = kategoriAktif.indexOf(katDipilih);
+            if (index > -1) {
+                // Jika kategori sudah ada di array (sedang aktif), hapus (Matikan)
+                kategoriAktif.splice(index, 1);
             } else {
-                kategoriAktif = katDipilih;
+                // Jika belum ada di array, tambahkan (Nyalakan)
+                kategoriAktif.push(katDipilih);
             }
             renderTombolKategori();
             terapkanFilterPeta();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Cek parameter dari index.html (Misal diklik dari kartu makanan)
+            // Cek parameter dari index.html
             if (filterDariURL) {
-                // Cek apakah itu cocok dengan daftar Kategori
                 if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) {
-                    kategoriAktif = filterDariURL;
+                    kategoriAktif.push(filterDariURL); // Langsung masukkan ke array aktif
                 } else {
                     document.getElementById('input-cari-peta').value = filterDariURL;
                 }
@@ -255,13 +256,16 @@
             document.getElementById('input-cari-peta').addEventListener('input', terapkanFilterPeta);
         });
 
-        // FUNGSI MENGGAMBAR TITIK KE PETA (HANYA MUNCUL JIKA DICARI / DIFILTER)
+        // FUNGSI MENGGAMBAR TITIK KE PETA
         function terapkanFilterPeta() {
             layerGrupMarker.clearLayers();
             const teksCari = document.getElementById('input-cari-peta').value.toLowerCase().trim();
 
-            // LOGIKA UTAMA: JIKA PENCARIAN & KATEGORI KOSONG = PETA KOSONG (RETURN)
-            if (teksCari === "" && kategoriAktif === "") {
+            const filterTeksAda = teksCari !== "";
+            const filterKategoriAda = kategoriAktif.length > 0;
+
+            // LOGIKA UTAMA: JIKA PENCARIAN & KATEGORI KOSONG = PETA KOSONG
+            if (!filterTeksAda && !filterKategoriAda) {
                 return;
             }
 
@@ -273,15 +277,16 @@
                 const stringKategori = toko["Kategori Produk"] || "";
                 
                 const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
-                const cocokKategori = (kategoriAktif === "") ? true : stringKategori.toLowerCase().includes(kategoriAktif.toLowerCase());
+                
+                // Cek apakah kategori UMKM ini cocok dengan SALAH SATU kategori yang sedang aktif (Array)
+                const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
-                // Keputusan tampil
                 let tampilkan = false;
-                if (teksCari !== "" && kategoriAktif !== "") {
-                    tampilkan = cocokTeks && cocokKategori; // Harus cocok keduanya
-                } else if (teksCari !== "") {
+                if (filterTeksAda && filterKategoriAda) {
+                    tampilkan = cocokTeks && cocokKategori; // Harus sesuai teks DAN masuk di kategori yg dipilih
+                } else if (filterTeksAda) {
                     tampilkan = cocokTeks;
-                } else if (kategoriAktif !== "") {
+                } else if (filterKategoriAda) {
                     tampilkan = cocokKategori;
                 }
 
@@ -350,14 +355,14 @@
                 const petani = tani["Nama Petani"] || "Petani Lokal";
 
                 const cocokTeks = (komoditas.toLowerCase().includes(teksCari) || petani.toLowerCase().includes(teksCari));
-                const cocokKategori = (kategoriAktif === "") ? true : (kategoriAktif.toLowerCase() === "hasil tani");
+                const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => kat.toLowerCase() === "hasil tani");
 
                 let tampilkan = false;
-                if (teksCari !== "" && kategoriAktif !== "") {
+                if (filterTeksAda && filterKategoriAda) {
                     tampilkan = cocokTeks && cocokKategori;
-                } else if (teksCari !== "") {
+                } else if (filterTeksAda) {
                     tampilkan = cocokTeks;
-                } else if (kategoriAktif !== "") {
+                } else if (filterKategoriAda) {
                     tampilkan = cocokKategori;
                 }
 

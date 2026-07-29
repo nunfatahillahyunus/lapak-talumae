@@ -112,7 +112,6 @@
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
 
-        // Kategori Warna (Tanpa Titik Penting, karena Titik Penting akan selalu ada, tidak perlu tombol filter)
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
             "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
@@ -168,8 +167,8 @@
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps' }).addTo(petaLeaflet);
             
-            layerGrupMarker = L.layerGroup().addTo(petaLeaflet); // Layer untuk UMKM & Tani (Bisa di-clear)
-            layerGrupTitik = L.layerGroup().addTo(petaLeaflet);  // Layer khusus Titik Penting (Permanen)
+            layerGrupMarker = L.layerGroup().addTo(petaLeaflet); 
+            layerGrupTitik = L.layerGroup().addTo(petaLeaflet);  
 
             // Fitur Lokasi Saya
             petaLeaflet.on('locationfound', function(e) {
@@ -196,37 +195,45 @@
                 geojsonTani = geoTani;
 
                 // ----------------------------------------------------
-                // RENDER TITIK PENTING SECARA PERMANEN DI SINI
+                // RENDER TITIK PENTING (DENGAN TOMBOL GOOGLE MAPS)
                 // ----------------------------------------------------
                 if (geoTitik && geoTitik.features) {
                     geoTitik.features.forEach(feature => {
-                        // CEGAH CRASH JIKA KOORDINAT KOSONG (Seperti SDN 1 Mojong fid: 10)
-                        if (!feature.geometry) return; 
+                        if (!feature.geometry || !feature.geometry.coordinates) return; 
+                        
+                        // Ekstrak Kordinat dari GeoJSON [longitude, latitude]
+                        const lng = feature.geometry.coordinates[0];
+                        const lat = feature.geometry.coordinates[1];
                         
                         const props = feature.properties || {};
                         const namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
 
                         const titikMarker = L.geoJSON(feature, {
                             pointToLayer: function (geoJsonPoint, latlng) {
-                                return L.marker(latlng, { icon: buatMarkerSVG("#ef4444") }); // Warna Merah
+                                return L.marker(latlng, { icon: buatMarkerSVG("#ef4444") });
                             }
                         });
 
                         const popupHTML = `
-                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[180px]">
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
                                 <div class="p-3 border-b-4 border-red-500 bg-red-50 flex flex-col items-center">
                                     <span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-1 inline-block">Titik Penting Desa</span>
-                                    <h3 class="font-bold text-gray-900 text-sm leading-tight text-center">${namaTitik}</h3>
+                                    <h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaTitik}</h3>
+                                </div>
+                                <div class="p-3 text-center bg-white flex flex-col gap-2">
+                                    <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        Buka Google Maps
+                                    </a>
                                 </div>
                             </div>
                         `;
                         
                         titikMarker.bindPopup(popupHTML);
-                        layerGrupTitik.addLayer(titikMarker); // Masuk ke layer permanen
+                        layerGrupTitik.addLayer(titikMarker);
                     });
                 }
 
-                // Eksekusi Parameter URL
                 if (filterDariURL) {
                     if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                     else document.getElementById('input-cari-peta').value = filterDariURL;
@@ -247,9 +254,8 @@
             document.getElementById('input-cari-peta').addEventListener('input', window.terapkanFilterPeta);
         });
 
-        // PENGGAMBARAN UMKM DAN POLIGON TANI (Bisa difilter/dibersihkan)
         window.terapkanFilterPeta = function() {
-            layerGrupMarker.clearLayers(); // Hanya membersihkan UMKM & Tani. Titik Penting aman.
+            layerGrupMarker.clearLayers(); 
             
             const teksCari = document.getElementById('input-cari-peta').value.toLowerCase().trim();
             const filterTeksAda = teksCari !== "";
@@ -257,7 +263,7 @@
 
             if (!filterTeksAda && !filterKategoriAda) return;
 
-            // 1. RENDER TITIK UMKM (CSV)
+            // 1. RENDER TITIK UMKM
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
@@ -299,13 +305,13 @@
                 }
             });
 
-            // 2. RENDER POLIGON TANI (GEOJSON)
+            // 2. RENDER POLIGON TANI
             if (geojsonTani && geojsonTani.features) {
                 geojsonTani.features.forEach(feature => {
                     if(!feature.geometry) return;
 
                     const props = feature.properties || {};
-                    const jenisTani = props["Jenis Tani"] || "Hasil Tani"; // Tani Sawah / Tani Sayur
+                    const jenisTani = props["Jenis Tani"] || "Hasil Tani"; 
                     
                     const cocokTeks = jenisTani.toLowerCase().includes(teksCari);
                     const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === jenisTani.toLowerCase());
@@ -314,9 +320,9 @@
                         (filterTeksAda && !filterKategoriAda && cocokTeks) || 
                         (!filterTeksAda && filterKategoriAda && cocokKategori)) {
                         
-                        let warnaPoli = "#22c55e"; // Default hijau
-                        if (jenisTani.toLowerCase().includes("sawah")) warnaPoli = "#eab308"; // Kuning Sawah
-                        if (jenisTani.toLowerCase().includes("sayur")) warnaPoli = "#22c55e"; // Hijau Sayur
+                        let warnaPoli = "#22c55e"; 
+                        if (jenisTani.toLowerCase().includes("sawah")) warnaPoli = "#eab308"; 
+                        if (jenisTani.toLowerCase().includes("sayur")) warnaPoli = "#22c55e"; 
 
                         const poligon = L.geoJSON(feature, {
                             style: { color: warnaPoli, weight: 2, fillColor: warnaPoli, fillOpacity: 0.4 }
@@ -329,7 +335,10 @@
                                 </div>
                                 <div class="p-3 text-center bg-white flex flex-col gap-2">
                                     <p class="text-xs text-gray-500 mb-2">Area Lahan Pertanian Desa</p>
-                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a>
+                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Buka Bursa Tani
+                                    </a>
                                 </div>
                             </div>
                         `;

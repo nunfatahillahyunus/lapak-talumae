@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapak Desa Talumae</title>
-    
-    <!-- INI YANG SEBELUMNYA TERHAPUS (Tailwind CSS) -->
+    <title>Katalog UMKM - Lapak Desa Talumae</title>
+    <!-- Tailwind & PapaParse -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Parser Database dan Logika Aplikasi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="js/app.js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
@@ -53,30 +49,144 @@
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
-        
-        <!-- STATUS LOADING -->
         <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse flex flex-col items-center">
             <svg class="w-10 h-10 mb-3 text-green-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             Mengambil data etalase...
         </div>
 
-        <!-- WADAH KARTU KATALOG -->
-        <div id="wadah-katalog" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden">
-            <!-- Kartu di-generate oleh JS -->
-        </div>
+        <div id="wadah-katalog" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden"></div>
 
-        <!-- PESAN KOSONG -->
         <div id="pesan-kosong" class="hidden text-center py-16 text-gray-500">
             <span class="text-6xl mb-4 block">🏬</span>
             <p class="text-xl font-bold text-gray-700">Belum ada toko di kategori ini.</p>
             <p class="text-sm mt-2">Silakan kembali dan pilih kategori lainnya.</p>
         </div>
-
     </main>
 
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
+    <!-- SCRIPT KHUSUS KATALOG -->
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
+        }
+
+        // Fungsi Download Cache
+        async function fetchCSV(url) {
+            const cacheKey = "cache_" + url;
+            const cachedText = sessionStorage.getItem(cacheKey);
+            const cacheTime = sessionStorage.getItem(cacheKey + "_time");
+
+            if (cachedText && cacheTime && (Date.now() - parseInt(cacheTime) < 300000)) {
+                return new Promise(resolve => Papa.parse(cachedText, { header: true, skipEmptyLines: true, complete: resolve }));
+            }
+            try {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                sessionStorage.setItem(cacheKey, csvText);
+                sessionStorage.setItem(cacheKey + "_time", Date.now().toString());
+                return new Promise(resolve => Papa.parse(csvText, { header: true, skipEmptyLines: true, complete: resolve }));
+            } catch (error) { throw error; }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const kategoriDicari = urlParams.get('jenis');
+            const tokoDicari = urlParams.get('toko');
+
+            if (kategoriDicari) {
+                document.getElementById('judul-kategori').innerText = `Kategori: ${kategoriDicari}`;
+                document.getElementById('sub-judul-kategori').innerText = `Menampilkan etalase warga yang menyediakan ${kategoriDicari}.`;
+            }
+
+            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+
+            fetchCSV(URL_CSV_TOKO).then(results => {
+                const dataToko = results.data;
+                let dataTersaring = [];
+
+                dataToko.forEach(toko => {
+                    const namaToko = toko["Nama Toko"];
+                    if (!namaToko || namaToko.trim() === "") return;
+
+                    const stringKategori = toko["Kategori Produk"] || "";
+                    const idToko = toko["Kode Unik Toko"] || namaToko;
+
+                    let masukKriteria = false;
+                    if (tokoDicari) {
+                        if (idToko.toLowerCase() === tokoDicari.toLowerCase() || namaToko.toLowerCase() === tokoDicari.toLowerCase()) masukKriteria = true;
+                    } else if (kategoriDicari) {
+                        if (stringKategori.toLowerCase().includes(kategoriDicari.toLowerCase())) masukKriteria = true;
+                    } else {
+                        masukKriteria = true;
+                    }
+
+                    if (masukKriteria) dataTersaring.push(toko);
+                });
+
+                renderKatalog(dataTersaring);
+            }).catch(() => {
+                document.getElementById('status-loading').innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data. Periksa koneksi Anda.</span>`;
+            });
+        });
+
+        function renderKatalog(data) {
+            document.getElementById('status-loading').classList.add('hidden');
+            const wadah = document.getElementById('wadah-katalog');
+            const pesanKosong = document.getElementById('pesan-kosong');
+
+            if (data.length === 0) {
+                pesanKosong.classList.remove('hidden');
+                return;
+            }
+
+            wadah.classList.remove('hidden');
+            let elemenHTML = "";
+
+            data.forEach(toko => {
+                const nama = toko["Nama Toko"];
+                const pemilik = toko["Nama Pemilik"] || "Warga Talumae";
+                const lokasi = toko["Lokasi Toko"];
+                const wa = toko["Nomor Whatsapp (62)"];
+                const kategori = toko["Kategori Produk"] || "Umum";
+                const deskripsi = toko["Deskripsi Singkat"] || "Toko kelontong dan usaha warga desa.";
+
+                let tombolWA = "";
+                if (wa) {
+                    const nomorBersih = wa.toString().replace(/[^0-9]/g, '');
+                    const pesan = `Halo ${nama}, saya melihat toko Anda di website Lapak Desa Talumae. Saya ingin bertanya tentang produk Anda.`;
+                    tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">💬 Hubungi</a>`;
+                }
+
+                let tombolPeta = "";
+                if (lokasi && lokasi.includes(',')) {
+                    tombolPeta = `<a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm">📍 Lokasi</a>`;
+                }
+
+                const labelKategori = kategori.split(',')[0].trim();
+
+                elemenHTML += `
+                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
+                        <div class="bg-yellow-50 px-5 py-4 border-b border-yellow-100 flex justify-between items-center">
+                            <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-md uppercase shadow-sm">${labelKategori}</span>
+                            <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🏪</span>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow">
+                            <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${nama}</h3>
+                            <p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider">👤 Bpk/Ibu ${pemilik}</p>
+                            <p class="text-sm text-gray-600 mb-5 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>
+                            <div class="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
+                                ${tombolWA}
+                                ${tombolPeta}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            wadah.innerHTML = elemenHTML;
+        }
+    </script>
 </body>
 </html>

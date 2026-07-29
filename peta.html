@@ -33,12 +33,10 @@
         </button>
         <div class="p-6 pt-16 flex-grow">
             <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
-            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🏠 Beranda</a>
-            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors mt-2">🌾 Hasil Tani</a>
-            <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
+            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
+            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🌾 Hasil Tani</a>
+            <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3 mt-2">🗺️ Peta Lokasi UMKM</a>
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
-            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
-            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
 
@@ -63,10 +61,9 @@
             <p class="text-[11px] text-gray-400 mt-4 italic">*Titik lokasi (pin) pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih satu/beberapa kategori di atas.</p>
         </div>
 
-        <!-- WADAH PETA DENGAN OVERLAY LOADING -->
+        <!-- WADAH PETA -->
         <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[50vh] md:min-h-[70vh]">
-            
-            <!-- OVERLAY LOADING DATA -->
+            <!-- OVERLAY LOADING -->
             <div id="data-loading-overlay" class="absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-500">
                 <svg class="w-10 h-10 mb-3 text-green-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 <span class="text-sm font-bold text-green-800">Menyinkronkan data lokasi...</span>
@@ -74,7 +71,6 @@
 
             <div id="map" class="absolute inset-0 z-[10]"></div>
             
-            <!-- TOMBOL LIVE LOCATION -->
             <button onclick="cariLokasiSaya()" class="absolute bottom-6 right-6 z-[1000] bg-white text-blue-600 p-3.5 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 transition-all flex items-center justify-center group" title="Temukan Lokasi Saya">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </button>
@@ -114,11 +110,15 @@
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
 
+        // DITAMBAHKAN 4 KATEGORI BARU & WARNANYA
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
             "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
             "ATK": "#d946ef", "Makanan Hewan": "#f97316", "Kosmetik": "#ec4899",
-            "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", "Hasil Tani": "#22c55e"
+            "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", 
+            "Pangkas Rambut": "#6366f1", "Fresh Food": "#84cc16", 
+            "Frozen Food": "#0ea5e9", "Alat & Pakan Ternak": "#f59e0b",
+            "Hasil Tani": "#22c55e"
         };
         const WARNA_DEFAULT = "#6b7280";
 
@@ -192,13 +192,11 @@
                     if (profilCocok) dataTaniPeta.push({ ...profilCocok, ...produk });
                 });
 
-                // Set up filter awal dari URL jika ada
                 if (filterDariURL) {
                     if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                     else document.getElementById('input-cari-peta').value = filterDariURL;
                 }
                 
-                // INI KUNCI UTAMANYA: MENGISI SEARCH BOX DENGAN NAMA TOKO DARI KATALOG
                 if (targetTokoBukaPopup) {
                     document.getElementById('input-cari-peta').value = targetTokoBukaPopup;
                 }
@@ -223,7 +221,6 @@
 
             if (!filterTeksAda && !filterKategoriAda) return;
 
-            // RENDER UMKM
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
@@ -241,7 +238,6 @@
                         const lat = parseFloat(lokasi.split(',')[0].trim());
                         const lng = parseFloat(lokasi.split(',')[1].trim());
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            const idToko = toko["Kode Unik Toko"] || namaToko; 
                             const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
                             
                             let warnaMarker = WARNA_DEFAULT;
@@ -249,16 +245,21 @@
                             if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
                             
                             let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
-                            if(arrKat.length > 0) arrKat.forEach(kat => tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}" class="inline-block w-full text-center bg-gray-50 hover:bg-green-600 text-gray-700 hover:text-white border border-gray-300 hover:border-green-600 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`);
-                            else tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
+                            if(arrKat.length > 0) {
+                                arrKat.forEach(kat => {
+                                    // LINK MENGIRIM NAMA TOKO
+                                    tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(namaToko)}" class="inline-block w-full text-center bg-white border border-gray-300 hover:bg-green-600 hover:text-white hover:border-green-600 text-gray-700 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`;
+                                });
+                            } else {
+                                tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
+                            }
                             tombolHTML += `</div>`;
 
                             const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-4 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-lg leading-tight text-center">${namaToko}</h3></div><div class="p-4 text-center bg-white flex flex-col gap-2">${tombolHTML}<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm mt-1">📍 Buka Google Maps</a></div></div>`;
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
                             layerGrupMarker.addLayer(marker);
                             
-                            // Logika Pembuka Popup Otomatis
-                            if (targetTokoBukaPopup && (idToko.toLowerCase() === targetTokoBukaPopup.toLowerCase() || namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
+                            if (targetTokoBukaPopup && (namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); targetTokoBukaPopup=null; }, 600); 
                             }
                         }
@@ -266,7 +267,6 @@
                 }
             });
 
-            // RENDER HASIL TANI
             const warnaTani = KATEGORI_WARNA["Hasil Tani"];
             dataTaniPeta.forEach(tani => {
                 const kom = tani["Nama Komoditas"] || "Hasil Bumi";
@@ -289,7 +289,6 @@
                             const markerTani = L.marker([lat, lng], { icon: buatMarkerSVG(warnaTani) }).bindPopup(popup);
                             layerGrupMarker.addLayer(markerTani);
 
-                            // Logika Pembuka Popup Otomatis untuk Tani
                             if (targetTokoBukaPopup && (kom.toLowerCase() === targetTokoBukaPopup.toLowerCase() || pet.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); markerTani.openPopup(); targetTokoBukaPopup=null; }, 600); 
                             }

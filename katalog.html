@@ -226,6 +226,10 @@
                 document.getElementById('sub-judul-kategori').innerText = `Menampilkan etalase warga yang menyediakan ${kategoriDicari}.`;
             }
 
+            if (tokoDicari) {
+                document.getElementById('input-cari-toko').value = tokoDicari;
+            }
+
             fetchCSV(URL_CSV_TOKO).then(results => {
                 const dataToko = results.data;
                 let dataTersaring = [];

@@ -201,7 +201,6 @@
                     geoTitik.features.forEach(feature => {
                         if (!feature.geometry || !feature.geometry.coordinates) return; 
                         
-                        // Ekstrak Kordinat dari GeoJSON [longitude, latitude]
                         const lng = feature.geometry.coordinates[0];
                         const lat = feature.geometry.coordinates[1];
                         
@@ -291,6 +290,15 @@
                                     tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(namaToko)}" class="inline-block w-full text-center bg-white border border-gray-300 hover:bg-green-600 hover:text-white hover:border-green-600 text-gray-700 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`;
                                 });
                             }
+                            
+                            // TOMBOL GOOGLE MAPS UNTUK UMKM DITAMBAHKAN DI SINI
+                            tombolHTML += `
+                                <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5 mt-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    Buka Google Maps
+                                </a>
+                            `;
+                            
                             tombolHTML += `</div>`;
 
                             const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-3 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}</div></div>`;

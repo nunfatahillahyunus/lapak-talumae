@@ -1,535 +1,516 @@
 // ==========================================
-// 1. VARIABEL GLOBAL & DATABASE
+// 1. KONFIGURASI DATABASE (Link CSV)
 // ==========================================
-let dataKatalogGlobal = [];
-let dataProdukGlobal = []; 
-
-const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
-const urlCSVProduk = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=263400492&single=true&output=csv";
+const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv";
+const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv";
 
 // ==========================================
-// 2. DETEKSI PARAMETER URL & ALAT BANTU
+// 2. FUNGSI UMUM & HELPER
 // ==========================================
-const urlParams = new URLSearchParams(window.location.search);
-const kategoriAktif = urlParams.get('jenis'); 
-const tokoBukaOtomatis = urlParams.get('toko');
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    if (sidebar) sidebar.classList.toggle('-translate-x-full');
+}
 
+// Fungsi Pintar Pembaca Foto (Bisa Link Drive atau Nama File Lokal)
+function formatGambar(sumberFoto) {
+    if (!sumberFoto || sumberFoto.trim() === "") return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
+    if (sumberFoto.includes("drive.google.com") || sumberFoto.includes("http")) {
+        const match = sumberFoto.match(/([-\w]{25,})/);
+        if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w600`;
+        return sumberFoto;
+    } 
+    let namaFile = sumberFoto.trim();
+    if (namaFile.includes("/")) namaFile = namaFile.split('/').pop(); 
+    return `img_umkm/${namaFile}`;
+}
+
+// Fungsi Download Paralel Cepat
+function fetchCSV(url) {
+    return new Promise((resolve, reject) => {
+        Papa.parse(url, { download: true, header: true, fastMode: true, complete: resolve, error: reject });
+    });
+}
+
+// ==========================================
+// 3. RUTING OTOMATIS (Deteksi Halaman Aktif)
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    if (kategoriAktif) {
-        const judulEl = document.getElementById("judul-kategori");
-        const descEl = document.getElementById("deskripsi-kategori");
-        if(judulEl) judulEl.innerText = "Kategori: " + kategoriAktif;
-        if(descEl) descEl.innerText = "Menampilkan etalase warga yang menyediakan " + kategoriAktif + ".";
-        document.title = kategoriAktif + " - Lapak Desa Talumae";
-    }
+    // Deteksi berdasarkan ID elemen utama di masing-masing halaman
+    const isHalamanKatalog = document.getElementById('wadah-katalog') !== null;
+    const isHalamanPeta = document.getElementById('map') !== null;
+    const isHalamanTani = document.getElementById('wadah-tani') !== null;
+
+    // Jalankan logika sesuai halaman yang terbuka (Mencegah Crash Script)
+    if (isHalamanKatalog) initKatalog();
+    if (isHalamanPeta) initPeta();
+    if (isHalamanTani) initTani();
 });
 
-function formatGambar(sumberFoto) {
-            // Jika kolom di spreadsheet kosong
-            if (!sumberFoto || sumberFoto.trim() === "") {
-                return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
+
+// ==========================================
+// 4. LOGIKA KHUSUS HALAMAN KATALOG
+// ==========================================
+function initKatalog() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const kategoriDicari = urlParams.get('jenis');
+    const tokoDicari = urlParams.get('toko');
+
+    if (kategoriDicari) {
+        const elJudul = document.getElementById('judul-kategori');
+        const elSub = document.getElementById('sub-judul-kategori');
+        if (elJudul) elJudul.innerText = `Kategori: ${kategoriDicari}`;
+        if (elSub) elSub.innerText = `Menampilkan etalase warga yang menyediakan ${kategoriDicari}.`;
+    }
+
+    fetchCSV(URL_CSV_TOKO).then(results => {
+        const dataToko = results.data;
+        let dataTersaring = [];
+
+        dataToko.forEach(toko => {
+            const namaToko = toko["Nama Toko"];
+            if (!namaToko || namaToko.trim() === "") return;
+
+            const stringKategori = toko["Kategori Produk"] || "";
+            const idToko = toko["Kode Unik Toko"] || namaToko;
+
+            let masukKriteria = false;
+            if (tokoDicari) {
+                if (idToko.toLowerCase() === tokoDicari.toLowerCase() || namaToko.toLowerCase() === tokoDicari.toLowerCase()) masukKriteria = true;
+            } else if (kategoriDicari) {
+                if (stringKategori.toLowerCase().includes(kategoriDicari.toLowerCase())) masukKriteria = true;
+            } else {
+                masukKriteria = true;
             }
-            
-            // Cek apakah ini link Google Drive (Sistem lama)
-            if (sumberFoto.includes("drive.google.com")) {
-                const match = sumberFoto.match(/([-\w]{25,})/);
-                if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-                return sumberFoto;
-            } 
-            
-            // JIKA HANYA NAMA FILE (Sistem Baru)
-            // Gabungkan nama folder dengan nama file
-            return `img_umkm/${sumberFoto.trim()}`;
-        }
 
-function bersihkanAngka(str) {
-    if (!str) return 0;
-    let bersih = str.toString().replace(/[^0-9]/g, '');
-    let hasil = parseInt(bersih, 10);
-    return isNaN(hasil) ? 0 : hasil;
-}
+            if (masukKriteria) dataTersaring.push(toko);
+        });
 
-function parseWaktuAppSheet(strTanggal) {
-    if (!strTanggal) return NaN;
-    let ms = new Date(strTanggal).getTime();
-    if (!isNaN(ms)) return ms;
-
-    const parts = strTanggal.split(/[\s/:-]+/);
-    if (parts.length >= 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        const hours = parts[3] ? parseInt(parts[3], 10) : 0;
-        const minutes = parts[4] ? parseInt(parts[4], 10) : 0;
-        const seconds = parts[5] ? parseInt(parts[5], 10) : 0;
-
-        const manualDate = new Date(year, month, day, hours, minutes, seconds);
-        return manualDate.getTime();
-    }
-    return NaN;
-}
-
-function ekstrakJam(strWaktu) {
-    if (!strWaktu) return null;
-    const match = strWaktu.match(/(\d{1,2}):(\d{2})/);
-    if (match) {
-        return {
-            jam: parseInt(match[1], 10),
-            menit: parseInt(match[2], 10),
-            teksBersih: `${match[1].padStart(2, '0')}:${match[2]}`
-        };
-    }
-    return null;
-}
-
-function cekStatusToko(stringHari, stringJamBuka, stringJamTutup) {
-    if (!stringHari || !stringJamBuka || !stringJamTutup) return null; 
-
-    const waktuBuka = ekstrakJam(stringJamBuka);
-    const waktuTutup = ekstrakJam(stringJamTutup);
-    
-    if (!waktuBuka || !waktuTutup) return null;
-
-    const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    const waktuSekarang = new Date();
-    const hariIni = namaHari[waktuSekarang.getDay()]; 
-    
-    const hariBuka = stringHari.split(',').map(h => h.trim().toLowerCase());
-    const isHariIniBuka = hariBuka.includes(hariIni.toLowerCase());
-
-    const menitTotalSekarang = (waktuSekarang.getHours() * 60) + waktuSekarang.getMinutes();
-    const menitTotalBuka = (waktuBuka.jam * 60) + waktuBuka.menit;
-    const menitTotalTutup = (waktuTutup.jam * 60) + waktuTutup.menit;
-
-    if (isHariIniBuka && menitTotalSekarang >= menitTotalBuka && menitTotalSekarang <= menitTotalTutup) {
-        return { buka: true, pesan: "Buka Sekarang", bukaTeks: waktuBuka.teksBersih, tutupTeks: waktuTutup.teksBersih };
-    } else {
-        return { buka: false, pesan: "Sedang Tutup", bukaTeks: waktuBuka.teksBersih, tutupTeks: waktuTutup.teksBersih };
-    }
-}
-
-// ==========================================
-// 3. MESIN PENARIKAN DATA GANDA
-// ==========================================
-if (document.getElementById("wadah-katalog")) {
-    Papa.parse(urlCSV, {
-        download: true,
-        header: true,
-        complete: function(resultsToko) {
-            Papa.parse(urlCSVProduk, {
-                download: true,
-                header: true,
-                complete: function(resultsProduk) {
-                    try {
-                        let dataMentahToko = resultsToko.data;
-                        dataProdukGlobal = resultsProduk.data;
-                        
-                        if (kategoriAktif) {
-                            dataKatalogGlobal = dataMentahToko.filter(toko => {
-                                const kategoriMentah = toko["Kategori Produk"];
-                                if (!kategoriMentah) return false;
-                                const arrayKat = kategoriMentah.split(',').map(k => k.trim().toLowerCase());
-                                return arrayKat.includes(kategoriAktif.trim().toLowerCase());
-                            });
-                        } else {
-                            dataKatalogGlobal = dataMentahToko;
-                        }
-                        
-                        const statusEl = document.getElementById("status-loading");
-                        const wadahEl = document.getElementById("wadah-katalog");
-
-                        if (!dataKatalogGlobal || dataKatalogGlobal.length === 0) {
-                            if(statusEl) {
-                                statusEl.innerText = "Belum ada lapak/toko untuk kategori ini.";
-                                statusEl.classList.remove("animate-pulse");
-                            }
-                            return;
-                        }
-                        
-                        if(statusEl) statusEl.classList.add("hidden");
-                        if(wadahEl) {
-                            wadahEl.classList.remove("hidden");
-                            if (kategoriAktif) renderKatalogGrid(dataKatalogGlobal);
-                            else renderKatalogList(dataKatalogGlobal);
-                        }
-
-                        // [DIUBAH] Mengecek produk sebelum melakukan auto-popup
-                        if (tokoBukaOtomatis) {
-                            const targetToko = tokoBukaOtomatis.trim().toLowerCase(); 
-                            const indexToko = dataKatalogGlobal.findIndex(t => {
-                                const kode = (t["Kode Unik Toko"] || "").trim().toLowerCase();
-                                const nama = (t["Nama Toko"] || "").trim().toLowerCase();
-                                return kode === targetToko || nama === targetToko;
-                            });
-                            
-                            if (indexToko !== -1) {
-                                // Hitung produk untuk toko spesifik ini
-                                const tokoTarget = dataKatalogGlobal[indexToko];
-                                const kodeUnikTarget = tokoTarget["Kode Unik Toko"];
-                                const produkTokoTarget = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikTarget);
-                                
-                                // Hanya buka popup otomatis JIKA produk > 0
-                                if (produkTokoTarget.length > 0) {
-                                    setTimeout(() => { bukaPopup(indexToko); }, 400); 
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Error memproses data.";
-                    }
-                },
-                error: function() { if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Produk."; }
-            });
-        },
-        error: function() { if(document.getElementById("status-loading")) document.getElementById("status-loading").innerText = "Gagal mengunduh data Toko."; }
+        renderKatalog(dataTersaring);
+    }).catch(err => {
+        const elLoading = document.getElementById('status-loading');
+        if (elLoading) elLoading.innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data. Periksa koneksi Anda.</span>`;
     });
 }
 
-function renderKatalogGrid(data) {
-    const wadah = document.getElementById("wadah-katalog");
-    if (!wadah) return;
+function renderKatalog(data) {
+    const elLoading = document.getElementById('status-loading');
+    if (elLoading) elLoading.classList.add('hidden');
+    
+    const wadah = document.getElementById('wadah-katalog');
+    const pesanKosong = document.getElementById('pesan-kosong');
 
-    wadah.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+    if (!wadah || !pesanKosong) return;
+
+    if (data.length === 0) {
+        pesanKosong.classList.remove('hidden');
+        return;
+    }
+
+    wadah.classList.remove('hidden');
     let elemenHTML = "";
 
-    data.forEach((toko) => {
-        if(!toko["Nama Toko"]) return; 
-        const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
+    data.forEach(toko => {
+        const nama = toko["Nama Toko"];
+        const pemilik = toko["Nama Pemilik"] || "Warga Talumae";
+        const lokasi = toko["Lokasi Toko"];
+        const wa = toko["Nomor Whatsapp (62)"];
+        const kategori = toko["Kategori Produk"] || "Umum";
+        const foto = formatGambar(toko["Perwakilan Foto Produk / Etalase"]);
+        const deskripsi = toko["Deskripsi Singkat"] || "Toko kelontong dan usaha warga desa.";
 
-        const namaToko = toko["Nama Toko"];
-        const kategori = toko["Kategori Produk"];
-        const deskripsiSingkat = toko["Deskripsi Singkat Toko"];
-        const fotoSiapRender = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
-        const kodeUnikToko = toko["Kode Unik Toko"];
-        
-        const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
-        let lencanaStatusHTML = "";
-        
-        if (statusToko) {
-            if (statusToko.buka) {
-                lencanaStatusHTML = `<div class="absolute top-3 right-3 bg-green-500 bg-opacity-90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 border border-green-400"><span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> BUKA</div>`;
-            } else {
-                lencanaStatusHTML = `<div class="absolute top-3 right-3 bg-red-500 bg-opacity-90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 border border-red-400"> TUTUP</div>`;
-            }
+        let tombolWA = "";
+        if (wa) {
+            const nomorBersih = wa.toString().replace(/[^0-9]/g, '');
+            const pesan = `Halo ${nama}, saya melihat toko Anda di website Lapak Desa Talumae. Saya ingin bertanya tentang produk Anda.`;
+            tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> Hubungi</a>`;
         }
-        
-        let arrayHarga = [];
-        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
 
-        produkTokoIni.forEach(p => {
-            let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
-            let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
-            
-            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
-            let hargaAkhir = hargaNormal;
-
-            if (isPromoAktif && hargaPromo > 0) {
-                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"] || p["Waktu Mulai"]);
-                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"] || p["Waktu Berakhir"]);
-                let waktuSekarang = new Date().getTime();
-                
-                let isMulaiValid = isNaN(waktuMulai) || waktuSekarang >= waktuMulai;
-                let isAkhirValid = isNaN(waktuAkhir) || waktuSekarang <= waktuAkhir;
-
-                if (isMulaiValid && isAkhirValid) hargaAkhir = hargaPromo; 
-            }
-            if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
-        });
-
-        let blokHargaHTML = "";
-        let tombolAksiHTML = "";
-
-        if (produkTokoIni.length > 0) {
-            let teksHarga = "Informasi Harga Belum Tersedia";
-            let labelHarga = "Harga Produk";
-
-            if (arrayHarga.length > 0) {
-                let hargaMin = Math.min(...arrayHarga);
-                let hargaMax = Math.max(...arrayHarga);
-                if (hargaMin === hargaMax) teksHarga = "Rp " + hargaMin.toLocaleString('id-ID');
-                else {
-                    teksHarga = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
-                    labelHarga = "Rentang Harga";
-                }
-            }
-            
-            blokHargaHTML = `
-                <div class="mb-4">
-                    <span class="text-sm text-gray-500">${labelHarga}</span><br>
-                    <span class="text-lg font-bold text-green-700">${teksHarga}</span>
-                </div>
-            `;
-
-            tombolAksiHTML = `
-                <button onclick="bukaPopup(${originalIndex})" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 shadow-sm mt-auto">
-                    Lihat Detail Lapak
-                </button>
-            `;
-        } else {
-            let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
-            if (!kategoriAktif && kategori) {
-                const arrKat = kategori.split(',').map(k => k.trim()).filter(k => k);
-                if (arrKat.length > 0) parameterFilter = arrKat[0];
-            }
-            let parameterToko = kodeUnikToko || namaToko;
-            
-            tombolAksiHTML = `
-                <a href="peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}" class="w-full mt-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm block text-center">
-                    📍 Lihat di Peta
-                </a>
-            `;
+        let tombolPeta = "";
+        if (lokasi && lokasi.includes(',')) {
+            tombolPeta = `<a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></a>`;
         }
+
+        const labelKategori = kategori.split(',')[0].trim();
 
         elemenHTML += `
-            <div class="kartu-toko bg-white rounded-lg shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
-                <div class="relative w-full h-48 overflow-hidden">
-                    <img src="${fotoSiapRender}" alt="${namaToko}" class="gambar-etalase w-full h-full object-cover">
-                    ${lencanaStatusHTML}
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group">
+                <div class="h-48 w-full overflow-hidden relative bg-gray-200">
+                    <img src="${foto}" alt="${nama}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-md uppercase shadow-sm">${labelKategori}</span>
                 </div>
-                <div class="p-5 flex-grow flex flex-col bg-white relative z-10">
-                    <span class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">LAPAK / TOKO</span>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">${namaToko}</h3>
-                    <p class="text-xs text-gray-500 mb-3 leading-relaxed">${kategori || ''}</p>
-                    <p class="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">${deskripsiSingkat || 'Belum ada deskripsi.'}</p>
-                    
-                    ${blokHargaHTML}
-                    ${tombolAksiHTML}
-                    
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1">${nama}</h3>
+                    <p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider">👤 Bpk/Ibu ${pemilik}</p>
+                    <p class="text-sm text-gray-600 mb-5 line-clamp-2 flex-grow">${deskripsi}</p>
+                    <div class="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
+                        ${tombolWA}
+                        ${tombolPeta}
+                    </div>
                 </div>
             </div>
         `;
     });
+
     wadah.innerHTML = elemenHTML;
 }
 
-function renderKatalogList(data) {
-    const wadah = document.getElementById("wadah-katalog");
-    if (!wadah) return;
 
-    wadah.className = "flex flex-col gap-4";
-    let elemenHTML = "";
+// ==========================================
+// 5. LOGIKA KHUSUS HALAMAN PETA
+// ==========================================
+let petaLeaflet, layerGrupMarker;
+let dataTokoPeta = [], dataTaniPeta = [];
+let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
+let targetTokoBukaPopup = null;
 
-    const dataUrut = data.slice().sort((a, b) => {
-        const namaA = (a["Nama Toko"] || "").toLowerCase();
-        const namaB = (b["Nama Toko"] || "").toLowerCase();
-        return namaA.localeCompare(namaB);
+const KATEGORI_WARNA = {
+    "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
+    "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
+    "ATK": "#d946ef", "Makanan Hewan": "#f97316", "Kosmetik": "#ec4899",
+    "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", "Hasil Tani": "#22c55e"
+};
+const WARNA_DEFAULT = "#6b7280";
+
+function initPeta() {
+    const urlParamsPeta = new URLSearchParams(window.location.search);
+    targetTokoBukaPopup = urlParamsPeta.get('toko'); 
+    const filterDariURL = urlParamsPeta.get('filter');
+
+    petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
+    L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps'
+    }).addTo(petaLeaflet);
+    layerGrupMarker = L.layerGroup().addTo(petaLeaflet);
+
+    petaLeaflet.on('locationfound', function(e) {
+        const radius = e.accuracy / 2;
+        if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
+        if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
+        const ikonLokasi = L.divIcon({ className: "bg-transparent", html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`, iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -10] });
+        markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`).openPopup();
+        circleLokasiSaya = L.circle(e.latlng, radius, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
     });
 
-    dataUrut.forEach((toko) => {
-        if(!toko["Nama Toko"]) return; 
-        const originalIndex = dataKatalogGlobal.findIndex(t => t === toko);
-        const namaToko = toko["Nama Toko"];
-        const deskripsiSingkat = toko["Deskripsi Singkat Toko"] || "Lapak warga Desa Talumae";
-        const kodeUnikToko = toko["Kode Unik Toko"];
+    fetch('data/Batas_Dusun_Talumae.geojson').then(r => r.json()).then(geo => {
+        const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
+        petaLeaflet.fitBounds(pol.getBounds());
+    }).catch(e => console.log("GeoJSON opsional tidak ditemukan."));
+
+    // Tarik 3 Data Sekaligus agar Peta Tani Muncul
+    Promise.all([fetchCSV(URL_CSV_TOKO), fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)])
+        .then(([resToko, resProfilPetani, resProdukTani]) => {
+            dataTokoPeta = resToko.data;
+            
+            const profilPetani = resProfilPetani.data;
+            const produkMentah = resProdukTani.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
+            
+            dataTaniPeta = [];
+            produkMentah.forEach(produk => {
+                const profilCocok = profilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
+                if (profilCocok) dataTaniPeta.push({ ...profilCocok, ...produk });
+            });
+
+            if (filterDariURL) {
+                if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
+                else document.getElementById('input-cari-peta').value = filterDariURL;
+            }
+            renderTombolKategoriPeta();
+            terapkanFilterPeta();
+
+            const overlay = document.getElementById("data-loading-overlay");
+            if (overlay) {
+                overlay.classList.add("opacity-0");
+                setTimeout(() => overlay.remove(), 500);
+            }
+        })
+        .catch(err => {
+            const overlay = document.getElementById("data-loading-overlay");
+            if (overlay) overlay.innerHTML = `<span class="text-red-600 font-bold bg-white p-2 rounded">Gagal menyinkronkan data. Silakan muat ulang halaman.</span>`;
+        });
+
+    const inputCari = document.getElementById('input-cari-peta');
+    if (inputCari) inputCari.addEventListener('input', terapkanFilterPeta);
+}
+
+function buatMarkerSVG(warnaHex) {
+    return L.divIcon({
+        className: "bg-transparent",
+        html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" style="filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${warnaHex}" stroke="#ffffff" stroke-width="1.5"/></svg>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36], popupAnchor: [0, -32] 
+    });
+}
+
+function renderTombolKategoriPeta() {
+    const wadah = document.getElementById('wadah-kategori-peta');
+    if (!wadah) return;
+    let html = "";
+    Object.keys(KATEGORI_WARNA).forEach(kat => {
+        const warnaPin = KATEGORI_WARNA[kat];
+        const isAktif = kategoriAktif.includes(kat);
+        const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
+        const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
+        html += `
+            <button onclick="pilihKategoriPeta('${kat}')" class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}">
+                <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>${kat}
+            </button>`;
+    });
+    wadah.innerHTML = html;
+}
+
+function pilihKategoriPeta(katDipilih) {
+    const index = kategoriAktif.indexOf(katDipilih);
+    if (index > -1) kategoriAktif.splice(index, 1);
+    else kategoriAktif.push(katDipilih);
+    renderTombolKategoriPeta();
+    terapkanFilterPeta();
+}
+
+function cariLokasiSaya() {
+    if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
+    else alert("Browser Anda tidak mendukung GPS.");
+}
+
+function terapkanFilterPeta() {
+    if (!layerGrupMarker) return;
+    layerGrupMarker.clearLayers();
+    
+    const elInput = document.getElementById('input-cari-peta');
+    const teksCari = elInput ? elInput.value.toLowerCase().trim() : "";
+
+    const filterTeksAda = teksCari !== "";
+    const filterKategoriAda = kategoriAktif.length > 0;
+
+    if (!filterTeksAda && !filterKategoriAda) return;
+
+    dataTokoPeta.forEach(toko => {
+        const namaToko = toko["Nama Toko"] || "Toko Warga";
         const stringKategori = toko["Kategori Produk"] || "";
-        
-        const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
-        let lencanaMiniHTML = "";
-        if (statusToko) {
-            if (statusToko.buka) lencanaMiniHTML = `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border border-green-200">Buka</span>`;
-            else lencanaMiniHTML = `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border border-red-200">Tutup</span>`;
-        }
+        const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
+        const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
-        const arrayKategori = stringKategori.split(',').map(kat => kat.trim()).filter(kat => kat);
-        let badgeKategoriHTML = "";
-        if(arrayKategori.length > 0) {
-            arrayKategori.forEach(kat => {
-                badgeKategoriHTML += `<span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">${kat}</span>`;
-            });
-        }
+        let tampilkan = false;
+        if (filterTeksAda && filterKategoriAda) tampilkan = cocokTeks && cocokKategori;
+        else if (filterTeksAda) tampilkan = cocokTeks;
+        else if (filterKategoriAda) tampilkan = cocokKategori;
 
-        let produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
-        
-        let aksiKlikBaris = `onclick="bukaPopup(${originalIndex})"`;
-        if (produkTokoIni.length === 0) {
-            let parameterFilter = kategoriAktif ? kategoriAktif : "Semua";
-            if (!kategoriAktif && stringKategori) {
-                const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
-                if (arrKat.length > 0) parameterFilter = arrKat[0];
+        if (tampilkan) {
+            const lokasi = toko["Lokasi Toko"];
+            if (lokasi && lokasi.includes(',')) {
+                const lat = parseFloat(lokasi.split(',')[0].trim());
+                const lng = parseFloat(lokasi.split(',')[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const idToko = toko["Kode Unik Toko"] || namaToko; 
+                    const foto = formatGambar(toko["Perwakilan Foto Produk / Etalase"]);
+                    const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
+                    
+                    let warnaMarker = WARNA_DEFAULT;
+                    const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === (arrKat[0] || "").toLowerCase());
+                    if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
+                    
+                    let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
+                    if(arrKat.length > 0) arrKat.forEach(kat => tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(idToko)}" class="inline-block w-full text-center bg-gray-50 hover:bg-green-600 text-gray-700 hover:text-white border border-gray-300 hover:border-green-600 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`);
+                    else tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
+                    tombolHTML += `</div>`;
+
+                    const popup = `<div class="flex flex-col bg-white"><div class="relative h-28 w-full border-b-4" style="border-color: ${warnaMarker};"><img src="${foto}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div><h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm mt-1">📍 Google Maps</a></div></div>`;
+                    const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
+                    layerGrupMarker.addLayer(marker);
+                    
+                    if (targetTokoBukaPopup && (idToko.toLowerCase() === targetTokoBukaPopup.toLowerCase() || namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
+                        setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); targetTokoBukaPopup=null; }, 600); 
+                    }
+                }
             }
-            let parameterToko = kodeUnikToko || namaToko;
-            aksiKlikBaris = `onclick="window.location.href='peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}'" title="Menuju Peta Lokasi"`;
         }
+    });
+
+    const warnaTani = KATEGORI_WARNA["Hasil Tani"];
+    dataTaniPeta.forEach(tani => {
+        const kom = tani["Nama Komoditas"] || "Hasil Bumi";
+        const pet = tani["Nama Petani"] || "Petani Lokal";
+        const cocokTeks = (kom.toLowerCase().includes(teksCari) || pet.toLowerCase().includes(teksCari));
+        const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === "hasil tani");
+
+        let tampilkan = false;
+        if (filterTeksAda && filterKategoriAda) tampilkan = cocokTeks && cocokKategori;
+        else if (filterTeksAda) tampilkan = cocokTeks;
+        else if (filterKategoriAda) tampilkan = cocokKategori;
+
+        if (tampilkan) {
+            const lokasi = tani["Lokasi Lahan"];
+            if (lokasi && lokasi.includes(',')) {
+                const lat = parseFloat(lokasi.split(',')[0].trim());
+                const lng = parseFloat(lokasi.split(',')[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const foto = formatGambar(tani["Foto Hasil Tani"]);
+                    const popup = `<div class="flex flex-col bg-white"><div class="relative h-28 w-full border-b-4" style="border-color: ${warnaTani};"><img src="${foto}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><span class="absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase shadow-sm" style="background-color: ${warnaTani};">Lahan Tani</span><h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${kom}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2"><p class="text-xs text-gray-500 mb-1">👤 ${pet}</p><div class="bg-green-50 border border-green-200 rounded p-1 mb-1"><p class="text-xs font-bold text-green-700">Stok: ${tani["Sisa Pangan Tersedia"]||"0"} ${tani["Satuan"]||""}</p></div><div class="flex flex-col gap-2 mt-1"><a href="tani.html" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a></div></div></div>`;
+                    layerGrupMarker.addLayer(L.marker([lat, lng], { icon: buatMarkerSVG(warnaTani) }).bindPopup(popup));
+                }
+            }
+        }
+    });
+}
+
+// ==========================================
+// 6. LOGIKA KHUSUS HALAMAN HASIL TANI
+// ==========================================
+let dataTaniList = [];
+let indexTaniAktif = null;
+
+function initTani() {
+    Promise.all([fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)])
+        .then(([resPetani, resProduk]) => {
+            const dataProfilPetani = resPetani.data;
+            const dataProdukMentah = resProduk.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
+
+            dataTaniList = [];
+            dataProdukMentah.forEach(produk => {
+                const profilCocok = dataProfilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
+                if (profilCocok) dataTaniList.push({ ...profilCocok, ...produk });
+            });
+
+            const elLoading = document.getElementById("status-loading");
+            if (elLoading) elLoading.classList.add("hidden");
+            saringDataTani();
+        })
+        .catch(err => {
+            const elLoading = document.getElementById("status-loading");
+            if(elLoading) {
+                elLoading.innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data hasil tani.</span><br><span class="text-sm text-gray-500">Silakan periksa koneksi internet.</span>`;
+                elLoading.classList.remove("animate-pulse");
+            }
+        });
+
+    const inputCari = document.getElementById('input-cari');
+    const filterJenis = document.getElementById('filter-jenis');
+    if (inputCari) inputCari.addEventListener('input', saringDataTani);
+    if (filterJenis) filterJenis.addEventListener('change', saringDataTani);
+}
+
+function saringDataTani() {
+    const elInput = document.getElementById('input-cari');
+    const elFilter = document.getElementById('filter-jenis');
+    if (!elInput || !elFilter) return;
+
+    const teksCari = elInput.value.toLowerCase().trim();
+    const jenisPilih = elFilter.value.toLowerCase();
+
+    const dataTersaring = dataTaniList.filter(tani => {
+        const komoditas = (tani["Nama Komoditas"] || "").toLowerCase();
+        const petani = (tani["Nama Petani"] || "").toLowerCase();
+        const jenisMentah = (tani["Jenis Hasil Tani"] || "").toLowerCase();
+
+        const cocokTeks = komoditas.includes(teksCari) || petani.includes(teksCari);
+        let cocokJenis = true;
+        if (jenisPilih !== "semua") cocokJenis = jenisMentah.includes(jenisPilih);
+
+        return cocokTeks && cocokJenis;
+    });
+
+    renderTaniGrid(dataTersaring);
+}
+
+function renderTaniGrid(data) {
+    const wadah = document.getElementById('wadah-tani');
+    const pesanKosong = document.getElementById('pesan-kosong');
+    if (!wadah || !pesanKosong) return;
+
+    wadah.innerHTML = "";
+    if (data.length === 0) {
+        wadah.classList.add('hidden');
+        pesanKosong.classList.remove('hidden');
+        return;
+    }
+
+    wadah.classList.remove('hidden');
+    pesanKosong.classList.add('hidden');
+
+    let elemenHTML = "";
+    data.forEach((tani) => {
+        const originalIndex = dataTaniList.findIndex(t => t === tani);
+        const komoditas = tani["Nama Komoditas"];
+        const petani = tani["Nama Petani"] || "Petani Lokal";
+        const jenis = tani["Jenis Hasil Tani"] || "Pangan";
+        const sisaTersedia = tani["Sisa Pangan Tersedia"] || "0";
+        const satuan = tani["Satuan"] || "Kg";
+        const foto = formatGambar(tani["Foto Hasil Tani"]);
 
         elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group" ${aksiKlikBaris}>
-                <div class="flex-grow">
-                    <div class="flex items-center gap-3 mb-1">
-                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-700 transition-colors">${namaToko}</h3>
-                        ${lencanaMiniHTML}
-                        ${produkTokoIni.length === 0 ? '<span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">📍 Lihat Peta</span>' : ''}
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden cursor-pointer flex flex-col group" onclick="bukaPopupTani(${originalIndex})">
+                <div class="h-40 w-full overflow-hidden relative">
+                    <img src="${foto}" alt="${komoditas}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <span class="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase shadow-sm opacity-90">${jenis}</span>
+                </div>
+                <div class="p-4 flex flex-col flex-grow">
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${komoditas}</h3>
+                    <p class="text-sm text-gray-500 mb-3">👤 ${petani}</p>
+                    <div class="mt-auto bg-gray-50 p-2.5 rounded-lg border border-gray-200 flex justify-between items-end">
+                        <span class="text-xs text-gray-500 font-semibold uppercase">Stok Tersedia:</span>
+                        <span class="text-lg font-bold text-green-700">${sisaTersedia} <span class="text-xs font-normal text-gray-600">${satuan}</span></span>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1 line-clamp-1">${deskripsiSingkat}</p>
                 </div>
-                <div class="flex flex-wrap md:justify-end gap-2 shrink-0">
-                    ${badgeKategoriHTML}
-                </div>
-            </div>
-        `;
+            </div>`;
     });
     wadah.innerHTML = elemenHTML;
 }
 
-// ==========================================
-// 5. FUNGSI BUKA POPUP & DETAIL TOKO
-// ==========================================
-function bukaPopup(index) {
-    const toko = dataKatalogGlobal[index];
-    if (!toko) return;
+function bukaPopupTani(index) {
+    const tani = dataTaniList[index];
+    if (!tani) return;
+    indexTaniAktif = index; 
 
-    document.getElementById('modal-nama').innerText = toko["Nama Toko"];
-    document.getElementById('modal-kategori').innerText = toko["Kategori Produk"] || '';
-    document.getElementById('modal-deskripsi').innerText = toko["Deskripsi Singkat Toko"];
-    document.getElementById('modal-foto').src = formatGambarDrive(toko["Perwakilan Foto Produk / Etalase"]);
-
-    const stringPembayaran = toko["Metode Pembayaran"] || "Tunai";
-    const arrayPembayaran = stringPembayaran.split(',').map(p => p.trim()).filter(p => p);
-    let htmlPembayaran = "";
-    arrayPembayaran.forEach(metode => {
-        let ikon = "💵"; 
-        const metodeKecil = metode.toLowerCase();
-        if (metodeKecil.includes("qris")) ikon = "📱";
-        else if (metodeKecil.includes("transfer") || metodeKecil.includes("bank") || metodeKecil.includes("bca") || metodeKecil.includes("bri")) ikon = "🏦";
-        else if (metodeKecil.includes("ewallet") || metodeKecil.includes("dana") || metodeKecil.includes("ovo") || metodeKecil.includes("gopay") || metodeKecil.includes("shopeepay")) ikon = "📲";
-
-        htmlPembayaran += `<span class="bg-white text-blue-700 border border-blue-200 shadow-sm text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5"><span class="text-sm">${ikon}</span> ${metode}</span>`;
-    });
-    const wadahPembayaran = document.getElementById('modal-pembayaran');
-    if (wadahPembayaran) wadahPembayaran.innerHTML = htmlPembayaran;
-
-    const wadahJadwal = document.getElementById('modal-jadwal');
-    const statusToko = cekStatusToko(toko["Hari Operasional"], toko["Jam Buka"], toko["Jam Tutup"]);
+    document.getElementById('modal-komoditas').innerText = tani["Nama Komoditas"];
+    document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
+    document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
+    document.getElementById('modal-foto').src = formatGambar(tani["Foto Hasil Tani"]);
     
-    if (statusToko && wadahJadwal) {
-        let warnaTeks = statusToko.buka ? "text-green-600" : "text-red-500";
-        let ikonStatus = statusToko.buka ? "🟢" : "🔴";
-
-        wadahJadwal.innerHTML = `
-            <div class="mb-5 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider flex items-center gap-1">🕒 Info Operasional Lapak</p>
-                <p class="text-base font-bold ${warnaTeks} mb-1">${ikonStatus} ${statusToko.pesan}</p>
-                <p class="text-sm text-gray-700"><strong>Hari:</strong> ${toko["Hari Operasional"]}</p>
-                <p class="text-sm text-gray-700"><strong>Jam:</strong> ${statusToko.bukaTeks} WITA - ${statusToko.tutupTeks} WITA</p>
-            </div>
-        `;
-        wadahJadwal.classList.remove("hidden");
-    } else if (wadahJadwal) {
-        wadahJadwal.classList.add("hidden"); 
-    }
-
-    const kodeUnikToko = toko["Kode Unik Toko"];
-    const produkTokoIni = dataProdukGlobal.filter(p => p["Kode Unik Toko"] === kodeUnikToko);
-
-    let htmlTabel = "";
-    let arrayHarga = [];
-    const wadahTabelProduk = document.getElementById('modal-list-barang');
-
-    if (produkTokoIni.length > 0) {
-        wadahTabelProduk.parentElement.classList.remove('hidden');
-        htmlTabel = `
-            <div class="overflow-x-auto rounded-lg">
-                <table class="w-full text-sm text-left text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-green-50 border-b-2 border-green-200">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 font-bold rounded-tl-lg">Nama Produk</th>
-                            <th scope="col" class="px-4 py-3 font-bold text-right rounded-tr-lg">Harga (Rp)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        produkTokoIni.forEach((p, i) => {
-            const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-            
-            let hargaNormal = bersihkanAngka(p["Harga (Rp)"] || p["Harga"]);
-            let hargaPromo = bersihkanAngka(p["Harga Promo (Rp)"] || p["Harga Promo"]);
-            let statusPromo = (p["Ada Promo?"] || p["Ada Promo"] || p["Promo"] || "").toString().trim().toUpperCase();
-            let isPromoAktif = (statusPromo === "TRUE" || statusPromo === "Y" || statusPromo === "YES" || statusPromo === "YA" || statusPromo === "BENAR" || statusPromo === "1" || statusPromo === "ON");
-            
-            let isPromoBerlaku = false;
-            let hargaAkhir = hargaNormal;
-
-            if (isPromoAktif && hargaPromo > 0) {
-                let waktuMulai = parseWaktuAppSheet(p["Waktu Mulai Promo"] || p["Waktu Mulai"]);
-                let waktuAkhir = parseWaktuAppSheet(p["Waktu Berakhir Promo"] || p["Waktu Berakhir"]);
-                let waktuSekarang = new Date().getTime();
-
-                let isMulaiValid = isNaN(waktuMulai) || waktuSekarang >= waktuMulai;
-                let isAkhirValid = isNaN(waktuAkhir) || waktuSekarang <= waktuAkhir;
-
-                if (isMulaiValid && isAkhirValid) {
-                    isPromoBerlaku = true;
-                    hargaAkhir = hargaPromo;
-                }
-            }
-
-            if (hargaAkhir > 0) arrayHarga.push(hargaAkhir);
-
-            let tampilanHarga = "";
-            if (isPromoBerlaku) {
-                tampilanHarga = `
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] text-red-400 line-through leading-tight">Rp ${hargaNormal.toLocaleString('id-ID')}</span>
-                        <span class="text-green-700 font-bold text-base leading-tight">Rp ${hargaPromo.toLocaleString('id-ID')}</span>
-                        <span class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded mt-1 shadow-sm uppercase tracking-wider animate-pulse">Promo!</span>
-                    </div>
-                `;
-            } else {
-                tampilanHarga = `<span class="text-green-700 font-semibold">Rp ${hargaNormal ? hargaNormal.toLocaleString('id-ID') : "0"}</span>`;
-            }
-
-            htmlTabel += `
-                <tr class="${bgColor} border-b hover:bg-green-50 transition-colors">
-                    <td class="px-4 py-3 font-medium text-gray-900 align-middle">${p["Nama Produk"] || '-'}</td>
-                    <td class="px-4 py-3 text-right align-middle">${tampilanHarga}</td>
-                </tr>
-            `;
-        });
-        htmlTabel += `</tbody></table></div>`;
-        wadahTabelProduk.innerHTML = htmlTabel;
+    const stringBulan = tani["Bulan Panen"] || "Belum ditentukan";
+    const wadahBulan = document.getElementById('modal-bulan');
+    if (stringBulan === "Belum ditentukan" || stringBulan.trim() === "") {
+        wadahBulan.innerHTML = "Belum ditentukan";
     } else {
-        wadahTabelProduk.parentElement.classList.add('hidden');
-        wadahTabelProduk.innerHTML = "";
+        const arrayBulan = stringBulan.split(',').map(b => b.trim()).filter(b => b);
+        let htmlBulan = `<div class="flex flex-wrap gap-1 mt-0.5">`;
+        arrayBulan.forEach(b => htmlBulan += `<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-200 shadow-sm">${b}</span>`);
+        htmlBulan += `</div>`;
+        wadahBulan.innerHTML = htmlBulan;
     }
-    
-    let teksHargaModal = "Harga Tersedia";
-    let teksLabelModal = "Informasi Harga:";
-    if (arrayHarga.length > 0) {
-        let hargaMin = Math.min(...arrayHarga);
-        let hargaMax = Math.max(...arrayHarga);
-        if (hargaMin === hargaMax) teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID');
-        else {
-            teksHargaModal = "Rp " + hargaMin.toLocaleString('id-ID') + " - Rp " + hargaMax.toLocaleString('id-ID');
-            teksLabelModal = "Rentang Harga:";
-        }
-    }
-    document.getElementById('modal-harga').innerText = teksHargaModal;
-    if (document.getElementById('modal-label-harga')) document.getElementById('modal-label-harga').innerText = teksLabelModal;
 
-    const tombolAksi = document.getElementById('btn-modal-wa');
-    const nomorWA = toko["Nomor Whatsapp (62)"];
-    const lokasiToko = toko["Lokasi Toko"];
-    const namaAman = toko["Nama Toko"].replace(/'/g, "\\'"); 
+    document.getElementById('modal-rata').innerText = tani["Rata-rata Panen"] || "-";
+    document.getElementById('modal-saatini').innerText = tani["Panen Saat Ini"] || "-";
+    document.getElementById('modal-sisa').innerText = tani["Sisa Pangan Tersedia"] || "0";
 
-    if (nomorWA && nomorWA.toString().trim() !== '' && nomorWA !== 'undefined') {
-        tombolAksi.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Hubungi Penjual`;
-        tombolAksi.className = "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition-colors flex items-center shadow-md shadow-green-200";
-        tombolAksi.setAttribute('onclick', `prosesBeli('${nomorWA}', '${namaAman}')`);
-        tombolAksi.style.display = 'flex';
-    } else if (lokasiToko && lokasiToko.includes(',')) {
-        const kordinat = lokasiToko.split(',');
-        const lat = kordinat[0].trim();
-        const lng = kordinat[1].trim();
-        tombolAksi.innerHTML = `📍 Lihat Lokasi Lapak`;
-        tombolAksi.className = "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition-colors flex items-center shadow-md shadow-blue-200";
-        tombolAksi.setAttribute('onclick', `window.open('https://www.google.com/maps?q=${lat},${lng}', '_blank')`);
-        tombolAksi.style.display = 'flex';
+    const satuan = tani["Satuan"] || "";
+    document.querySelectorAll('.satuan-teks').forEach(el => el.innerText = satuan);
+
+    const btnPeta = document.getElementById('btn-modal-peta');
+    const lokasi = tani["Lokasi Lahan"];
+    if (lokasi && lokasi.includes(',')) {
+        const kordinat = lokasi.split(',');
+        btnPeta.setAttribute('onclick', `window.open('https://www.google.com/maps?q=${kordinat[0].trim()},${kordinat[1].trim()}', '_blank')`);
+        btnPeta.style.display = 'flex';
     } else {
-        tombolAksi.style.display = 'none';
+        btnPeta.style.display = 'none';
     }
 
-    const modal = document.getElementById('modal-detail');
+    const btnWA = document.getElementById('btn-modal-wa');
+    const nomorWA = tani["Nomor Whatsapp (62)"];
+    if (nomorWA) {
+        const nomorBersih = nomorWA.toString().replace(/[^0-9]/g, '');
+        const pesan = `Halo Bapak/Ibu ${tani["Nama Petani"]}, saya melihat informasi di website Lapak Desa Talumae. Saya tertarik dengan ketersediaan ${tani["Nama Komoditas"]} Anda. Apakah bisa dibantu informasinya?`;
+        btnWA.setAttribute('onclick', `window.open('https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}', '_blank')`);
+        btnWA.style.display = 'flex';
+        document.getElementById('btn-modal-penawaran').style.display = 'flex';
+    } else {
+        btnWA.style.display = 'none';
+        document.getElementById('btn-modal-penawaran').style.display = 'none';
+    }
+
+    const modal = document.getElementById('modal-tani');
     modal.classList.remove('hidden');
     setTimeout(() => {
         modal.classList.remove('opacity-0');
@@ -538,33 +519,78 @@ function bukaPopup(index) {
     }, 10);
 }
 
-function tutupPopup() {
-    const modal = document.getElementById('modal-detail');
+function tutupPopupTani() {
+    const modal = document.getElementById('modal-tani');
     modal.classList.add('opacity-0');
     modal.children[0].classList.remove('scale-100');
     modal.children[0].classList.add('scale-95');
     setTimeout(() => {
         modal.classList.add('hidden');
         document.getElementById('modal-foto').src = ""; 
+        indexTaniAktif = null;
     }, 300); 
 }
 
-function prosesBeli(nomorWA, namaToko) {
-    if (!nomorWA || nomorWA === 'undefined') return;
-    const nomorBersih = nomorWA.replace(/[^0-9]/g, ''); 
-    const pesan = `Halo, saya melihat informasi dari website Lapak Desa Talumae. Saya tertarik dengan barang yang dijual di etalase *${namaToko}*. Apakah bisa dibantu informasi pemesanannya?`;
-    const urlWA = `https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}`;
-    window.open(urlWA, "_blank");
+function bukaModalPenawaran() {
+    if (indexTaniAktif === null) return;
+    const tani = dataTaniList[indexTaniAktif];
+    document.getElementById('penawaran-target-petani').innerText = tani["Nama Petani"] || "Petani";
+    document.getElementById('penawaran-target-komoditas').innerText = tani["Nama Komoditas"] || "Komoditas";
+    document.getElementById('label-satuan-penawaran').innerText = tani["Satuan"] || "Unit";
+    document.getElementById('error-penawaran').classList.add('hidden');
+    
+    const modal = document.getElementById('modal-penawaran');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.children[0].classList.remove('scale-95');
+        modal.children[0].classList.add('scale-100');
+    }, 10);
 }
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebarMenu');
-    if (sidebar) {
-        if (sidebar.classList.contains('-translate-x-full')) sidebar.classList.remove('-translate-x-full');
-        else sidebar.classList.add('-translate-x-full');
+function tutupModalPenawaran() {
+    const modal = document.getElementById('modal-penawaran');
+    modal.classList.add('opacity-0');
+    modal.children[0].classList.remove('scale-100');
+    modal.children[0].classList.add('scale-95');
+    setTimeout(() => { modal.classList.add('hidden'); }, 300); 
+}
+
+function formatRupiah(angka) {
+    return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function kirimPenawaranWA() {
+    if (indexTaniAktif === null) return;
+    const tani = dataTaniList[indexTaniAktif];
+    const nomorWA = tani["Nomor Whatsapp (62)"];
+    if (!nomorWA) return;
+
+    const qty = document.getElementById('form-kuantitas').value.trim();
+    const hrg = document.getElementById('form-harga').value.trim();
+    const prsh = document.getElementById('form-perusahaan').value.trim();
+    const eml = document.getElementById('form-email').value.trim();
+    const telp = document.getElementById('form-telepon').value.trim();
+    const prov = document.getElementById('form-provinsi').value.trim();
+    const kab = document.getElementById('form-kabupaten').value.trim();
+    const kec = document.getElementById('form-kecamatan').value.trim();
+    const pos = document.getElementById('form-kodepos').value.trim();
+
+    if (!qty || !hrg || !prsh || !eml || !telp || !prov || !kab || !kec) {
+        document.getElementById('error-penawaran').classList.remove('hidden');
+        return;
     }
+
+    const nomorBersih = nomorWA.toString().replace(/[^0-9]/g, '');
+    const hrgFormat = formatRupiah(hrg);
+    const teksPesan = `Halo Bapak/Ibu *${tani["Nama Petani"]}*,\n\nPerkenalkan, saya dari *${prsh}*. Saya melihat informasi hasil tani Anda di Lapak Desa Talumae dan bermaksud mengajukan penawaran untuk komoditas *${tani["Nama Komoditas"]}*.\n\nBerikut rincian penawaran kami:\n- *Kuantitas Diminta:* ${qty} ${tani["Satuan"] || ""}\n- *Harga Penawaran:* Rp ${hrgFormat}\n\n📍 *Informasi Pengiriman / Kontak Kami:*\n- Email: ${eml}\n- Telepon: ${telp}\n- Alamat: Kec. ${kec}, Kab. ${kab}, Prov. ${prov} ${pos ? `(Kode Pos: ${pos})` : ''}\n\nApakah penawaran ini bisa didiskusikan lebih lanjut? Terima kasih.`;
+    window.open(`https://wa.me/${nomorBersih}?text=${encodeURIComponent(teksPesan)}`, '_blank');
+    tutupModalPenawaran();
 }
 
+// ==========================================
+// 7. MODAL APPSHEET PENJUAL (Semua Halaman)
+// ==========================================
 function bukaModalKodeUnik() {
     const sidebar = document.getElementById('sidebarMenu');
     if(sidebar) sidebar.classList.add('-translate-x-full'); 
@@ -600,32 +626,26 @@ function validasiDanBukaAppSheet() {
 
     const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
 
-    Papa.parse(urlCSV, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            const isValid = results.data.some(toko => {
-                const kode = toko["Kode Unik Toko"];
-                return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
-            });
+    Promise.all([fetchCSV(URL_CSV_TOKO), fetchCSV(URL_CSV_PETANI)])
+        .then(([resToko, resPetani]) => {
+            const isValidToko = resToko.data.some(t => t["Kode Unik Toko"] && t["Kode Unik Toko"].trim().toLowerCase() === inputKode.toLowerCase());
+            const isValidTani = resPetani.data.some(t => t["Kode Unik Toko"] && t["Kode Unik Toko"].trim().toLowerCase() === inputKode.toLowerCase());
 
-            if (isValid) {
+            if (isValidToko || isValidTani) {
                 pesanError.classList.add('hidden');
-                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
-                window.open(urlTujuan, "_blank");
+                window.open(`${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`, "_blank");
                 tutupModalKodeUnik();
             } else {
                 pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
                 pesanError.classList.remove('hidden');
             }
-            btnValidasi.innerText = "Validasi & Masuk";
-            btnValidasi.disabled = false;
-        },
-        error: function(err) {
-            pesanError.innerText = "Gagal memuat data dari server.";
+        })
+        .catch(err => {
+            pesanError.innerText = "Gagal menghubungi server validasi.";
             pesanError.classList.remove('hidden');
+        })
+        .finally(() => {
             btnValidasi.innerText = "Validasi & Masuk";
             btnValidasi.disabled = false;
-        }
-    });
+        });
 }

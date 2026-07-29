@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapak Desa Talumae</title>
-    
-    <!-- INI YANG SEBELUMNYA TERHAPUS (Tailwind CSS) -->
+    <title>Beranda - Lapak Desa Talumae</title>
+    <!-- Tailwind & PapaParse -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Parser Database dan Logika Aplikasi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="js/app.js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
@@ -21,9 +17,7 @@
                 <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                <a href="index.html" class="flex items-center text-green-700 font-bold text-lg md:text-xl">
-                    Lapak Talumae
-                </a>
+                <a href="index.html" class="flex items-center text-green-700 font-bold text-lg md:text-xl">Lapak Talumae</a>
             </div>
             <span class="font-semibold text-gray-500 hidden sm:block text-sm">Inovasi KKN Desa Talumae</span>
         </div>
@@ -59,7 +53,7 @@
         </div>
     </div>
 
-    <!-- HERO SECTION (Tampilan Hijau) -->
+    <!-- HERO SECTION -->
     <header class="bg-[#1a853f] text-white text-center py-16 px-4">
         <div class="container mx-auto max-w-4xl">
             <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Lapak Desa Talumae</h1>
@@ -68,8 +62,6 @@
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-12 max-w-6xl">
-        
-        <!-- JUDUL SECTION -->
         <div class="text-center mb-10">
             <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 inline-block relative">
                 Jelajahi <span class="text-gray-900">Lapak & Toko</span> Warga
@@ -77,142 +69,94 @@
             </h2>
         </div>
 
-        <!-- KUMPULAN KARTU KATEGORI (DESAIN BARU: HORIZONTAL & TIPIS) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            
             <!-- 1. Makanan -->
             <a href="katalog.html?jenis=Makanan" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-makanan.png" alt="Makanan" class="w-7 h-7 object-contain" onerror="this.outerHTML='🍔'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🍔</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-orange-600 transition-colors">Makanan</h3>
             </a>
-
             <!-- 2. Minuman -->
             <a href="katalog.html?jenis=Minuman" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-minuman.png" alt="Minuman" class="w-7 h-7 object-contain" onerror="this.outerHTML='🍹'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🍹</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-blue-600 transition-colors">Minuman</h3>
             </a>
-
             <!-- 3. Bengkel -->
             <a href="katalog.html?jenis=Bengkel" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-bengkel.png" alt="Bengkel" class="w-7 h-7 object-contain" onerror="this.outerHTML='🔧'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🔧</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-gray-600 transition-colors">Bengkel</h3>
             </a>
-
             <!-- 4. Kelontong -->
-            <a href="peta.html?filter=Kelontong" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-kelontong.png" alt="Kelontong" class="w-7 h-7 object-contain" onerror="this.outerHTML='🏪'">
-                </div>
+            <a href="katalog.html?jenis=Kelontong" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
+                <div class="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🏪</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-yellow-600 transition-colors">Kelontong</h3>
             </a>
-
             <!-- 5. Konter Pulsa -->
             <a href="katalog.html?jenis=Konter Pulsa" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-konter.png" alt="Konter Pulsa" class="w-7 h-7 object-contain" onerror="this.outerHTML='📱'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">📱</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-purple-600 transition-colors">Konter Pulsa</h3>
             </a>
-
             <!-- 6. Laundry -->
             <a href="katalog.html?jenis=Laundry" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-cyan-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-laundry.png" alt="Laundry" class="w-7 h-7 object-contain" onerror="this.outerHTML='🧺'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-cyan-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🧺</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-cyan-600 transition-colors">Laundry</h3>
             </a>
-
             <!-- 7. ATK -->
             <a href="katalog.html?jenis=ATK" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-fuchsia-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-atk.png" alt="ATK" class="w-7 h-7 object-contain" onerror="this.outerHTML='✏️'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-fuchsia-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">✏️</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-fuchsia-600 transition-colors">ATK</h3>
             </a>
-
             <!-- 8. Makanan Hewan -->
             <a href="katalog.html?jenis=Makanan Hewan" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-pet.png" alt="Makanan Hewan" class="w-7 h-7 object-contain" onerror="this.outerHTML='🐾'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🐾</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-rose-600 transition-colors">Makanan Hewan</h3>
             </a>
-
             <!-- 9. Kosmetik -->
             <a href="katalog.html?jenis=Kosmetik" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-pink-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-kosmetik.png" alt="Kosmetik" class="w-7 h-7 object-contain" onerror="this.outerHTML='💄'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-pink-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">💄</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-pink-600 transition-colors">Kosmetik</h3>
             </a>
-
             <!-- 10. Alat & Bahan Pertanian -->
             <a href="katalog.html?jenis=Alat & Bahan Pertanian" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-tani.png" alt="Pertanian" class="w-7 h-7 object-contain" onerror="this.outerHTML='🚜'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🚜</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-teal-600 transition-colors leading-tight">Alat & Bahan Pertanian</h3>
             </a>
-
             <!-- 11. Pakaian -->
             <a href="katalog.html?jenis=Pakaian" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <img src="ikon-pakaian.png" alt="Pakaian" class="w-7 h-7 object-contain" onerror="this.outerHTML='👕'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">👕</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-red-600 transition-colors">Pakaian</h3>
             </a>
-
-            <!-- 12. Hasil Tani Lahan (Tetap diarahkan ke tani.html) -->
+            <!-- 12. Hasil Tani -->
             <a href="tani.html" class="bg-gradient-to-r from-green-50 to-green-100 p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-green-200 flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                    <img src="ikon-lahan.png" alt="Hasil Tani" class="w-7 h-7 object-contain filter brightness-0 invert" onerror="this.outerHTML='<span class=\'text-white text-xl\'>🌾</span>'">
-                </div>
+                <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm text-white text-xl">🌾</div>
                 <div>
                     <h3 class="font-bold text-green-800 text-sm md:text-base group-hover:text-green-900 transition-colors leading-tight">Bursa Hasil Tani</h3>
                     <p class="text-[10px] text-green-600 font-semibold">Komoditas Lahan Desa</p>
                 </div>
             </a>
-
         </div>
     </main>
 
-    <!-- FOOTER -->
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
-    <!-- SCRIPT LOGIKA MODAL SIDEBAR & APPSHEET -->
+    <!-- SCRIPT KHUSUS INDEX -->
     <script>
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebarMenu');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-            }
+            document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
         }
 
         function bukaModalKodeUnik() {
-            const sidebar = document.getElementById('sidebarMenu');
-            if(sidebar) sidebar.classList.add('-translate-x-full'); 
-            const modal = document.getElementById('modalKodeUnik');
-            if(!modal) return; 
+            document.getElementById('sidebarMenu').classList.add('-translate-x-full'); 
             document.getElementById('inputKodeUnik').value = "";
-            const pesanError = document.getElementById('pesanErrorKode');
-            if (pesanError) pesanError.classList.add('hidden');
+            document.getElementById('pesanErrorKode').classList.add('hidden');
+            const modal = document.getElementById('modalKodeUnik');
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
         }
 
         function tutupModalKodeUnik() {
             const modal = document.getElementById('modalKodeUnik');
-            if(!modal) return;
             modal.classList.add('opacity-0');
             modal.children[0].classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
@@ -232,63 +176,30 @@
             btnValidasi.disabled = true;
 
             const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
-            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
-            const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv"; 
+            const URL_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+            const URL_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv";
 
-            // Cek UMKM dulu
-            Papa.parse(URL_CSV_TOKO, {
-                download: true,
-                header: true,
-                complete: function(resultsToko) {
-                    const isValidToko = resultsToko.data.some(toko => {
-                        const kode = toko["Kode Unik Toko"];
-                        return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
-                    });
+            Promise.all([
+                new Promise(resolve => Papa.parse(URL_TOKO, { download: true, header: true, complete: resolve })),
+                new Promise(resolve => Papa.parse(URL_PETANI, { download: true, header: true, complete: resolve }))
+            ]).then(([resToko, resPetani]) => {
+                const isValidToko = resToko.data.some(t => t["Kode Unik Toko"] && t["Kode Unik Toko"].trim().toLowerCase() === inputKode.toLowerCase());
+                const isValidTani = resPetani.data.some(t => t["Kode Unik Toko"] && t["Kode Unik Toko"].trim().toLowerCase() === inputKode.toLowerCase());
 
-                    if (isValidToko) {
-                        berhasilValidasi(URL_APPSHEET, inputKode);
-                    } else {
-                        // Jika tidak ada di UMKM, Cek Profil Petani
-                        Papa.parse(URL_CSV_PETANI, {
-                            download: true,
-                            header: true,
-                            complete: function(resultsPetani) {
-                                const isValidTani = resultsPetani.data.some(tani => {
-                                    const kode = tani["Kode Unik Toko"];
-                                    return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
-                                });
-
-                                if (isValidTani) {
-                                    berhasilValidasi(URL_APPSHEET, inputKode);
-                                } else {
-                                    gagalValidasi();
-                                }
-                            },
-                            error: function() { gagalValidasi("Gagal menghubungi server database Petani."); }
-                        });
-                    }
-                },
-                error: function() { gagalValidasi("Gagal menghubungi server database Toko."); }
-            });
-
-            function berhasilValidasi(urlBase, kode) {
-                pesanError.classList.add('hidden');
-                const urlTujuan = `${urlBase}&defaults=%7B%22Kode%20Unik%22%3A%22${kode.toUpperCase()}%22%7D`;
-                window.open(urlTujuan, "_blank");
-                tutupModalKodeUnik();
-                resetTombol();
-            }
-
-            function gagalValidasi(pesan = "Maaf, Kode Unik Anda tidak terdaftar!") {
-                pesanError.innerText = pesan;
+                if (isValidToko || isValidTani) {
+                    window.open(`${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`, "_blank");
+                    tutupModalKodeUnik();
+                } else {
+                    pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
+                    pesanError.classList.remove('hidden');
+                }
+            }).catch(() => {
+                pesanError.innerText = "Gagal menghubungi server validasi.";
                 pesanError.classList.remove('hidden');
-                resetTombol();
-            }
-
-            function resetTombol() {
+            }).finally(() => {
                 btnValidasi.innerText = "Validasi & Masuk";
                 btnValidasi.disabled = false;
-            }
+            });
         }
     </script>
 </body>

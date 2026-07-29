@@ -64,31 +64,46 @@
         </div>
     </main>
 
-    <!-- MODAL DETAIL TOKO -->
+    <!-- MODAL DETAIL TOKO (POP-UP) -->
     <div id="modal-detail-toko" class="fixed inset-0 bg-black bg-opacity-70 z-[100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
             <div class="bg-green-600 p-4 shrink-0 flex justify-between items-center text-white">
                 <h3 id="modal-dt-nama" class="text-lg font-bold leading-tight">Nama Toko</h3>
                 <button onclick="tutupModalDetail()" class="hover:text-red-200 focus:outline-none shrink-0 ml-4">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="p-5 flex-grow text-gray-700 bg-green-50/30">
-                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm mb-3">
-                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">💳 Metode Pembayaran</p>
-                    <p id="modal-dt-bayar" class="font-semibold text-gray-800 text-sm">-</p>
+            
+            <div class="p-5 flex-grow overflow-y-auto bg-gray-50">
+                <!-- Deskripsi -->
+                <p id="modal-dt-desc" class="text-sm text-gray-700 mb-5 italic text-center bg-white p-3 rounded-lg shadow-sm border border-gray-100 hidden"></p>
+
+                <!-- Info Dasar -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                    <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">💳 Metode Pembayaran</p>
+                        <p id="modal-dt-bayar" class="font-semibold text-gray-800 text-sm">-</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">📅 Hari Operasional</p>
+                        <p id="modal-dt-hari" class="font-semibold text-gray-800 text-sm">-</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm sm:col-span-2">
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">⏰ Jam Operasional</p>
+                        <p id="modal-dt-jam" class="font-bold text-green-700 text-sm">-</p>
+                    </div>
                 </div>
-                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm mb-3">
-                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">📅 Hari Operasional</p>
-                    <p id="modal-dt-hari" class="font-semibold text-gray-800 text-sm">-</p>
-                </div>
-                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">⏰ Jam Operasional</p>
-                    <p id="modal-dt-jam" class="font-bold text-green-700 text-sm">-</p>
+
+                <!-- Tabel Produk -->
+                <h4 class="font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2">📦 Daftar Produk / Menu</h4>
+                <div id="modal-dt-produk" class="flex flex-col gap-2">
+                    <!-- Produk digenerate JS -->
                 </div>
             </div>
-            <div class="p-4 bg-gray-50 border-t shrink-0">
-                <button onclick="tutupModalDetail()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-4 rounded-lg transition-colors text-sm">Tutup</button>
+
+            <!-- Footer Tombol -->
+            <div id="modal-dt-footer" class="p-4 bg-white border-t border-gray-200 shrink-0 flex flex-col sm:flex-row gap-2">
+                <!-- Tombol digenerate JS -->
             </div>
         </div>
     </div>
@@ -99,8 +114,28 @@
 
     <!-- SCRIPT KHUSUS KATALOG -->
     <script>
+        // ========================================================
+        // ⚠️ MASUKKAN LINK CSV TABEL PRODUK ANDA DI BAWAH INI ⚠️
+        // ========================================================
+        const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+        const URL_CSV_PRODUK_UMKM = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pubhtml?gid=263400492&single=true"; 
+
+        const IKON_KATEGORI = {
+            "Makanan": "🍔", "Minuman": "🍹", "Bengkel": "🔧",
+            "Kelontong": "🏪", "Konter Pulsa": "📱", "Laundry": "🧺",
+            "ATK": "✏️", "Makanan Hewan": "🐾", "Kosmetik": "💄",
+            "Alat & Bahan Pertanian": "🚜", "Pakaian": "👕", "Hasil Tani": "🌾"
+        };
+
+        let dataKatalogGlobal = [];
+
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
+        }
+
+        function formatRupiah(angka) {
+            if (!angka) return "0";
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
         // Fungsi Download Cache
@@ -121,9 +156,6 @@
             } catch (error) { throw error; }
         }
 
-        // Variabel global untuk menyimpan data sementara agar bisa diakses oleh pop-up modal
-        let dataKatalogGlobal = [];
-
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
             const kategoriDicari = urlParams.get('jenis');
@@ -133,8 +165,6 @@
                 document.getElementById('judul-kategori').innerText = `Kategori: ${kategoriDicari}`;
                 document.getElementById('sub-judul-kategori').innerText = `Menampilkan etalase warga yang menyediakan ${kategoriDicari}.`;
             }
-
-            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
 
             fetchCSV(URL_CSV_TOKO).then(results => {
                 const dataToko = results.data;
@@ -159,7 +189,7 @@
                     if (masukKriteria) dataTersaring.push(toko);
                 });
 
-                dataKatalogGlobal = dataTersaring; // Simpan untuk modal
+                dataKatalogGlobal = dataTersaring; 
                 renderKatalog(dataTersaring);
             }).catch(() => {
                 document.getElementById('status-loading').innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data. Periksa koneksi Anda.</span>`;
@@ -181,13 +211,21 @@
 
             data.forEach((toko, index) => {
                 const nama = toko["Nama Toko"];
-                const pemilik = toko["Nama Pemilik"] || "Warga Talumae";
-                const lokasi = toko["Lokasi Toko"];
                 const wa = toko["Nomor Whatsapp (62)"];
                 const kodeUnik = toko["Kode Unik Toko"];
-                const deskripsi = toko["Deskripsi Singkat"] || "";
+                const kategori = toko["Kategori Produk"] || "Umum";
+                const deskripsi = toko["Deskripsi Singkat Toko"] || "";
+                const hari = toko["Hari Operasional"] || "-";
+                const jamBuka = toko["Jam Buka"] || "";
+                const jamTutup = toko["Jam Tutup"] || "";
 
-                // Tombol Hubungi (Hanya Muncul Jika Ada Nomor WA)
+                // Susun Jam Operasional
+                let jamOperasional = "-";
+                if (jamBuka && jamTutup) jamOperasional = `${jamBuka} - ${jamTutup} WITA`;
+                else if (jamBuka) jamOperasional = `Buka: ${jamBuka} WITA`;
+                else if (jamTutup) jamOperasional = `Tutup: ${jamTutup} WITA`;
+
+                // Logika Tombol di Kartu
                 let tombolWA = "";
                 if (wa && wa.trim() !== "") {
                     const nomorBersih = wa.toString().replace(/[^0-9]/g, '');
@@ -195,34 +233,35 @@
                     tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs flex items-center justify-center gap-1">💬 Hubungi</a>`;
                 }
 
-                // Tombol Peta (Hanya Muncul Jika Ada Kordinat)
-                let tombolPeta = "";
-                if (lokasi && lokasi.includes(',')) {
-                    tombolPeta = `<a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs">📍 Lokasi</a>`;
-                }
-
-                // Tombol Detail (Hanya Muncul Jika Ada Kode Unik)
                 let tombolDetail = "";
                 if (kodeUnik && kodeUnik.trim() !== "") {
-                    tombolDetail = `<button onclick="bukaModalDetail(${index})" class="flex-none bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs">ℹ️ Detail</button>`;
+                    tombolDetail = `<button onclick="bukaModalDetail(${index})" class="flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs">ℹ️ Detail</button>`;
                 }
 
-                // HTML Khusus Deskripsi (Hilang jika kosong)
-                const htmlDeskripsi = deskripsi ? `<p class="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>` : `<div class="flex-grow"></div>`;
+                // Logika Ikon Dinamis
+                const katUtama = kategori.split(',')[0].trim();
+                const ikon = IKON_KATEGORI[katUtama] || "🏪";
+
+                // Logika Deskripsi (Kosong jika tidak diisi)
+                const htmlDeskripsi = deskripsi ? `<p class="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">${deskripsi}</p>` : ``;
 
                 elemenHTML += `
                     <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
-                        <div class="bg-green-50 px-5 py-4 border-b border-green-100 flex justify-end items-center">
-                            <span class="text-3xl opacity-80 group-hover:scale-110 transition-transform">🏪</span>
+                        <div class="bg-green-50 px-5 py-3 border-b border-green-100 flex justify-end items-center">
+                            <span class="text-3xl opacity-80 group-hover:scale-110 transition-transform">${ikon}</span>
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
-                            <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${nama}</h3>
-                            <p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider">👤 Bpk/Ibu ${pemilik}</p>
+                            <h3 class="text-xl font-bold text-gray-900 leading-tight mb-3 group-hover:text-green-700 transition-colors">${nama}</h3>
                             ${htmlDeskripsi}
-                            <div class="flex flex-wrap items-center gap-2 mt-auto pt-4 border-t border-gray-100">
-                                ${tombolWA}
-                                ${tombolPeta}
+                            
+                            <div class="bg-gray-50 rounded-lg p-3 mb-5 text-xs text-gray-700 space-y-2 border border-gray-100 flex-grow">
+                                <p class="flex items-center gap-2"><span class="text-base">📅</span> <span class="font-semibold">${hari}</span></p>
+                                <p class="flex items-center gap-2"><span class="text-base">⏰</span> <span class="font-bold text-green-700">${jamOperasional}</span></p>
+                            </div>
+
+                            <div class="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
                                 ${tombolDetail}
+                                ${tombolWA}
                             </div>
                         </div>
                     </div>
@@ -232,13 +271,27 @@
         }
 
         // ==========================================
-        // FUNGSI MODAL DETAIL TOKO
+        // FUNGSI MODAL DETAIL TOKO (POP-UP)
         // ==========================================
         function bukaModalDetail(index) {
             const toko = dataKatalogGlobal[index];
             if (!toko) return;
 
+            // FREEZE WEB BACKGROUND
+            document.body.style.overflow = 'hidden';
+
             document.getElementById('modal-dt-nama').innerText = toko["Nama Toko"] || "Detail Toko";
+            
+            // Deskripsi di Atas Popup
+            const desc = toko["Deskripsi Singkat Toko"];
+            const elDesc = document.getElementById('modal-dt-desc');
+            if (desc && desc.trim() !== "") {
+                elDesc.innerText = `"${desc}"`;
+                elDesc.classList.remove('hidden');
+            } else {
+                elDesc.classList.add('hidden');
+            }
+
             document.getElementById('modal-dt-bayar').innerText = toko["Metode Pembayaran"] || "Belum ada informasi";
             document.getElementById('modal-dt-hari').innerText = toko["Hari Operasional"] || "Belum ada informasi";
 
@@ -246,15 +299,82 @@
             const jamTutup = toko["Jam Tutup"] || "";
             let jamOperasional = "Belum ada informasi";
 
-            if (jamBuka !== "" && jamTutup !== "") {
-                jamOperasional = `${jamBuka} WITA - ${jamTutup} WITA`;
-            } else if (jamBuka !== "") {
-                jamOperasional = `Buka: ${jamBuka} WITA`;
-            } else if (jamTutup !== "") {
-                jamOperasional = `Tutup: ${jamTutup} WITA`;
-            }
+            if (jamBuka !== "" && jamTutup !== "") jamOperasional = `${jamBuka} WITA - ${jamTutup} WITA`;
+            else if (jamBuka !== "") jamOperasional = `Buka: ${jamBuka} WITA`;
+            else if (jamTutup !== "") jamOperasional = `Tutup: ${jamTutup} WITA`;
             
             document.getElementById('modal-dt-jam').innerText = jamOperasional;
+
+            // Ambil Data Produk
+            const kodeUnik = toko["Kode Unik Toko"];
+            const wadahProduk = document.getElementById('modal-dt-produk');
+            wadahProduk.innerHTML = `<p class="text-sm text-gray-500 text-center animate-pulse py-4">Memuat produk...</p>`;
+            
+            if (URL_CSV_PRODUK_UMKM === "MASUKKAN_LINK_CSV_TABEL_PRODUK_DISINI") {
+                wadahProduk.innerHTML = `<p class="text-xs text-red-500 text-center py-2 font-bold bg-red-50 rounded border border-red-200">Anda belum memasukkan URL Tabel_Produk.csv di kodingan.</p>`;
+            } else {
+                fetchCSV(URL_CSV_PRODUK_UMKM).then(res => {
+                    const produkList = res.data.filter(p => p["Kode Unik Toko"] && p["Kode Unik Toko"].trim() === kodeUnik && p["Nama Produk"] && p["Nama Produk"].trim() !== "");
+                    
+                    if (produkList.length === 0) {
+                        wadahProduk.innerHTML = `<p class="text-sm text-gray-500 text-center italic py-2">Belum ada produk yang ditambahkan.</p>`;
+                    } else {
+                        let htmlProd = "";
+                        produkList.forEach(p => {
+                            const namaP = p["Nama Produk"];
+                            const harga = p["Harga (Rp)"];
+                            const isPromo = (p["Ada Promo ?"] || "").trim().toLowerCase() === "ya";
+                            const hargaPromo = p["Harga Promo (Rp)"];
+                            const katP = p["Kategori Produk"] || "";
+                            
+                            let hargaHtml = `<p class="text-sm font-bold text-green-700">Rp ${formatRupiah(harga)}</p>`;
+                            if (isPromo && hargaPromo) {
+                                hargaHtml = `
+                                    <p class="text-[11px] text-gray-400 line-through mb-0.5">Rp ${formatRupiah(harga)}</p>
+                                    <p class="text-sm font-bold text-red-600 flex items-center gap-1 justify-end">
+                                        Rp ${formatRupiah(hargaPromo)} 
+                                        <span class="bg-red-100 text-red-700 text-[9px] px-1.5 py-0.5 rounded font-black">PROMO</span>
+                                    </p>
+                                `;
+                            }
+                            
+                            htmlProd += `
+                                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-bold text-gray-800 text-sm mb-0.5">${namaP}</p>
+                                        ${katP ? `<p class="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded inline-block border border-gray-200">${katP}</p>` : ''}
+                                    </div>
+                                    <div class="text-right shrink-0 ml-3">
+                                        ${hargaHtml}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        wadahProduk.innerHTML = htmlProd;
+                    }
+                }).catch(e => {
+                    wadahProduk.innerHTML = `<p class="text-sm text-red-500 text-center py-2">Gagal memuat produk dari database.</p>`;
+                });
+            }
+
+            // Logika Footer Pop-up
+            const footer = document.getElementById('modal-dt-footer');
+            let htmlFooter = `<button onclick="tutupModalDetail()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-4 rounded-lg transition-colors text-sm">Tutup</button>`;
+            
+            const lokasi = toko["Lokasi Toko"];
+            if (lokasi && lokasi.includes(',')) {
+                const kordinat = lokasi.split(',');
+                htmlFooter += `<a href="https://www.google.com/maps?q=${kordinat[0].trim()},${kordinat[1].trim()}" target="_blank" class="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-center font-bold py-2.5 px-4 rounded-lg transition-colors text-sm">📍 Peta</a>`;
+            }
+
+            const wa = toko["Nomor Whatsapp (62)"];
+            if (wa && wa.trim() !== "") {
+                const noWa = wa.toString().replace(/[^0-9]/g, '');
+                const pesan = `Halo ${toko["Nama Toko"]}, saya melihat produk Anda di Lapak Talumae. Apakah bisa dibantu informasinya?`;
+                htmlFooter += `<a href="https://wa.me/${noWa}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2.5 px-4 rounded-lg transition-colors text-sm">💬 WA</a>`;
+            }
+            
+            footer.innerHTML = htmlFooter;
 
             const modal = document.getElementById('modal-detail-toko');
             modal.classList.remove('hidden');
@@ -266,6 +386,7 @@
         }
 
         function tutupModalDetail() {
+            document.body.style.overflow = 'auto'; // UN-FREEZE WEB
             const modal = document.getElementById('modal-detail-toko');
             modal.classList.add('opacity-0');
             modal.children[0].classList.remove('scale-100');

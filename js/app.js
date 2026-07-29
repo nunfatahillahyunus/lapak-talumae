@@ -6,18 +6,55 @@ const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6m
 const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv";
 
 // ==========================================
-// 2. FUNGSI UMUM & HELPER
+// 2. FUNGSI UMUM & GLOBAL (Anti Crash)
 // ==========================================
-function toggleSidebar() {
+// Didaftarkan ke window agar bisa dipanggil langsung dari HTML (onclick)
+window.toggleSidebar = function() {
     const sidebar = document.getElementById('sidebarMenu');
     if (sidebar) sidebar.classList.toggle('-translate-x-full');
-}
+};
 
-// Fungsi Download Paralel Cepat
-function fetchCSV(url) {
-    return new Promise((resolve, reject) => {
-        Papa.parse(url, { download: true, header: true, fastMode: true, complete: resolve, error: reject });
-    });
+window.formatGambar = function(sumberFoto) {
+    if (!sumberFoto || sumberFoto.trim() === "") return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
+    if (sumberFoto.includes("drive.google.com") || sumberFoto.includes("http")) {
+        const match = sumberFoto.match(/([-\w]{25,})/);
+        if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+        return sumberFoto;
+    } 
+    let namaFile = sumberFoto.trim();
+    if (namaFile.includes("/")) namaFile = namaFile.split('/').pop(); 
+    return `img_umkm/${namaFile}`;
+};
+
+// Fungsi Download dengan CACHE (Membuat Loading Instan!)
+async function fetchCSV(url) {
+    const cacheKey = "cache_" + url;
+    const cachedText = sessionStorage.getItem(cacheKey);
+    const cacheTime = sessionStorage.getItem(cacheKey + "_time");
+
+    // Jika cache masih ada dan usianya di bawah 5 menit, gunakan cache (Loading 0 Detik)
+    if (cachedText && cacheTime && (Date.now() - parseInt(cacheTime) < 300000)) {
+        return new Promise(resolve => {
+            Papa.parse(cachedText, { header: true, skipEmptyLines: true, complete: resolve });
+        });
+    }
+
+    // Jika tidak ada cache, download live dari Google (Loading 2-3 Detik)
+    try {
+        const response = await fetch(url);
+        const csvText = await response.text();
+        
+        // Simpan ke ingatan HP (Cache)
+        sessionStorage.setItem(cacheKey, csvText);
+        sessionStorage.setItem(cacheKey + "_time", Date.now().toString());
+
+        return new Promise(resolve => {
+            Papa.parse(csvText, { header: true, skipEmptyLines: true, complete: resolve });
+        });
+    } catch (error) {
+        console.error("Gagal mendownload data:", error);
+        throw error;
+    }
 }
 
 // ==========================================
@@ -85,7 +122,6 @@ function renderKatalog(data) {
     
     const wadah = document.getElementById('wadah-katalog');
     const pesanKosong = document.getElementById('pesan-kosong');
-
     if (!wadah || !pesanKosong) return;
 
     if (data.length === 0) {
@@ -118,7 +154,6 @@ function renderKatalog(data) {
 
         const labelKategori = kategori.split(',')[0].trim();
 
-        // Desain Kartu Tanpa Foto
         elemenHTML += `
             <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
                 <div class="bg-yellow-50 px-5 py-4 border-b border-yellow-100 flex justify-between items-center">
@@ -199,8 +234,8 @@ function initPeta() {
                 if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                 else document.getElementById('input-cari-peta').value = filterDariURL;
             }
-            renderTombolKategoriPeta();
-            terapkanFilterPeta();
+            window.renderTombolKategoriPeta();
+            window.terapkanFilterPeta();
 
             const overlay = document.getElementById("data-loading-overlay");
             if (overlay) {
@@ -214,7 +249,7 @@ function initPeta() {
         });
 
     const inputCari = document.getElementById('input-cari-peta');
-    if (inputCari) inputCari.addEventListener('input', terapkanFilterPeta);
+    if (inputCari) inputCari.addEventListener('input', window.terapkanFilterPeta);
 }
 
 function buatMarkerSVG(warnaHex) {
@@ -226,7 +261,7 @@ function buatMarkerSVG(warnaHex) {
     });
 }
 
-function renderTombolKategoriPeta() {
+window.renderTombolKategoriPeta = function() {
     const wadah = document.getElementById('wadah-kategori-peta');
     if (!wadah) return;
     let html = "";
@@ -236,27 +271,27 @@ function renderTombolKategoriPeta() {
         const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
         const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
         html += `
-            <button onclick="pilihKategoriPeta('${kat}')" class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}">
+            <button onclick="window.pilihKategoriPeta('${kat}')" class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}">
                 <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>${kat}
             </button>`;
     });
     wadah.innerHTML = html;
-}
+};
 
-function pilihKategoriPeta(katDipilih) {
+window.pilihKategoriPeta = function(katDipilih) {
     const index = kategoriAktif.indexOf(katDipilih);
     if (index > -1) kategoriAktif.splice(index, 1);
     else kategoriAktif.push(katDipilih);
-    renderTombolKategoriPeta();
-    terapkanFilterPeta();
-}
+    window.renderTombolKategoriPeta();
+    window.terapkanFilterPeta();
+};
 
-function cariLokasiSaya() {
+window.cariLokasiSaya = function() {
     if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
     else alert("Browser Anda tidak mendukung GPS.");
-}
+};
 
-function terapkanFilterPeta() {
+window.terapkanFilterPeta = function() {
     if (!layerGrupMarker) return;
     layerGrupMarker.clearLayers();
     
@@ -297,7 +332,6 @@ function terapkanFilterPeta() {
                     else tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
                     tombolHTML += `</div>`;
 
-                    // Popup Peta Tanpa Foto
                     const popup = `
                         <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
                             <div class="p-4 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;">
@@ -337,7 +371,6 @@ function terapkanFilterPeta() {
                 const lat = parseFloat(lokasi.split(',')[0].trim());
                 const lng = parseFloat(lokasi.split(',')[1].trim());
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    // Popup Tani Tanpa Foto
                     const popup = `
                         <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
                             <div class="p-4 border-b-4 flex flex-col items-center" style="border-color: ${warnaTani}; background-color: #f0fdf4;">
@@ -359,7 +392,7 @@ function terapkanFilterPeta() {
             }
         }
     });
-}
+};
 
 // ==========================================
 // 6. LOGIKA KHUSUS HALAMAN HASIL TANI
@@ -381,7 +414,7 @@ function initTani() {
 
             const elLoading = document.getElementById("status-loading");
             if (elLoading) elLoading.classList.add("hidden");
-            saringDataTani();
+            window.saringDataTani();
         })
         .catch(err => {
             const elLoading = document.getElementById("status-loading");
@@ -393,11 +426,11 @@ function initTani() {
 
     const inputCari = document.getElementById('input-cari');
     const filterJenis = document.getElementById('filter-jenis');
-    if (inputCari) inputCari.addEventListener('input', saringDataTani);
-    if (filterJenis) filterJenis.addEventListener('change', saringDataTani);
+    if (inputCari) inputCari.addEventListener('input', window.saringDataTani);
+    if (filterJenis) filterJenis.addEventListener('change', window.saringDataTani);
 }
 
-function saringDataTani() {
+window.saringDataTani = function() {
     const elInput = document.getElementById('input-cari');
     const elFilter = document.getElementById('filter-jenis');
     if (!elInput || !elFilter) return;
@@ -418,7 +451,7 @@ function saringDataTani() {
     });
 
     renderTaniGrid(dataTersaring);
-}
+};
 
 function renderTaniGrid(data) {
     const wadah = document.getElementById('wadah-tani');
@@ -444,9 +477,8 @@ function renderTaniGrid(data) {
         const sisaTersedia = tani["Sisa Pangan Tersedia"] || "0";
         const satuan = tani["Satuan"] || "Kg";
 
-        // Desain Kartu Tani Tanpa Foto
         elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden cursor-pointer flex flex-col group" onclick="bukaPopupTani(${originalIndex})">
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden cursor-pointer flex flex-col group" onclick="window.bukaPopupTani(${originalIndex})">
                 <div class="bg-green-50 px-5 py-4 border-b border-green-100 flex justify-between items-center">
                     <span class="bg-green-500 text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase shadow-sm opacity-90">${jenis}</span>
                     <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🌾</span>
@@ -464,7 +496,7 @@ function renderTaniGrid(data) {
     wadah.innerHTML = elemenHTML;
 }
 
-function bukaPopupTani(index) {
+window.bukaPopupTani = function(index) {
     const tani = dataTaniList[index];
     if (!tani) return;
     indexTaniAktif = index; 
@@ -522,9 +554,9 @@ function bukaPopupTani(index) {
         modal.children[0].classList.remove('scale-95');
         modal.children[0].classList.add('scale-100');
     }, 10);
-}
+};
 
-function tutupPopupTani() {
+window.tutupPopupTani = function() {
     const modal = document.getElementById('modal-tani');
     modal.classList.add('opacity-0');
     modal.children[0].classList.remove('scale-100');
@@ -533,9 +565,9 @@ function tutupPopupTani() {
         modal.classList.add('hidden');
         indexTaniAktif = null;
     }, 300); 
-}
+};
 
-function bukaModalPenawaran() {
+window.bukaModalPenawaran = function() {
     if (indexTaniAktif === null) return;
     const tani = dataTaniList[indexTaniAktif];
     document.getElementById('penawaran-target-petani').innerText = tani["Nama Petani"] || "Petani";
@@ -550,21 +582,21 @@ function bukaModalPenawaran() {
         modal.children[0].classList.remove('scale-95');
         modal.children[0].classList.add('scale-100');
     }, 10);
-}
+};
 
-function tutupModalPenawaran() {
+window.tutupModalPenawaran = function() {
     const modal = document.getElementById('modal-penawaran');
     modal.classList.add('opacity-0');
     modal.children[0].classList.remove('scale-100');
     modal.children[0].classList.add('scale-95');
     setTimeout(() => { modal.classList.add('hidden'); }, 300); 
-}
+};
 
 function formatRupiah(angka) {
     return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-function kirimPenawaranWA() {
+window.kirimPenawaranWA = function() {
     if (indexTaniAktif === null) return;
     const tani = dataTaniList[indexTaniAktif];
     const nomorWA = tani["Nomor Whatsapp (62)"];
@@ -589,13 +621,13 @@ function kirimPenawaranWA() {
     const hrgFormat = formatRupiah(hrg);
     const teksPesan = `Halo Bapak/Ibu *${tani["Nama Petani"]}*,\n\nPerkenalkan, saya dari *${prsh}*. Saya melihat informasi hasil tani Anda di Lapak Desa Talumae dan bermaksud mengajukan penawaran untuk komoditas *${tani["Nama Komoditas"]}*.\n\nBerikut rincian penawaran kami:\n- *Kuantitas Diminta:* ${qty} ${tani["Satuan"] || ""}\n- *Harga Penawaran:* Rp ${hrgFormat}\n\n📍 *Informasi Pengiriman / Kontak Kami:*\n- Email: ${eml}\n- Telepon: ${telp}\n- Alamat: Kec. ${kec}, Kab. ${kab}, Prov. ${prov} ${pos ? `(Kode Pos: ${pos})` : ''}\n\nApakah penawaran ini bisa didiskusikan lebih lanjut? Terima kasih.`;
     window.open(`https://wa.me/${nomorBersih}?text=${encodeURIComponent(teksPesan)}`, '_blank');
-    tutupModalPenawaran();
-}
+    window.tutupModalPenawaran();
+};
 
 // ==========================================
 // 7. MODAL APPSHEET PENJUAL (Semua Halaman)
 // ==========================================
-function bukaModalKodeUnik() {
+window.bukaModalKodeUnik = function() {
     const sidebar = document.getElementById('sidebarMenu');
     if(sidebar) sidebar.classList.add('-translate-x-full'); 
     const modal = document.getElementById('modalKodeUnik');
@@ -605,17 +637,17 @@ function bukaModalKodeUnik() {
     if (pesanError) pesanError.classList.add('hidden');
     modal.classList.remove('hidden');
     setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
-}
+};
 
-function tutupModalKodeUnik() {
+window.tutupModalKodeUnik = function() {
     const modal = document.getElementById('modalKodeUnik');
     if(!modal) return;
     modal.classList.add('opacity-0');
     modal.children[0].classList.add('scale-95');
     setTimeout(() => { modal.classList.add('hidden'); }, 300);
-}
+};
 
-function validasiDanBukaAppSheet() {
+window.validasiDanBukaAppSheet = function() {
     const inputKode = document.getElementById('inputKodeUnik').value.trim();
     const pesanError = document.getElementById('pesanErrorKode');
     const btnValidasi = document.getElementById('btnValidasi');
@@ -638,7 +670,7 @@ function validasiDanBukaAppSheet() {
             if (isValidToko || isValidTani) {
                 pesanError.classList.add('hidden');
                 window.open(`${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`, "_blank");
-                tutupModalKodeUnik();
+                window.tutupModalKodeUnik();
             } else {
                 pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
                 pesanError.classList.remove('hidden');
@@ -652,4 +684,4 @@ function validasiDanBukaAppSheet() {
             btnValidasi.innerText = "Validasi & Masuk";
             btnValidasi.disabled = false;
         });
-}
+};

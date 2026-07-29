@@ -8,7 +8,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen overflow-hidden" id="body-main">
+
+    <!-- SPLASH SCREEN (LAYAR SAMBUTAN AWAL) -->
+    <div id="splash-screen" class="fixed inset-0 bg-[#1a853f] z-[200] flex flex-col items-center justify-center text-white transition-opacity duration-700">
+        <div class="text-center px-6 transform transition-transform duration-700 scale-100" id="splash-content">
+            <div class="text-7xl mb-6 animate-bounce">👋</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Selamat Datang di<br>Lapak Talumae</h1>
+            <p class="text-green-100 text-base md:text-lg mb-10 max-w-md mx-auto leading-relaxed">Platform digital pemberdayaan ekonomi warga. Temukan berbagai etalase produk unggulan dan hasil bumi langsung dari masyarakat desa.</p>
+            <button onclick="tutupSplash()" class="bg-white text-green-700 font-bold text-lg py-3.5 px-8 rounded-full shadow-2xl hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto">
+                <span></span> Jelajahi UMKM
+            </button>
+        </div>
+    </div>
+
+    <!-- Script Pencegah Splash Muncul Berkali-kali -->
+    <script>
+        if (sessionStorage.getItem('sudah_disapa')) {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('body-main').classList.remove('overflow-hidden');
+        }
+    </script>
 
     <!-- NAVIGASI ATAS -->
     <nav class="bg-white shadow-sm p-4 sticky top-0 z-[40]">
@@ -85,8 +105,8 @@
                 <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🔧</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-gray-600 transition-colors">Bengkel</h3>
             </a>
-            <!-- 4. Kelontong -->
-            <a href="katalog.html?jenis=Kelontong" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
+            <!-- 4. Kelontong (Diarahkan Langsung Ke Peta) -->
+            <a href="peta.html?filter=Kelontong" class="bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 flex items-center gap-4 group cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🏪</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-yellow-600 transition-colors">Kelontong</h3>
             </a>
@@ -145,7 +165,8 @@
                 <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">🐄</div>
                 <h3 class="font-bold text-gray-800 text-sm md:text-base group-hover:text-amber-600 transition-colors leading-tight">Alat & Pakan Ternak</h3>
             </a>
-            <!-- 16. Hasil Tani -->
+            
+            <!-- 16. Hasil Tani (Di akhir agar rapi) -->
             <a href="tani.html" class="bg-gradient-to-r from-green-50 to-green-100 p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-green-200 flex items-center gap-4 group cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm text-white text-xl">🌾</div>
                 <div>
@@ -162,6 +183,26 @@
 
     <!-- SCRIPT KHUSUS INDEX -->
     <script>
+        // Fungsi untuk menghilangkan splash screen
+        function tutupSplash() {
+            const splash = document.getElementById('splash-screen');
+            const content = document.getElementById('splash-content');
+            
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            splash.classList.add('opacity-0');
+            
+            // Catat di memori HP bahwa pengunjung sudah disapa
+            sessionStorage.setItem('sudah_disapa', 'true');
+            
+            // Lepaskan kunci scroll pada body
+            document.getElementById('body-main').classList.remove('overflow-hidden');
+            
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 700);
+        }
+
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
         }

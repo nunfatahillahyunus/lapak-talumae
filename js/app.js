@@ -13,19 +13,6 @@ function toggleSidebar() {
     if (sidebar) sidebar.classList.toggle('-translate-x-full');
 }
 
-// Fungsi Pintar Pembaca Foto (Bisa Link Drive atau Nama File Lokal)
-function formatGambar(sumberFoto) {
-    if (!sumberFoto || sumberFoto.trim() === "") return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
-    if (sumberFoto.includes("drive.google.com") || sumberFoto.includes("http")) {
-        const match = sumberFoto.match(/([-\w]{25,})/);
-        if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w600`;
-        return sumberFoto;
-    } 
-    let namaFile = sumberFoto.trim();
-    if (namaFile.includes("/")) namaFile = namaFile.split('/').pop(); 
-    return `img_umkm/${namaFile}`;
-}
-
 // Fungsi Download Paralel Cepat
 function fetchCSV(url) {
     return new Promise((resolve, reject) => {
@@ -37,12 +24,10 @@ function fetchCSV(url) {
 // 3. RUTING OTOMATIS (Deteksi Halaman Aktif)
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-    // Deteksi berdasarkan ID elemen utama di masing-masing halaman
     const isHalamanKatalog = document.getElementById('wadah-katalog') !== null;
     const isHalamanPeta = document.getElementById('map') !== null;
     const isHalamanTani = document.getElementById('wadah-tani') !== null;
 
-    // Jalankan logika sesuai halaman yang terbuka (Mencegah Crash Script)
     if (isHalamanKatalog) initKatalog();
     if (isHalamanPeta) initPeta();
     if (isHalamanTani) initTani();
@@ -117,7 +102,6 @@ function renderKatalog(data) {
         const lokasi = toko["Lokasi Toko"];
         const wa = toko["Nomor Whatsapp (62)"];
         const kategori = toko["Kategori Produk"] || "Umum";
-        const foto = formatGambar(toko["Perwakilan Foto Produk / Etalase"]);
         const deskripsi = toko["Deskripsi Singkat"] || "Toko kelontong dan usaha warga desa.";
 
         let tombolWA = "";
@@ -134,17 +118,17 @@ function renderKatalog(data) {
 
         const labelKategori = kategori.split(',')[0].trim();
 
+        // Desain Kartu Tanpa Foto
         elemenHTML += `
-            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group">
-                <div class="h-48 w-full overflow-hidden relative bg-gray-200">
-                    <img src="${foto}" alt="${nama}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-md uppercase shadow-sm">${labelKategori}</span>
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
+                <div class="bg-yellow-50 px-5 py-4 border-b border-yellow-100 flex justify-between items-center">
+                    <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-md uppercase shadow-sm">${labelKategori}</span>
+                    <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🏪</span>
                 </div>
                 <div class="p-5 flex flex-col flex-grow">
-                    <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1">${nama}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${nama}</h3>
                     <p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider">👤 Bpk/Ibu ${pemilik}</p>
-                    <p class="text-sm text-gray-600 mb-5 line-clamp-2 flex-grow">${deskripsi}</p>
+                    <p class="text-sm text-gray-600 mb-5 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>
                     <div class="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
                         ${tombolWA}
                         ${tombolPeta}
@@ -199,11 +183,9 @@ function initPeta() {
         petaLeaflet.fitBounds(pol.getBounds());
     }).catch(e => console.log("GeoJSON opsional tidak ditemukan."));
 
-    // Tarik 3 Data Sekaligus agar Peta Tani Muncul
     Promise.all([fetchCSV(URL_CSV_TOKO), fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)])
         .then(([resToko, resProfilPetani, resProdukTani]) => {
             dataTokoPeta = resToko.data;
-            
             const profilPetani = resProfilPetani.data;
             const produkMentah = resProdukTani.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
             
@@ -304,7 +286,6 @@ function terapkanFilterPeta() {
                 const lng = parseFloat(lokasi.split(',')[1].trim());
                 if (!isNaN(lat) && !isNaN(lng)) {
                     const idToko = toko["Kode Unik Toko"] || namaToko; 
-                    const foto = formatGambar(toko["Perwakilan Foto Produk / Etalase"]);
                     const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
                     
                     let warnaMarker = WARNA_DEFAULT;
@@ -316,7 +297,17 @@ function terapkanFilterPeta() {
                     else tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
                     tombolHTML += `</div>`;
 
-                    const popup = `<div class="flex flex-col bg-white"><div class="relative h-28 w-full border-b-4" style="border-color: ${warnaMarker};"><img src="${foto}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div><h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm mt-1">📍 Google Maps</a></div></div>`;
+                    // Popup Peta Tanpa Foto
+                    const popup = `
+                        <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                            <div class="p-4 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;">
+                                <h3 class="font-bold text-gray-900 text-lg leading-tight text-center">${namaToko}</h3>
+                            </div>
+                            <div class="p-4 text-center bg-white flex flex-col gap-2">
+                                ${tombolHTML}
+                                <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm mt-1">📍 Buka Google Maps</a>
+                            </div>
+                        </div>`;
                     const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
                     layerGrupMarker.addLayer(marker);
                     
@@ -346,8 +337,23 @@ function terapkanFilterPeta() {
                 const lat = parseFloat(lokasi.split(',')[0].trim());
                 const lng = parseFloat(lokasi.split(',')[1].trim());
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    const foto = formatGambar(tani["Foto Hasil Tani"]);
-                    const popup = `<div class="flex flex-col bg-white"><div class="relative h-28 w-full border-b-4" style="border-color: ${warnaTani};"><img src="${foto}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><span class="absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase shadow-sm" style="background-color: ${warnaTani};">Lahan Tani</span><h3 class="absolute bottom-2 left-3 right-3 font-bold text-white text-lg leading-tight text-shadow-sm">${kom}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2"><p class="text-xs text-gray-500 mb-1">👤 ${pet}</p><div class="bg-green-50 border border-green-200 rounded p-1 mb-1"><p class="text-xs font-bold text-green-700">Stok: ${tani["Sisa Pangan Tersedia"]||"0"} ${tani["Satuan"]||""}</p></div><div class="flex flex-col gap-2 mt-1"><a href="tani.html" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a></div></div></div>`;
+                    // Popup Tani Tanpa Foto
+                    const popup = `
+                        <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                            <div class="p-4 border-b-4 flex flex-col items-center" style="border-color: ${warnaTani}; background-color: #f0fdf4;">
+                                <span class="text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-2 inline-block" style="background-color: ${warnaTani};">Lahan Tani</span>
+                                <h3 class="font-bold text-gray-900 text-lg leading-tight text-center">${kom}</h3>
+                            </div>
+                            <div class="p-4 text-center bg-white flex flex-col gap-2">
+                                <p class="text-xs text-gray-500 mb-1">👤 ${pet}</p>
+                                <div class="bg-green-50 border border-green-200 rounded p-2 mb-1">
+                                    <p class="text-xs font-bold text-green-700">Stok: ${tani["Sisa Pangan Tersedia"]||"0"} ${tani["Satuan"]||""}</p>
+                                </div>
+                                <div class="flex flex-col gap-2 mt-1">
+                                    <a href="tani.html" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a>
+                                </div>
+                            </div>
+                        </div>`;
                     layerGrupMarker.addLayer(L.marker([lat, lng], { icon: buatMarkerSVG(warnaTani) }).bindPopup(popup));
                 }
             }
@@ -437,19 +443,19 @@ function renderTaniGrid(data) {
         const jenis = tani["Jenis Hasil Tani"] || "Pangan";
         const sisaTersedia = tani["Sisa Pangan Tersedia"] || "0";
         const satuan = tani["Satuan"] || "Kg";
-        const foto = formatGambar(tani["Foto Hasil Tani"]);
 
+        // Desain Kartu Tani Tanpa Foto
         elemenHTML += `
-            <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden cursor-pointer flex flex-col group" onclick="bukaPopupTani(${originalIndex})">
-                <div class="h-40 w-full overflow-hidden relative">
-                    <img src="${foto}" alt="${komoditas}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase shadow-sm opacity-90">${jenis}</span>
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden cursor-pointer flex flex-col group" onclick="bukaPopupTani(${originalIndex})">
+                <div class="bg-green-50 px-5 py-4 border-b border-green-100 flex justify-between items-center">
+                    <span class="bg-green-500 text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase shadow-sm opacity-90">${jenis}</span>
+                    <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🌾</span>
                 </div>
-                <div class="p-4 flex flex-col flex-grow">
+                <div class="p-5 flex flex-col flex-grow">
                     <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${komoditas}</h3>
-                    <p class="text-sm text-gray-500 mb-3">👤 ${petani}</p>
-                    <div class="mt-auto bg-gray-50 p-2.5 rounded-lg border border-gray-200 flex justify-between items-end">
-                        <span class="text-xs text-gray-500 font-semibold uppercase">Stok Tersedia:</span>
+                    <p class="text-sm text-gray-500 mb-5">👤 ${petani}</p>
+                    <div class="mt-auto bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 font-semibold uppercase">Stok Tersedia</span>
                         <span class="text-lg font-bold text-green-700">${sisaTersedia} <span class="text-xs font-normal text-gray-600">${satuan}</span></span>
                     </div>
                 </div>
@@ -466,7 +472,6 @@ function bukaPopupTani(index) {
     document.getElementById('modal-komoditas').innerText = tani["Nama Komoditas"];
     document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
     document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
-    document.getElementById('modal-foto').src = formatGambar(tani["Foto Hasil Tani"]);
     
     const stringBulan = tani["Bulan Panen"] || "Belum ditentukan";
     const wadahBulan = document.getElementById('modal-bulan');
@@ -526,7 +531,6 @@ function tutupPopupTani() {
     modal.children[0].classList.add('scale-95');
     setTimeout(() => {
         modal.classList.add('hidden');
-        document.getElementById('modal-foto').src = ""; 
         indexTaniAktif = null;
     }, 300); 
 }

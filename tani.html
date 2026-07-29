@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hasil Tani - Lapak Desa Talumae</title>
-    <!-- Tailwind & PapaParse -->
+    <title>Peta Lokasi - Lapak Desa Talumae</title>
+    <!-- Tailwind, PapaParse, dan Leaflet -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
     <!-- NAVIGASI ATAS -->
     <nav class="bg-white shadow-sm p-4 sticky top-0 z-[40]">
         <div class="container mx-auto max-w-6xl flex items-center">
-            <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 focus:outline-none">
+            <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            <a href="index.html" class="flex items-center text-green-700 font-bold">
+            <a href="index.html" class="flex items-center text-green-700 hover:text-green-800 font-bold transition-colors">
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Kembali ke Beranda
             </a>
+            <span class="font-semibold text-gray-500 hidden sm:block ml-auto">Inovasi KKN Desa Talumae</span>
         </div>
     </nav>
 
@@ -30,160 +33,65 @@
         </button>
         <div class="p-6 pt-16 flex-grow">
             <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
-            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🏠 Beranda</a>
-            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors mt-2">🌾 Hasil Tani</a>
-            <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
+            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
+            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🌾 Hasil Tani</a>
+            <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3 mt-2">🗺️ Peta Lokasi UMKM</a>
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
-            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
-            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
 
     <!-- HEADER HALAMAN -->
     <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
         <div class="container mx-auto max-w-6xl">
-            <h1 class="text-3xl md:text-4xl font-bold mb-2">Hasil Tani</h1>
-            <p class="text-green-100">Informasi komoditas dan ketersediaan panen warga Desa Talumae.</p>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Peta Persebaran</h1>
+            <p class="text-green-100">Lokasi UMKM, Titik Penting, dan Poligon Pertanian Desa Talumae.</p>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl flex flex-col">
         
-        <!-- PENCARIAN & FILTER -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 relative z-20">
-            <div class="flex-grow relative">
-                <input type="text" id="input-cari" placeholder="Cari nama komoditas atau nama petani..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+        <!-- PANEL PENCARIAN & FILTER PETA -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 relative z-[20]">
+            <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Cari Lokasi Spesifik</h3>
+            <div class="relative mb-5">
+                <input type="text" id="input-cari-peta" placeholder="Cari nama toko, jenis tani, atau titik penting..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm shadow-sm">
             </div>
-            <div class="w-full md:w-64 shrink-0">
-                <select id="filter-jenis" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50 font-semibold text-gray-700">
-                    <option value="Semua">Semua Jenis</option>
-                    <option value="Pangan">Pangan</option>
-                    <option value="Sayur">Sayur-sayuran</option>
-                    <option value="Buah">Buah-buahan</option>
-                    <option value="Palawija">Palawija & Rempah</option>
-                </select>
-            </div>
+
+            <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
+            <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
+            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik atau area pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih kategori di atas.</p>
         </div>
 
-        <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse flex flex-col items-center">
-            <svg class="w-10 h-10 mb-3 text-green-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            Menggabungkan data profil dan produk...
-        </div>
+        <!-- WADAH PETA DENGAN OVERLAY LOADING -->
+        <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[50vh] md:min-h-[70vh]">
+            
+            <div id="data-loading-overlay" class="absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-500">
+                <svg class="w-10 h-10 mb-3 text-green-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span class="text-sm font-bold text-green-800">Menyinkronkan data spasial...</span>
+            </div>
 
-        <!-- WADAH KARTU HASIL TANI -->
-        <div id="wadah-tani" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 hidden"></div>
-        
-        <!-- PESAN KOSONG -->
-        <div id="pesan-kosong" class="hidden text-center py-12 text-gray-500">
-            <p class="text-lg font-semibold">Komoditas tidak ditemukan.</p>
+            <div id="map" class="absolute inset-0 z-[10]"></div>
+            
+            <!-- TOMBOL LIVE LOCATION -->
+            <button onclick="cariLokasiSaya()" class="absolute bottom-6 right-6 z-[1000] bg-white text-blue-600 p-3.5 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 transition-all flex items-center justify-center group" title="Temukan Lokasi Saya">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
         </div>
 
     </main>
 
-    <!-- MODAL POPUP DETAIL TANI (Desain Tanpa Foto) -->
-    <div id="modal-tani" class="fixed inset-0 bg-black bg-opacity-70 z-[100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
-            
-            <div class="relative bg-green-700 p-6 shrink-0 flex flex-col items-center justify-center text-center">
-                <button onclick="tutupPopupTani()" class="absolute top-3 right-3 bg-white bg-opacity-20 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-                <span class="text-4xl mb-3 block opacity-80">🌾</span>
-                <span id="modal-jenis" class="bg-green-500 border border-green-400 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block">Jenis</span>
-                <h2 id="modal-komoditas" class="text-2xl md:text-3xl font-bold text-white leading-tight">Nama Komoditas</h2>
-            </div>
-
-            <div class="p-5 overflow-y-auto flex-grow bg-white">
-                <div class="flex items-center gap-3 mb-5 text-gray-700">
-                    <div>
-                        <p class="text-xs text-gray-500 font-semibold uppercase">Petani / Pengelola</p>
-                        <p id="modal-petani" class="font-bold text-lg leading-tight text-gray-900">Nama Petani</p>
-                    </div>
-                </div>
-
-                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
-                    <p class="text-xs text-blue-600 font-semibold uppercase">Bulan Panen</p>
-                    <div id="modal-bulan" class="font-bold text-gray-800 leading-tight">Belum ditentukan</div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
-                        <p class="text-xs text-gray-500 mb-1">Rata-rata Panen</p>
-                        <p class="text-lg font-bold text-gray-800"><span id="modal-rata">0</span> <span class="satuan-teks text-sm font-normal"></span></p>
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 text-center">
-                        <p class="text-xs text-gray-500 mb-1">Panen Saat Ini</p>
-                        <p class="text-lg font-bold text-gray-800"><span id="modal-saatini">0</span> <span class="satuan-teks text-sm font-normal"></span></p>
-                    </div>
-                    <div class="col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 text-center shadow-inner">
-                        <p class="text-sm text-green-800 font-semibold mb-1">Sisa Pangan Tersedia</p>
-                        <p class="text-3xl font-extrabold text-green-700"><span id="modal-sisa">0</span> <span class="satuan-teks text-lg font-bold"></span></p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 bg-gray-50 border-t flex flex-col gap-2 shrink-0">
-                <button id="btn-modal-penawaran" onclick="bukaModalPenawaran()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md">🤝 Ajukan Penawaran Langsung</button>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <button id="btn-modal-wa" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm text-sm">💬 Tanya Biasa (WA)</button>
-                    <button id="btn-modal-peta" class="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm text-sm">📍 Lokasi Lahan</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL FORM PENAWARAN (Bidding) -->
-    <div id="modal-penawaran" class="fixed inset-0 bg-black bg-opacity-75 z-[110] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[95vh]">
-            <div class="bg-yellow-500 p-4 shrink-0 flex justify-between items-center text-white">
-                <h3 class="text-xl font-bold">Form Pengajuan Penawaran</h3>
-                <button onclick="tutupModalPenawaran()" class="hover:text-red-200 focus:outline-none"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div class="p-5 overflow-y-auto flex-grow text-sm">
-                <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-yellow-800">
-                    <p class="font-semibold text-sm">Target: <span id="penawaran-target-petani">Nama Petani</span></p>
-                    <p class="text-xs">Komoditas: <span id="penawaran-target-komoditas" class="font-bold">Komoditas</span></p>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">Kuantitas Diminta (<span id="label-satuan-penawaran" class="text-green-600">Satuan</span>)*</label>
-                        <input type="number" id="form-kuantitas" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-1">Harga Penawaran (Rp)*</label>
-                        <input type="number" id="form-harga" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none">
-                    </div>
-                    <div class="sm:col-span-2 border-t pt-4 mt-2">
-                        <label class="block text-gray-700 font-bold mb-1">Nama Perusahaan / Instansi*</label>
-                        <input type="text" id="form-perusahaan" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-yellow-500 focus:outline-none">
-                    </div>
-                    <div><label class="block text-gray-700 font-bold mb-1">Email / Gmail*</label><input type="email" id="form-email" class="w-full border border-gray-300 p-2 rounded"></div>
-                    <div><label class="block text-gray-700 font-bold mb-1">Nomor Telepon Anda*</label><input type="tel" id="form-telepon" class="w-full border border-gray-300 p-2 rounded"></div>
-                    <div><label class="block text-gray-600 mb-1 text-xs font-semibold">Provinsi*</label><input type="text" id="form-provinsi" class="w-full border border-gray-300 p-2 rounded"></div>
-                    <div><label class="block text-gray-600 mb-1 text-xs font-semibold">Kabupaten / Kota*</label><input type="text" id="form-kabupaten" class="w-full border border-gray-300 p-2 rounded"></div>
-                    <div><label class="block text-gray-600 mb-1 text-xs font-semibold">Kecamatan*</label><input type="text" id="form-kecamatan" class="w-full border border-gray-300 p-2 rounded"></div>
-                    <div><label class="block text-gray-600 mb-1 text-xs font-semibold">Kode Pos</label><input type="text" id="form-kodepos" class="w-full border border-gray-300 p-2 rounded"></div>
-                </div>
-                <p id="error-penawaran" class="text-red-500 text-xs font-bold mt-3 hidden text-center">Mohon lengkapi seluruh kolom yang bertanda bintang (*).</p>
-            </div>
-            <div class="p-4 bg-gray-50 border-t shrink-0">
-                <button onclick="kirimPenawaranWA()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md">Kirim Penawaran via WA</button>
-            </div>
-        </div>
-    </div>
-
-    <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
+    <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-6">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
-    <!-- SCRIPT KHUSUS TANI -->
+    <!-- SCRIPT KHUSUS PETA & SPASIAL -->
     <script>
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
         }
 
         async function fetchCSV(url) {
-            const cacheKey = "cache_" + url;
+            const cacheKey = "talumae_v5_" + url;
             const cachedText = sessionStorage.getItem(cacheKey);
             const cacheTime = sessionStorage.getItem(cacheKey + "_time");
 
@@ -199,223 +107,243 @@
             } catch (error) { throw error; }
         }
 
-        let dataTaniList = [];
-        let indexTaniAktif = null;
+        let petaLeaflet, layerGrupMarker;
+        let dataTokoPeta = [];
+        let geojsonTani = null; // Menyimpan data Polygon Tani
+        let geojsonTitik = null; // Menyimpan data Titik Penting
+        
+        let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
+        let targetTokoBukaPopup = null;
+
+        // KATEGORI SPASIAL TERBARU (Mencakup Tani & Titik Penting)
+        const KATEGORI_WARNA = {
+            "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
+            "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
+            "ATK": "#d946ef", "Makanan Hewan": "#f97316", "Kosmetik": "#ec4899",
+            "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", 
+            "Pangkas Rambut": "#6366f1", "Fresh Food": "#84cc16", 
+            "Frozen Food": "#0ea5e9", "Alat & Pakan Ternak": "#f59e0b",
+            "Tani Sawah": "#eab308", "Tani Sayur": "#22c55e", "Titik Penting": "#ef4444"
+        };
+        const WARNA_DEFAULT = "#6b7280";
+
+        function buatMarkerSVG(warnaHex) {
+            return L.divIcon({
+                className: "bg-transparent",
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" style="filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${warnaHex}" stroke="#ffffff" stroke-width="1.5"/></svg>`,
+                iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -32] 
+            });
+        }
+
+        window.renderTombolKategoriPeta = function() {
+            const wadah = document.getElementById('wadah-kategori-peta');
+            let html = "";
+            Object.keys(KATEGORI_WARNA).forEach(kat => {
+                const warnaPin = KATEGORI_WARNA[kat];
+                const isAktif = kategoriAktif.includes(kat);
+                const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
+                const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
+                html += `<button onclick="window.pilihKategoriPeta('${kat}')" class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>${kat}</button>`;
+            });
+            wadah.innerHTML = html;
+        };
+
+        window.pilihKategoriPeta = function(katDipilih) {
+            const index = kategoriAktif.indexOf(katDipilih);
+            if (index > -1) kategoriAktif.splice(index, 1);
+            else kategoriAktif.push(katDipilih);
+            window.renderTombolKategoriPeta();
+            window.terapkanFilterPeta();
+        };
+
+        window.cariLokasiSaya = function() {
+            if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
+        };
 
         document.addEventListener("DOMContentLoaded", () => {
-            const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv";
-            const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv";
+            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
 
-            Promise.all([fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)])
-                .then(([resPetani, resProduk]) => {
-                    const dataProfilPetani = resPetani.data;
-                    const dataProdukMentah = resProduk.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
+            const urlParamsPeta = new URLSearchParams(window.location.search);
+            targetTokoBukaPopup = urlParamsPeta.get('toko'); 
+            const filterDariURL = urlParamsPeta.get('filter');
 
-                    dataTaniList = [];
-                    dataProdukMentah.forEach(produk => {
-                        const profilCocok = dataProfilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
-                        if (profilCocok) dataTaniList.push({ ...profilCocok, ...produk });
-                    });
+            // Inisialisasi Peta
+            petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
+            L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps' }).addTo(petaLeaflet);
+            layerGrupMarker = L.layerGroup().addTo(petaLeaflet);
 
-                    document.getElementById("status-loading").classList.add("hidden");
-                    saringDataTani();
-                })
-                .catch(err => {
-                    document.getElementById("status-loading").innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data hasil tani.</span>`;
-                });
+            // Fitur Lokasi Saya
+            petaLeaflet.on('locationfound', function(e) {
+                if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
+                if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
+                const ikonLokasi = L.divIcon({ className: "bg-transparent", html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`, iconSize: [16, 16]});
+                markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`).openPopup();
+                circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
+            });
 
-            document.getElementById('input-cari').addEventListener('input', saringDataTani);
-            document.getElementById('filter-jenis').addEventListener('change', saringDataTani);
+            // Tarik Batas Dusun
+            fetch('data/Batas_Dusun_Talumae.geojson').then(r => r.json()).then(geo => {
+                const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
+                petaLeaflet.fitBounds(pol.getBounds());
+            }).catch(e => console.log("Batas dusun tidak ada"));
+
+            // Tarik CSV Toko, Poligon Tani, dan Titik Penting
+            Promise.all([
+                fetchCSV(URL_CSV_TOKO),
+                fetch('data/Lokasi_Petani.geojson').then(r => r.ok ? r.json() : null).catch(() => null),
+                fetch('data/Titik_Penting.geojson').then(r => r.ok ? r.json() : null).catch(() => null)
+            ]).then(([resToko, geoTani, geoTitik]) => {
+                dataTokoPeta = resToko.data;
+                geojsonTani = geoTani;
+                geojsonTitik = geoTitik;
+
+                // Eksekusi Parameter URL
+                if (filterDariURL) {
+                    if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
+                    else document.getElementById('input-cari-peta').value = filterDariURL;
+                }
+                if (targetTokoBukaPopup) {
+                    document.getElementById('input-cari-peta').value = targetTokoBukaPopup;
+                }
+
+                window.renderTombolKategoriPeta();
+                window.terapkanFilterPeta();
+
+                const overlay = document.getElementById("data-loading-overlay");
+                if (overlay) { overlay.classList.add("opacity-0"); setTimeout(() => overlay.remove(), 500); }
+            }).catch(err => {
+                document.getElementById("data-loading-overlay").innerHTML = `<span class="text-red-600 font-bold bg-white p-2 rounded">Gagal menyinkronkan data spasial.</span>`;
+            });
+
+            document.getElementById('input-cari-peta').addEventListener('input', window.terapkanFilterPeta);
         });
 
-        function saringDataTani() {
-            const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
-            const jenisPilih = document.getElementById('filter-jenis').value.toLowerCase();
+        // PENGGAMBARAN TITIK DAN POLIGON
+        window.terapkanFilterPeta = function() {
+            layerGrupMarker.clearLayers();
+            const teksCari = document.getElementById('input-cari-peta').value.toLowerCase().trim();
+            const filterTeksAda = teksCari !== "";
+            const filterKategoriAda = kategoriAktif.length > 0;
 
-            const dataTersaring = dataTaniList.filter(tani => {
-                const komoditas = (tani["Nama Komoditas"] || "").toLowerCase();
-                const petani = (tani["Nama Petani"] || "").toLowerCase();
-                const jenisMentah = (tani["Jenis Hasil Tani"] || "").toLowerCase();
+            if (!filterTeksAda && !filterKategoriAda) return;
 
-                const cocokTeks = komoditas.includes(teksCari) || petani.includes(teksCari);
-                let cocokJenis = true;
-                if (jenisPilih !== "semua") cocokJenis = jenisMentah.includes(jenisPilih);
+            // 1. RENDER TITIK UMKM (CSV)
+            dataTokoPeta.forEach(toko => {
+                const namaToko = toko["Nama Toko"] || "Toko Warga";
+                const stringKategori = toko["Kategori Produk"] || "";
+                const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
+                const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
-                return cocokTeks && cocokJenis;
+                if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
+                    (filterTeksAda && !filterKategoriAda && cocokTeks) || 
+                    (!filterTeksAda && filterKategoriAda && cocokKategori)) {
+                    
+                    const lokasi = toko["Lokasi Toko"];
+                    if (lokasi && lokasi.includes(',')) {
+                        const lat = parseFloat(lokasi.split(',')[0].trim());
+                        const lng = parseFloat(lokasi.split(',')[1].trim());
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const arrKat = stringKategori.split(',').map(k => k.trim()).filter(k => k);
+                            
+                            let warnaMarker = WARNA_DEFAULT;
+                            const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === (arrKat[0] || "").toLowerCase());
+                            if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
+                            
+                            let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
+                            if(arrKat.length > 0) {
+                                arrKat.forEach(kat => {
+                                    tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(namaToko)}" class="inline-block w-full text-center bg-white border border-gray-300 hover:bg-green-600 hover:text-white hover:border-green-600 text-gray-700 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`;
+                                });
+                            }
+                            tombolHTML += `</div>`;
+
+                            const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-3 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}</div></div>`;
+                            const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
+                            layerGrupMarker.addLayer(marker);
+                            
+                            if (targetTokoBukaPopup && (namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
+                                setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); targetTokoBukaPopup=null; }, 600); 
+                            }
+                        }
+                    }
+                }
             });
 
-            renderTaniGrid(dataTersaring);
-        }
+            // 2. RENDER POLIGON TANI (GEOJSON)
+            if (geojsonTani && geojsonTani.features) {
+                geojsonTani.features.forEach(feature => {
+                    const props = feature.properties || {};
+                    // Tangkap variabel Jenis Tani (Akomodasi kemungkinan beda kapital)
+                    const jenisTani = props["Jenis Tani"] || props["jenis_tani"] || props["JENIS_TANI"] || "Hasil Tani";
+                    
+                    const cocokTeks = jenisTani.toLowerCase().includes(teksCari);
+                    const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === jenisTani.toLowerCase() || k.toLowerCase() === "hasil tani");
 
-        function renderTaniGrid(data) {
-            const wadah = document.getElementById('wadah-tani');
-            const pesanKosong = document.getElementById('pesan-kosong');
+                    if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
+                        (filterTeksAda && !filterKategoriAda && cocokTeks) || 
+                        (!filterTeksAda && filterKategoriAda && cocokKategori)) {
+                        
+                        let warnaPoli = KATEGORI_WARNA["Hasil Tani"];
+                        if (jenisTani.toLowerCase().includes("sawah")) warnaPoli = KATEGORI_WARNA["Tani Sawah"];
+                        if (jenisTani.toLowerCase().includes("sayur")) warnaPoli = KATEGORI_WARNA["Tani Sayur"];
 
-            wadah.innerHTML = "";
-            if (data.length === 0) {
-                wadah.classList.add('hidden');
-                pesanKosong.classList.remove('hidden');
-                return;
-            }
+                        const poligon = L.geoJSON(feature, {
+                            style: { color: warnaPoli, weight: 2, fillColor: warnaPoli, fillOpacity: 0.4 }
+                        });
 
-            wadah.classList.remove('hidden');
-            pesanKosong.classList.add('hidden');
-
-            let elemenHTML = "";
-            data.forEach((tani) => {
-                const originalIndex = dataTaniList.findIndex(t => t === tani);
-                const komoditas = tani["Nama Komoditas"];
-                const petani = tani["Nama Petani"] || "Petani Lokal";
-                const jenis = tani["Jenis Hasil Tani"] || "Pangan";
-                const sisaTersedia = tani["Sisa Pangan Tersedia"] || "0";
-                const satuan = tani["Satuan"] || "Kg";
-
-                elemenHTML += `
-                    <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden cursor-pointer flex flex-col group" onclick="bukaPopupTani(${originalIndex})">
-                        <div class="bg-green-50 px-5 py-4 border-b border-green-100 flex justify-between items-center">
-                            <span class="bg-green-500 text-white text-[10px] font-bold px-3 py-1.5 rounded uppercase shadow-sm opacity-90">${jenis}</span>
-                            <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🌾</span>
-                        </div>
-                        <div class="p-5 flex flex-col flex-grow">
-                            <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${komoditas}</h3>
-                            <p class="text-sm text-gray-500 mb-5">👤 ${petani}</p>
-                            <div class="mt-auto bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
-                                <span class="text-xs text-gray-500 font-semibold uppercase">Stok Tersedia</span>
-                                <span class="text-lg font-bold text-green-700">${sisaTersedia} <span class="text-xs font-normal text-gray-600">${satuan}</span></span>
+                        const popupHTML = `
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                                <div class="p-3 border-b-4 flex flex-col items-center" style="border-color: ${warnaPoli}; background-color: #f0fdf4;">
+                                    <h3 class="font-bold text-gray-900 text-base leading-tight text-center uppercase">${jenisTani}</h3>
+                                </div>
+                                <div class="p-3 text-center bg-white flex flex-col gap-2">
+                                    <p class="text-xs text-gray-500 mb-2">Area Lahan Pertanian Talumae</p>
+                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a>
+                                </div>
                             </div>
-                        </div>
-                    </div>`;
-            });
-            wadah.innerHTML = elemenHTML;
-        }
-
-        function bukaPopupTani(index) {
-            const tani = dataTaniList[index];
-            if (!tani) return;
-            indexTaniAktif = index; 
-
-            document.getElementById('modal-komoditas').innerText = tani["Nama Komoditas"];
-            document.getElementById('modal-jenis').innerText = tani["Jenis Hasil Tani"] || "Pangan";
-            document.getElementById('modal-petani').innerText = tani["Nama Petani"] || "Petani Lokal";
-            
-            const stringBulan = tani["Bulan Panen"] || "Belum ditentukan";
-            const wadahBulan = document.getElementById('modal-bulan');
-            if (stringBulan === "Belum ditentukan" || stringBulan.trim() === "") {
-                wadahBulan.innerHTML = "Belum ditentukan";
-            } else {
-                const arrayBulan = stringBulan.split(',').map(b => b.trim()).filter(b => b);
-                let htmlBulan = `<div class="flex flex-wrap gap-1 mt-0.5">`;
-                arrayBulan.forEach(b => htmlBulan += `<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-200 shadow-sm">${b}</span>`);
-                htmlBulan += `</div>`;
-                wadahBulan.innerHTML = htmlBulan;
+                        `;
+                        
+                        poligon.bindPopup(popupHTML);
+                        layerGrupMarker.addLayer(poligon);
+                    }
+                });
             }
 
-            document.getElementById('modal-rata').innerText = tani["Rata-rata Panen"] || "-";
-            document.getElementById('modal-saatini').innerText = tani["Panen Saat Ini"] || "-";
-            document.getElementById('modal-sisa').innerText = tani["Sisa Pangan Tersedia"] || "0";
+            // 3. RENDER TITIK PENTING (GEOJSON)
+            if (geojsonTitik && geojsonTitik.features) {
+                const warnaTitik = KATEGORI_WARNA["Titik Penting"];
+                geojsonTitik.features.forEach(feature => {
+                    const props = feature.properties || {};
+                    const namaTitik = props["Nama"] || props["nama"] || props["NAMA"] || "Fasilitas Umum";
+                    
+                    const cocokTeks = namaTitik.toLowerCase().includes(teksCari) || "titik penting".includes(teksCari);
+                    const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === "titik penting");
 
-            const satuan = tani["Satuan"] || "";
-            document.querySelectorAll('.satuan-teks').forEach(el => el.innerText = satuan);
+                    if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
+                        (filterTeksAda && !filterKategoriAda && cocokTeks) || 
+                        (!filterTeksAda && filterKategoriAda && cocokKategori)) {
+                        
+                        const titik = L.geoJSON(feature, {
+                            pointToLayer: function (geoJsonPoint, latlng) {
+                                return L.marker(latlng, { icon: buatMarkerSVG(warnaTitik) });
+                            }
+                        });
 
-            const btnPeta = document.getElementById('btn-modal-peta');
-            const lokasi = tani["Lokasi Lahan"];
-            if (lokasi && lokasi.includes(',')) {
-                const kordinat = lokasi.split(',');
-                btnPeta.setAttribute('onclick', `window.open('https://www.google.com/maps?q=${kordinat[0].trim()},${kordinat[1].trim()}', '_blank')`);
-                btnPeta.style.display = 'flex';
-            } else {
-                btnPeta.style.display = 'none';
+                        const popupHTML = `
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                                <div class="p-3 border-b-4" style="border-color: ${warnaTitik}; background-color: #fef2f2;">
+                                    <span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-1 inline-block">Titik Penting</span>
+                                    <h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaTitik}</h3>
+                                </div>
+                            </div>
+                        `;
+                        
+                        titik.bindPopup(popupHTML);
+                        layerGrupMarker.addLayer(titik);
+                    }
+                });
             }
-
-            const btnWA = document.getElementById('btn-modal-wa');
-            const nomorWA = tani["Nomor Whatsapp (62)"];
-            if (nomorWA) {
-                const nomorBersih = nomorWA.toString().replace(/[^0-9]/g, '');
-                const pesan = `Halo Bapak/Ibu ${tani["Nama Petani"]}, saya melihat informasi di website Lapak Desa Talumae. Saya tertarik dengan ketersediaan ${tani["Nama Komoditas"]} Anda. Apakah bisa dibantu informasinya?`;
-                btnWA.setAttribute('onclick', `window.open('https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}', '_blank')`);
-                btnWA.style.display = 'flex';
-                document.getElementById('btn-modal-penawaran').style.display = 'flex';
-            } else {
-                btnWA.style.display = 'none';
-                document.getElementById('btn-modal-penawaran').style.display = 'none';
-            }
-
-            const modal = document.getElementById('modal-tani');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.children[0].classList.remove('scale-95');
-                modal.children[0].classList.add('scale-100');
-            }, 10);
-        }
-
-        function tutupPopupTani() {
-            const modal = document.getElementById('modal-tani');
-            modal.classList.add('opacity-0');
-            modal.children[0].classList.remove('scale-100');
-            modal.children[0].classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                indexTaniAktif = null;
-            }, 300); 
-        }
-
-        function bukaModalPenawaran() {
-            if (indexTaniAktif === null) return;
-            const tani = dataTaniList[indexTaniAktif];
-            document.getElementById('penawaran-target-petani').innerText = tani["Nama Petani"] || "Petani";
-            document.getElementById('penawaran-target-komoditas').innerText = tani["Nama Komoditas"] || "Komoditas";
-            document.getElementById('label-satuan-penawaran').innerText = tani["Satuan"] || "Unit";
-            document.getElementById('error-penawaran').classList.add('hidden');
-            
-            const modal = document.getElementById('modal-penawaran');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.children[0].classList.remove('scale-95');
-                modal.children[0].classList.add('scale-100');
-            }, 10);
-        }
-
-        function tutupModalPenawaran() {
-            const modal = document.getElementById('modal-penawaran');
-            modal.classList.add('opacity-0');
-            modal.children[0].classList.remove('scale-100');
-            modal.children[0].classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300); 
-        }
-
-        function formatRupiah(angka) {
-            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-
-        function kirimPenawaranWA() {
-            if (indexTaniAktif === null) return;
-            const tani = dataTaniList[indexTaniAktif];
-            const nomorWA = tani["Nomor Whatsapp (62)"];
-            if (!nomorWA) return;
-
-            const qty = document.getElementById('form-kuantitas').value.trim();
-            const hrg = document.getElementById('form-harga').value.trim();
-            const prsh = document.getElementById('form-perusahaan').value.trim();
-            const eml = document.getElementById('form-email').value.trim();
-            const telp = document.getElementById('form-telepon').value.trim();
-            const prov = document.getElementById('form-provinsi').value.trim();
-            const kab = document.getElementById('form-kabupaten').value.trim();
-            const kec = document.getElementById('form-kecamatan').value.trim();
-            const pos = document.getElementById('form-kodepos').value.trim();
-
-            if (!qty || !hrg || !prsh || !eml || !telp || !prov || !kab || !kec) {
-                document.getElementById('error-penawaran').classList.remove('hidden');
-                return;
-            }
-
-            const nomorBersih = nomorWA.toString().replace(/[^0-9]/g, '');
-            const hrgFormat = formatRupiah(hrg);
-            const teksPesan = `Halo Bapak/Ibu *${tani["Nama Petani"]}*,\n\nPerkenalkan, saya dari *${prsh}*. Saya melihat informasi hasil tani Anda di Lapak Desa Talumae dan bermaksud mengajukan penawaran untuk komoditas *${tani["Nama Komoditas"]}*.\n\nBerikut rincian penawaran kami:\n- *Kuantitas Diminta:* ${qty} ${tani["Satuan"] || ""}\n- *Harga Penawaran:* Rp ${hrgFormat}\n\n📍 *Informasi Pengiriman / Kontak Kami:*\n- Email: ${eml}\n- Telepon: ${telp}\n- Alamat: Kec. ${kec}, Kab. ${kab}, Prov. ${prov} ${pos ? `(Kode Pos: ${pos})` : ''}\n\nApakah penawaran ini bisa didiskusikan lebih lanjut? Terima kasih.`;
-            window.open(`https://wa.me/${nomorBersih}?text=${encodeURIComponent(teksPesan)}`, '_blank');
-            tutupModalPenawaran();
-        }
+        };
     </script>
 </body>
 </html>

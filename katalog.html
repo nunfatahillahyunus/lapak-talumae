@@ -54,6 +54,7 @@
             Mengambil data etalase...
         </div>
 
+        <!-- WADAH KARTU KATALOG -->
         <div id="wadah-katalog" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 hidden"></div>
 
         <div id="pesan-kosong" class="hidden text-center py-16 text-gray-500">
@@ -62,6 +63,35 @@
             <p class="text-sm mt-2">Silakan kembali dan pilih kategori lainnya.</p>
         </div>
     </main>
+
+    <!-- MODAL DETAIL TOKO -->
+    <div id="modal-detail-toko" class="fixed inset-0 bg-black bg-opacity-70 z-[100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col">
+            <div class="bg-green-600 p-4 shrink-0 flex justify-between items-center text-white">
+                <h3 id="modal-dt-nama" class="text-lg font-bold leading-tight">Nama Toko</h3>
+                <button onclick="tutupModalDetail()" class="hover:text-red-200 focus:outline-none shrink-0 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-5 flex-grow text-gray-700 bg-green-50/30">
+                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm mb-3">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">💳 Metode Pembayaran</p>
+                    <p id="modal-dt-bayar" class="font-semibold text-gray-800 text-sm">-</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm mb-3">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">📅 Hari Operasional</p>
+                    <p id="modal-dt-hari" class="font-semibold text-gray-800 text-sm">-</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">⏰ Jam Operasional</p>
+                    <p id="modal-dt-jam" class="font-bold text-green-700 text-sm">-</p>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t shrink-0">
+                <button onclick="tutupModalDetail()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-4 rounded-lg transition-colors text-sm">Tutup</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
@@ -90,6 +120,9 @@
                 return new Promise(resolve => Papa.parse(csvText, { header: true, skipEmptyLines: true, complete: resolve }));
             } catch (error) { throw error; }
         }
+
+        // Variabel global untuk menyimpan data sementara agar bisa diakses oleh pop-up modal
+        let dataKatalogGlobal = [];
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -126,6 +159,7 @@
                     if (masukKriteria) dataTersaring.push(toko);
                 });
 
+                dataKatalogGlobal = dataTersaring; // Simpan untuk modal
                 renderKatalog(dataTersaring);
             }).catch(() => {
                 document.getElementById('status-loading').innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data. Periksa koneksi Anda.</span>`;
@@ -145,47 +179,98 @@
             wadah.classList.remove('hidden');
             let elemenHTML = "";
 
-            data.forEach(toko => {
+            data.forEach((toko, index) => {
                 const nama = toko["Nama Toko"];
                 const pemilik = toko["Nama Pemilik"] || "Warga Talumae";
                 const lokasi = toko["Lokasi Toko"];
                 const wa = toko["Nomor Whatsapp (62)"];
-                const kategori = toko["Kategori Produk"] || "Umum";
-                const deskripsi = toko["Deskripsi Singkat"] || "Toko kelontong dan usaha warga desa.";
+                const kodeUnik = toko["Kode Unik Toko"];
+                const deskripsi = toko["Deskripsi Singkat"] || "";
 
+                // Tombol Hubungi (Hanya Muncul Jika Ada Nomor WA)
                 let tombolWA = "";
-                if (wa) {
+                if (wa && wa.trim() !== "") {
                     const nomorBersih = wa.toString().replace(/[^0-9]/g, '');
                     const pesan = `Halo ${nama}, saya melihat toko Anda di website Lapak Desa Talumae. Saya ingin bertanya tentang produk Anda.`;
-                    tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">💬 Hubungi</a>`;
+                    tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs flex items-center justify-center gap-1">💬 Hubungi</a>`;
                 }
 
+                // Tombol Peta (Hanya Muncul Jika Ada Kordinat)
                 let tombolPeta = "";
                 if (lokasi && lokasi.includes(',')) {
-                    tombolPeta = `<a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm">📍 Lokasi</a>`;
+                    tombolPeta = `<a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs">📍 Lokasi</a>`;
                 }
 
-                const labelKategori = kategori.split(',')[0].trim();
+                // Tombol Detail (Hanya Muncul Jika Ada Kode Unik)
+                let tombolDetail = "";
+                if (kodeUnik && kodeUnik.trim() !== "") {
+                    tombolDetail = `<button onclick="bukaModalDetail(${index})" class="flex-none bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 text-center font-bold py-2 px-3 rounded-lg transition-colors shadow-sm text-xs">ℹ️ Detail</button>`;
+                }
+
+                // HTML Khusus Deskripsi (Hilang jika kosong)
+                const htmlDeskripsi = deskripsi ? `<p class="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>` : `<div class="flex-grow"></div>`;
 
                 elemenHTML += `
                     <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
-                        <div class="bg-yellow-50 px-5 py-4 border-b border-yellow-100 flex justify-between items-center">
-                            <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-md uppercase shadow-sm">${labelKategori}</span>
-                            <span class="text-2xl opacity-70 group-hover:scale-110 transition-transform">🏪</span>
+                        <div class="bg-green-50 px-5 py-4 border-b border-green-100 flex justify-end items-center">
+                            <span class="text-3xl opacity-80 group-hover:scale-110 transition-transform">🏪</span>
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
                             <h3 class="text-xl font-bold text-gray-900 leading-tight mb-1 group-hover:text-green-700 transition-colors">${nama}</h3>
                             <p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider">👤 Bpk/Ibu ${pemilik}</p>
-                            <p class="text-sm text-gray-600 mb-5 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>
-                            <div class="flex items-center gap-2 mt-auto pt-4 border-t border-gray-100">
+                            ${htmlDeskripsi}
+                            <div class="flex flex-wrap items-center gap-2 mt-auto pt-4 border-t border-gray-100">
                                 ${tombolWA}
                                 ${tombolPeta}
+                                ${tombolDetail}
                             </div>
                         </div>
                     </div>
                 `;
             });
             wadah.innerHTML = elemenHTML;
+        }
+
+        // ==========================================
+        // FUNGSI MODAL DETAIL TOKO
+        // ==========================================
+        function bukaModalDetail(index) {
+            const toko = dataKatalogGlobal[index];
+            if (!toko) return;
+
+            document.getElementById('modal-dt-nama').innerText = toko["Nama Toko"] || "Detail Toko";
+            document.getElementById('modal-dt-bayar').innerText = toko["Metode Pembayaran"] || "Belum ada informasi";
+            document.getElementById('modal-dt-hari').innerText = toko["Hari Operasional"] || "Belum ada informasi";
+
+            const jamBuka = toko["Jam Buka"] || "";
+            const jamTutup = toko["Jam Tutup"] || "";
+            let jamOperasional = "Belum ada informasi";
+
+            if (jamBuka !== "" && jamTutup !== "") {
+                jamOperasional = `${jamBuka} WITA - ${jamTutup} WITA`;
+            } else if (jamBuka !== "") {
+                jamOperasional = `Buka: ${jamBuka} WITA`;
+            } else if (jamTutup !== "") {
+                jamOperasional = `Tutup: ${jamTutup} WITA`;
+            }
+            
+            document.getElementById('modal-dt-jam').innerText = jamOperasional;
+
+            const modal = document.getElementById('modal-detail-toko');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-95');
+                modal.children[0].classList.add('scale-100');
+            }, 10);
+        }
+
+        function tutupModalDetail() {
+            const modal = document.getElementById('modal-detail-toko');
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.remove('scale-100');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
     </script>
 </body>

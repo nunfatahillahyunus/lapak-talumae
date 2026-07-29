@@ -44,7 +44,7 @@
     <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
         <div class="container mx-auto max-w-6xl">
             <h1 class="text-3xl md:text-4xl font-bold mb-2">Peta Persebaran</h1>
-            <p class="text-green-100">Lokasi UMKM dan Lahan Pertanian Desa Talumae.</p>
+            <p class="text-green-100">Lokasi UMKM, Titik Penting, dan Poligon Pertanian Desa Talumae.</p>
         </div>
     </header>
 
@@ -53,20 +53,20 @@
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 relative z-[20]">
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Cari Lokasi Spesifik</h3>
             <div class="relative mb-5">
-                <input type="text" id="input-cari-peta" placeholder="Cari nama toko, komoditas, atau petani..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm shadow-sm">
+                <input type="text" id="input-cari-peta" placeholder="Cari nama toko, jenis tani, atau lokasi..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm shadow-sm">
             </div>
 
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
             <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
-            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik lokasi (pin) pada peta hanya akan muncul jika Anda melakukan pencarian atau memilih satu/beberapa kategori di atas.</p>
+            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik penting desa selalu ditampilkan secara permanen di peta. Pin UMKM dan Lahan akan muncul sesuai kategori yang dipilih.</p>
         </div>
 
         <!-- WADAH PETA -->
         <div id="map-container" class="w-full flex-grow relative bg-gray-200 rounded-xl shadow-inner border border-gray-300 overflow-hidden min-h-[50vh] md:min-h-[70vh]">
-            <!-- OVERLAY LOADING -->
+            
             <div id="data-loading-overlay" class="absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-500">
                 <svg class="w-10 h-10 mb-3 text-green-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span class="text-sm font-bold text-green-800">Menyinkronkan data lokasi...</span>
+                <span class="text-sm font-bold text-green-800">Menyinkronkan data spasial...</span>
             </div>
 
             <div id="map" class="absolute inset-0 z-[10]"></div>
@@ -82,14 +82,14 @@
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
-    <!-- SCRIPT KHUSUS PETA -->
+    <!-- SCRIPT KHUSUS PETA & SPASIAL -->
     <script>
         function toggleSidebar() {
             document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
         }
 
         async function fetchCSV(url) {
-            const cacheKey = "talumae_v4_" + url;
+            const cacheKey = "talumae_v6_" + url;
             const cachedText = sessionStorage.getItem(cacheKey);
             const cacheTime = sessionStorage.getItem(cacheKey + "_time");
 
@@ -105,12 +105,14 @@
             } catch (error) { throw error; }
         }
 
-        let petaLeaflet, layerGrupMarker;
-        let dataTokoPeta = [], dataTaniPeta = [];
+        let petaLeaflet, layerGrupMarker, layerGrupTitik;
+        let dataTokoPeta = [];
+        let geojsonTani = null; 
+        
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
 
-        // DITAMBAHKAN 4 KATEGORI BARU & WARNANYA
+        // Kategori Warna (Tanpa Titik Penting, karena Titik Penting akan selalu ada, tidak perlu tombol filter)
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
             "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
@@ -118,7 +120,7 @@
             "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", 
             "Pangkas Rambut": "#6366f1", "Fresh Food": "#84cc16", 
             "Frozen Food": "#0ea5e9", "Alat & Pakan Ternak": "#f59e0b",
-            "Hasil Tani": "#22c55e"
+            "Tani Sawah": "#eab308", "Tani Sayur": "#22c55e"
         };
         const WARNA_DEFAULT = "#6b7280";
 
@@ -157,17 +159,19 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
-            const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv";
-            const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv";
 
             const urlParamsPeta = new URLSearchParams(window.location.search);
             targetTokoBukaPopup = urlParamsPeta.get('toko'); 
             const filterDariURL = urlParamsPeta.get('filter');
 
+            // Inisialisasi Peta & Layer
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps' }).addTo(petaLeaflet);
-            layerGrupMarker = L.layerGroup().addTo(petaLeaflet);
+            
+            layerGrupMarker = L.layerGroup().addTo(petaLeaflet); // Layer untuk UMKM & Tani (Bisa di-clear)
+            layerGrupTitik = L.layerGroup().addTo(petaLeaflet);  // Layer khusus Titik Penting (Permanen)
 
+            // Fitur Lokasi Saya
             petaLeaflet.on('locationfound', function(e) {
                 if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
                 if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
@@ -176,27 +180,57 @@
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
             });
 
+            // Tarik Batas Dusun
             fetch('data/Batas_Dusun_Talumae.geojson').then(r => r.json()).then(geo => {
                 const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
                 petaLeaflet.fitBounds(pol.getBounds());
-            }).catch(e => {});
+            }).catch(e => console.log("Batas dusun tidak ada"));
 
-            Promise.all([fetchCSV(URL_CSV_TOKO), fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)]).then(([resToko, resProfilPetani, resProdukTani]) => {
+            // Tarik Data Paralel
+            Promise.all([
+                fetchCSV(URL_CSV_TOKO),
+                fetch('data/Lokasi_Petani.geojson').then(r => r.ok ? r.json() : null).catch(() => null),
+                fetch('data/Titik_Penting.geojson').then(r => r.ok ? r.json() : null).catch(() => null)
+            ]).then(([resToko, geoTani, geoTitik]) => {
                 dataTokoPeta = resToko.data;
-                const profilPetani = resProfilPetani.data;
-                const produkMentah = resProdukTani.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
-                
-                dataTaniPeta = [];
-                produkMentah.forEach(produk => {
-                    const profilCocok = profilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
-                    if (profilCocok) dataTaniPeta.push({ ...profilCocok, ...produk });
-                });
+                geojsonTani = geoTani;
 
+                // ----------------------------------------------------
+                // RENDER TITIK PENTING SECARA PERMANEN DI SINI
+                // ----------------------------------------------------
+                if (geoTitik && geoTitik.features) {
+                    geoTitik.features.forEach(feature => {
+                        // CEGAH CRASH JIKA KOORDINAT KOSONG (Seperti SDN 1 Mojong fid: 10)
+                        if (!feature.geometry) return; 
+                        
+                        const props = feature.properties || {};
+                        const namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
+
+                        const titikMarker = L.geoJSON(feature, {
+                            pointToLayer: function (geoJsonPoint, latlng) {
+                                return L.marker(latlng, { icon: buatMarkerSVG("#ef4444") }); // Warna Merah
+                            }
+                        });
+
+                        const popupHTML = `
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[180px]">
+                                <div class="p-3 border-b-4 border-red-500 bg-red-50 flex flex-col items-center">
+                                    <span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-1 inline-block">Titik Penting Desa</span>
+                                    <h3 class="font-bold text-gray-900 text-sm leading-tight text-center">${namaTitik}</h3>
+                                </div>
+                            </div>
+                        `;
+                        
+                        titikMarker.bindPopup(popupHTML);
+                        layerGrupTitik.addLayer(titikMarker); // Masuk ke layer permanen
+                    });
+                }
+
+                // Eksekusi Parameter URL
                 if (filterDariURL) {
                     if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                     else document.getElementById('input-cari-peta').value = filterDariURL;
                 }
-                
                 if (targetTokoBukaPopup) {
                     document.getElementById('input-cari-peta').value = targetTokoBukaPopup;
                 }
@@ -213,26 +247,27 @@
             document.getElementById('input-cari-peta').addEventListener('input', window.terapkanFilterPeta);
         });
 
+        // PENGGAMBARAN UMKM DAN POLIGON TANI (Bisa difilter/dibersihkan)
         window.terapkanFilterPeta = function() {
-            layerGrupMarker.clearLayers();
+            layerGrupMarker.clearLayers(); // Hanya membersihkan UMKM & Tani. Titik Penting aman.
+            
             const teksCari = document.getElementById('input-cari-peta').value.toLowerCase().trim();
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
             if (!filterTeksAda && !filterKategoriAda) return;
 
+            // 1. RENDER TITIK UMKM (CSV)
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
                 const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
                 const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
-                let tampilkan = false;
-                if (filterTeksAda && filterKategoriAda) tampilkan = cocokTeks && cocokKategori;
-                else if (filterTeksAda) tampilkan = cocokTeks;
-                else if (filterKategoriAda) tampilkan = cocokKategori;
-
-                if (tampilkan) {
+                if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
+                    (filterTeksAda && !filterKategoriAda && cocokTeks) || 
+                    (!filterTeksAda && filterKategoriAda && cocokKategori)) {
+                    
                     const lokasi = toko["Lokasi Toko"];
                     if (lokasi && lokasi.includes(',')) {
                         const lat = parseFloat(lokasi.split(',')[0].trim());
@@ -247,15 +282,12 @@
                             let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
                             if(arrKat.length > 0) {
                                 arrKat.forEach(kat => {
-                                    // LINK MENGIRIM NAMA TOKO
                                     tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(namaToko)}" class="inline-block w-full text-center bg-white border border-gray-300 hover:bg-green-600 hover:text-white hover:border-green-600 text-gray-700 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`;
                                 });
-                            } else {
-                                tombolHTML += `<span class="text-xs text-gray-500 italic">Kategori belum ditentukan</span>`;
                             }
                             tombolHTML += `</div>`;
 
-                            const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-4 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-lg leading-tight text-center">${namaToko}</h3></div><div class="p-4 text-center bg-white flex flex-col gap-2">${tombolHTML}<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm mt-1">📍 Buka Google Maps</a></div></div>`;
+                            const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-3 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}</div></div>`;
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
                             layerGrupMarker.addLayer(marker);
                             
@@ -267,35 +299,46 @@
                 }
             });
 
-            const warnaTani = KATEGORI_WARNA["Hasil Tani"];
-            dataTaniPeta.forEach(tani => {
-                const kom = tani["Nama Komoditas"] || "Hasil Bumi";
-                const pet = tani["Nama Petani"] || "Petani Lokal";
-                const cocokTeks = (kom.toLowerCase().includes(teksCari) || pet.toLowerCase().includes(teksCari));
-                const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === "hasil tani");
+            // 2. RENDER POLIGON TANI (GEOJSON)
+            if (geojsonTani && geojsonTani.features) {
+                geojsonTani.features.forEach(feature => {
+                    if(!feature.geometry) return;
 
-                let tampilkan = false;
-                if (filterTeksAda && filterKategoriAda) tampilkan = cocokTeks && cocokKategori;
-                else if (filterTeksAda) tampilkan = cocokTeks;
-                else if (filterKategoriAda) tampilkan = cocokKategori;
+                    const props = feature.properties || {};
+                    const jenisTani = props["Jenis Tani"] || "Hasil Tani"; // Tani Sawah / Tani Sayur
+                    
+                    const cocokTeks = jenisTani.toLowerCase().includes(teksCari);
+                    const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === jenisTani.toLowerCase());
 
-                if (tampilkan) {
-                    const lokasi = tani["Lokasi Lahan"];
-                    if (lokasi && lokasi.includes(',')) {
-                        const lat = parseFloat(lokasi.split(',')[0].trim());
-                        const lng = parseFloat(lokasi.split(',')[1].trim());
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-4 border-b-4 flex flex-col items-center" style="border-color: ${warnaTani}; background-color: #f0fdf4;"><span class="text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-2 inline-block" style="background-color: ${warnaTani};">Lahan Tani</span><h3 class="font-bold text-gray-900 text-lg leading-tight text-center">${kom}</h3></div><div class="p-4 text-center bg-white flex flex-col gap-2"><p class="text-xs text-gray-500 mb-1">👤 ${pet}</p><div class="bg-green-50 border border-green-200 rounded p-2 mb-1"><p class="text-xs font-bold text-green-700">Stok: ${tani["Sisa Pangan Tersedia"]||"0"} ${tani["Satuan"]||""}</p></div><div class="flex flex-col gap-2 mt-1"><a href="tani.html" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a></div></div></div>`;
-                            const markerTani = L.marker([lat, lng], { icon: buatMarkerSVG(warnaTani) }).bindPopup(popup);
-                            layerGrupMarker.addLayer(markerTani);
+                    if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
+                        (filterTeksAda && !filterKategoriAda && cocokTeks) || 
+                        (!filterTeksAda && filterKategoriAda && cocokKategori)) {
+                        
+                        let warnaPoli = "#22c55e"; // Default hijau
+                        if (jenisTani.toLowerCase().includes("sawah")) warnaPoli = "#eab308"; // Kuning Sawah
+                        if (jenisTani.toLowerCase().includes("sayur")) warnaPoli = "#22c55e"; // Hijau Sayur
 
-                            if (targetTokoBukaPopup && (kom.toLowerCase() === targetTokoBukaPopup.toLowerCase() || pet.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
-                                setTimeout(() => { petaLeaflet.setView([lat, lng], 18); markerTani.openPopup(); targetTokoBukaPopup=null; }, 600); 
-                            }
-                        }
+                        const poligon = L.geoJSON(feature, {
+                            style: { color: warnaPoli, weight: 2, fillColor: warnaPoli, fillOpacity: 0.4 }
+                        });
+
+                        const popupHTML = `
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                                <div class="p-3 border-b-4 flex flex-col items-center" style="border-color: ${warnaPoli}; background-color: #f0fdf4;">
+                                    <h3 class="font-bold text-gray-900 text-base leading-tight text-center uppercase">${jenisTani}</h3>
+                                </div>
+                                <div class="p-3 text-center bg-white flex flex-col gap-2">
+                                    <p class="text-xs text-gray-500 mb-2">Area Lahan Pertanian Desa</p>
+                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm">🌾 Buka Bursa Tani</a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        poligon.bindPopup(popupHTML);
+                        layerGrupMarker.addLayer(poligon);
                     }
-                }
-            });
+                });
+            }
         };
     </script>
 </body>

@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pusat Data UMKM - Lapak Desa Talumae</title>
+    <title>Pusat Data & Pencarian - Lapak Desa Talumae</title>
+    <!-- Tailwind & PapaParse -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="js/app.js"></script> <!-- Ini adalah kunci utamanya -->
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
 
     <!-- NAVIGASI ATAS -->
     <nav class="bg-white shadow-sm p-4 sticky top-0 z-[40]">
-        <div class="container mx-auto max-w-6xl flex items-center">
-            <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 transition-colors focus:outline-none">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-            </button>
-            <a href="index.html" class="flex items-center text-green-700 hover:text-green-800 font-bold transition-colors">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Kembali ke Beranda
-            </a>
+        <div class="container mx-auto max-w-6xl flex items-center justify-between">
+            <div class="flex items-center">
+                <button onclick="toggleSidebar()" class="mr-4 bg-transparent text-green-700 hover:text-green-800 focus:outline-none">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <a href="index.html" class="flex items-center text-green-700 font-bold text-lg md:text-xl">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Kembali ke Beranda
+                </a>
+            </div>
+            <span class="font-semibold text-gray-500 hidden sm:block text-sm">Pusat Data Terpadu</span>
         </div>
     </nav>
 
@@ -32,382 +36,205 @@
             <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
             <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🌾 Hasil Tani</a>
             <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
-            <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
-            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
-            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
-        </div>
-    </div>
-
-    <!-- MODAL AKSES PENJUAL -->
-    <div id="modalKodeUnik" class="fixed inset-0 bg-black bg-opacity-60 z-[110] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-11/12 max-w-sm transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Akses Penjual</h3>
-            <p class="text-sm text-gray-600 mb-4">Masukkan Kode Unik Toko Anda untuk mengelola produk.</p>
-            <input type="text" id="inputKodeUnik" class="border border-gray-300 p-3 w-full mb-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-center uppercase" placeholder="Contoh: TLM01">
-            <p id="pesanErrorKode" class="text-red-500 text-xs font-semibold hidden mb-4 text-center"></p>
-            <div class="flex justify-end gap-3 mt-4">
-                <button onclick="tutupModalKodeUnik()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">Batal</button>
-                <button id="btnValidasi" onclick="validasiDanBukaAppSheet()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-bold transition-colors">Validasi & Masuk</button>
-            </div>
+            <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3 mt-2">📊 Pusat Data & Pencarian</a>
         </div>
     </div>
 
     <!-- HEADER HALAMAN -->
-    <header class="bg-green-700 text-white text-center py-10 px-4 shadow-md">
-        <div class="container mx-auto max-w-6xl">
-            <h1 class="text-3xl md:text-4xl font-bold mb-2">Pusat Data UMKM</h1>
-            <p class="text-green-100">Cari dan pantau direktori lapak warga Desa Talumae secara spesifik.</p>
+    <header class="bg-green-700 text-white text-center py-12 px-4 shadow-md">
+        <div class="container mx-auto max-w-4xl">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Pusat Data Terpadu</h1>
+            <p class="text-green-100">Cari seluruh informasi UMKM dan Hasil Tani Desa Talumae dalam satu halaman.</p>
         </div>
     </header>
 
-    <!-- AREA KONTEN UTAMA -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
         
-        <!-- DASHBOARD STATISTIK -->
-        <div class="mb-8">
-            <div class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-lg p-6 flex items-center justify-between text-white mb-4">
-                <div>
-                    <p class="text-green-100 font-semibold mb-1 text-sm md:text-base">Total UMKM Terdaftar</p>
-                    <p class="text-4xl md:text-5xl font-extrabold" id="stat-total">0</p>
-                </div>
-                <div class="text-5xl md:text-6xl opacity-80">🏪</div>
-            </div>
-
-            <h3 class="text-gray-700 font-bold mb-3 text-sm md:text-base px-1">Sebaran UMKM Berdasarkan Kategori:</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-green-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Makanan</span>
-                    <span class="bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded text-xs" id="count-makanan">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-blue-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Minuman</span>
-                    <span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded text-xs" id="count-minuman">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-gray-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Bengkel</span>
-                    <span class="bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded text-xs" id="count-bengkel">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-yellow-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kelontong</span>
-                    <span class="bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kelontong">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-indigo-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">K. Pulsa</span>
-                    <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded text-xs" id="count-konter">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-cyan-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Laundry</span>
-                    <span class="bg-cyan-100 text-cyan-700 font-bold px-2 py-0.5 rounded text-xs" id="count-laundry">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">ATK</span>
-                    <span class="bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded text-xs" id="count-atk">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-amber-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Mak. Hewan</span>
-                    <span class="bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded text-xs" id="count-hewan">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-pink-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Kosmetik</span>
-                    <span class="bg-pink-100 text-pink-700 font-bold px-2 py-0.5 rounded text-xs" id="count-kosmetik">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-emerald-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pertanian</span>
-                    <span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pertanian">0</span>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center justify-between hover:border-rose-300 transition-colors">
-                    <span class="text-xs md:text-sm font-semibold text-gray-600 truncate mr-2">Pakaian</span>
-                    <span class="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded text-xs" id="count-pakaian">0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- KOTAK PENCARIAN & FILTER -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4">
-            
+        <!-- PENCARIAN & FILTER -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 relative z-20">
             <div class="flex-grow relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <input type="text" id="input-cari" placeholder="Cari nama lapak atau pemilik..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition-shadow">
+                <input type="text" id="input-cari-global" placeholder="Ketik nama toko, komoditas, petani, atau kategori..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
             </div>
-
             <div class="w-full md:w-64 shrink-0">
-                <select id="filter-kategori" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50 cursor-pointer font-semibold text-gray-700">
-                    <option value="Semua">Semua Kategori</option>
-                    <option value="Makanan">Makanan</option>
-                    <option value="Minuman">Minuman</option>
-                    <option value="Bengkel">Bengkel</option>
-                    <option value="Kelontong">Kelontong</option>
-                    <option value="Konter Pulsa">Konter Pulsa</option>
-                    <option value="Laundry">Laundry</option>
-                    <option value="ATK">ATK</option>
-                    <option value="Makanan Hewan">Makanan Hewan</option>
-                    <option value="Kosmetik">Kosmetik</option>
-                    <option value="Alat & Bahan Pertanian">Alat & Bahan Pertanian</option>
-                    <option value="Pakaian">Pakaian</option>
+                <select id="filter-tipe" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none bg-gray-50 font-semibold text-gray-700">
+                    <option value="Semua">Semua Data</option>
+                    <option value="UMKM">Hanya UMKM / Toko</option>
+                    <option value="Tani">Hanya Hasil Tani</option>
                 </select>
             </div>
         </div>
 
-        <!-- BANNER KHUSUS KELONTONG -->
-        <div id="banner-kelontong" class="hidden mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-            <div>
-                <h3 class="font-bold text-yellow-800 text-lg">Mencari Toko Kelontong?</h3>
-                <p class="text-yellow-700 text-sm">Toko kelontong memiliki beragam jenis barang. Agar lebih mudah, mari lihat sebaran lokasinya langsung di peta.</p>
-            </div>
-            <a href="peta.html?filter=Kelontong" class="shrink-0 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
-                📍 Buka Peta Kelontong
-            </a>
-        </div>
-
         <!-- STATUS LOADING -->
-        <div id="status-loading" class="text-center py-10 text-gray-500 text-lg animate-pulse">
-            Mengambil data dari server...
+        <div id="status-loading" class="text-center py-12 text-gray-500 text-lg animate-pulse flex flex-col items-center">
+            <svg class="w-10 h-10 mb-3 text-green-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Menyinkronkan seluruh database...
         </div>
 
-        <!-- WADAH TABEL/LIST -->
-        <div id="wadah-tabel" class="hidden overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-green-50 text-green-800 border-b-2 border-green-200">
-                    <tr>
-                        <th class="p-4 font-bold">Nama Lapak / Toko</th>
-                        <th class="p-4 font-bold">Kategori Lapak</th>
-                        <th class="p-4 font-bold text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="isi-tabel" class="divide-y divide-gray-100 text-gray-700">
-                    <!-- Data dimasukkan oleh JavaScript -->
-                </tbody>
-            </table>
+        <!-- WADAH LIST / TABEL -->
+        <div id="wadah-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
+            <!-- Data digenerate oleh JS -->
         </div>
-        
+
         <!-- PESAN KOSONG -->
-        <div id="pesan-kosong" class="hidden text-center py-12 text-gray-500">
-            <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="text-lg font-semibold">Toko tidak ditemukan.</p>
-            <p class="text-sm">Coba gunakan kata kunci atau kategori lain.</p>
+        <div id="pesan-kosong" class="hidden text-center py-16 text-gray-500">
+            <span class="text-6xl mb-4 block">🔍</span>
+            <p class="text-xl font-bold text-gray-700">Data tidak ditemukan.</p>
+            <p class="text-sm mt-2">Coba gunakan kata kunci pencarian yang lain.</p>
         </div>
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
     </footer>
 
-    <!-- SCRIPT HALAMAN PUSAT DATA -->
+    <!-- SCRIPT KHUSUS LIST -->
     <script>
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebarMenu');
-            if (sidebar.classList.contains('-translate-x-full')) sidebar.classList.remove('-translate-x-full');
-            else sidebar.classList.add('-translate-x-full');
+            document.getElementById('sidebarMenu').classList.toggle('-translate-x-full');
         }
 
-        function bukaModalKodeUnik() {
-            document.getElementById('sidebarMenu').classList.add('-translate-x-full');
-            const modal = document.getElementById('modalKodeUnik');
-            document.getElementById('inputKodeUnik').value = "";
-            document.getElementById('pesanErrorKode').classList.add('hidden');
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
+        // Fungsi Download Cache Super Cepat
+        async function fetchCSV(url) {
+            const cacheKey = "cache_" + url;
+            const cachedText = sessionStorage.getItem(cacheKey);
+            const cacheTime = sessionStorage.getItem(cacheKey + "_time");
+
+            if (cachedText && cacheTime && (Date.now() - parseInt(cacheTime) < 300000)) {
+                return new Promise(resolve => Papa.parse(cachedText, { header: true, skipEmptyLines: true, complete: resolve }));
+            }
+            try {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                sessionStorage.setItem(cacheKey, csvText);
+                sessionStorage.setItem(cacheKey + "_time", Date.now().toString());
+                return new Promise(resolve => Papa.parse(csvText, { header: true, skipEmptyLines: true, complete: resolve }));
+            } catch (error) { throw error; }
         }
 
-        function tutupModalKodeUnik() {
-            const modal = document.getElementById('modalKodeUnik');
-            modal.classList.add('opacity-0');
-            modal.children[0].classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
-        let dataTokoMaster = [];
+        let dataGlobalTerpadu = [];
 
         document.addEventListener("DOMContentLoaded", () => {
-            Papa.parse(urlCSV, {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    
-                    dataTokoMaster = results.data.filter(toko => toko["Nama Toko"] && toko["Nama Toko"].trim() !== "");
-                    
-                    document.getElementById('stat-total').innerText = dataTokoMaster.length;
-                    
-                    let hitunganKategori = {
-                        "Makanan": 0, "Minuman": 0, "Bengkel": 0, "Kelontong": 0,
-                        "Konter Pulsa": 0, "Laundry": 0, "ATK": 0, "Makanan Hewan": 0,
-                        "Kosmetik": 0, "Alat & Bahan Pertanian": 0, "Pakaian": 0
-                    };
+            const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
+            const URL_CSV_PETANI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=282611667&single=true&output=csv";
+            const URL_CSV_PRODUK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=843653380&single=true&output=csv";
 
-                    let idKategori = {
-                        "Makanan": "count-makanan", "Minuman": "count-minuman", 
-                        "Bengkel": "count-bengkel", "Kelontong": "count-kelontong",
-                        "Konter Pulsa": "count-konter", "Laundry": "count-laundry", 
-                        "ATK": "count-atk", "Makanan Hewan": "count-hewan",
-                        "Kosmetik": "count-kosmetik", "Alat & Bahan Pertanian": "count-pertanian", 
-                        "Pakaian": "count-pakaian"
-                    };
+            Promise.all([fetchCSV(URL_CSV_TOKO), fetchCSV(URL_CSV_PETANI), fetchCSV(URL_CSV_PRODUK)])
+                .then(([resToko, resPetani, resProduk]) => {
+                    dataGlobalTerpadu = [];
 
-                    dataTokoMaster.forEach(toko => {
-                        let kats = (toko["Kategori Produk"] || "").split(',');
-                        kats.forEach(k => {
-                            let nama = k.trim().toLowerCase();
-                            for (let namaAsli in hitunganKategori) {
-                                if (nama === namaAsli.toLowerCase()) {
-                                    hitunganKategori[namaAsli]++;
-                                }
-                            }
-                        });
+                    // 1. Masukkan Data UMKM
+                    resToko.data.forEach(toko => {
+                        if (toko["Nama Toko"] && toko["Nama Toko"].trim() !== "") {
+                            dataGlobalTerpadu.push({
+                                tipe: "UMKM",
+                                namaUtama: toko["Nama Toko"],
+                                namaPemilik: toko["Nama Pemilik"] || "Warga Talumae",
+                                kategori: toko["Kategori Produk"] || "Umum",
+                                infoTambahan: toko["Deskripsi Singkat"] || "Toko kelontong / UMKM desa.",
+                                nomorWA: toko["Nomor Whatsapp (62)"]
+                            });
+                        }
                     });
 
-                    for (let kat in idKategori) {
-                        let el = document.getElementById(idKategori[kat]);
-                        if (el) el.innerText = hitunganKategori[kat];
-                    }
+                    // 2. Masukkan Data Tani
+                    const profilPetani = resPetani.data;
+                    const produkMentah = resProduk.data.filter(p => p["Nama Komoditas"] && p["Nama Komoditas"].trim() !== "");
+                    
+                    produkMentah.forEach(produk => {
+                        const profilCocok = profilPetani.find(pt => pt["Kode Unik Toko"] === produk["Kode Unik Toko"]);
+                        if (profilCocok) {
+                            dataGlobalTerpadu.push({
+                                tipe: "Tani",
+                                namaUtama: produk["Nama Komoditas"],
+                                namaPemilik: profilCocok["Nama Petani"] || "Petani Lokal",
+                                kategori: produk["Jenis Hasil Tani"] || "Pangan",
+                                infoTambahan: `Stok Tersedia: ${produk["Sisa Pangan Tersedia"] || "0"} ${produk["Satuan"] || ""}`,
+                                nomorWA: profilCocok["Nomor Whatsapp (62)"]
+                            });
+                        }
+                    });
 
                     document.getElementById("status-loading").classList.add("hidden");
-                    
-                    saringData(); 
-                },
-                error: function(err) {
-                    document.getElementById("status-loading").innerText = "Gagal memuat data dari server.";
-                }
-            });
+                    saringDataGlobal();
+                })
+                .catch(err => {
+                    document.getElementById("status-loading").innerHTML = `<span class="text-red-500 font-bold">Gagal memuat database. Periksa koneksi Anda.</span>`;
+                });
 
-            document.getElementById('input-cari').addEventListener('input', saringData);
-            document.getElementById('filter-kategori').addEventListener('change', saringData);
+            document.getElementById('input-cari-global').addEventListener('input', saringDataGlobal);
+            document.getElementById('filter-tipe').addEventListener('change', saringDataGlobal);
         });
 
-        function saringData() {
-            const teksCari = document.getElementById('input-cari').value.toLowerCase().trim();
-            const kategoriPilih = document.getElementById('filter-kategori').value.toLowerCase();
+        function saringDataGlobal() {
+            const teksCari = document.getElementById('input-cari-global').value.toLowerCase().trim();
+            const tipePilih = document.getElementById('filter-tipe').value;
 
-            const bannerKelontong = document.getElementById('banner-kelontong');
-            if (kategoriPilih === "kelontong" || teksCari.includes("kelontong")) {
-                bannerKelontong.classList.remove('hidden');
-            } else {
-                bannerKelontong.classList.add('hidden');
-            }
-
-            const dataTersaring = dataTokoMaster.filter(toko => {
-                const namaToko = (toko["Nama Toko"] || "").toLowerCase().trim();
+            const dataTersaring = dataGlobalTerpadu.filter(item => {
+                const teksGabungan = `${item.namaUtama} ${item.namaPemilik} ${item.kategori} ${item.infoTambahan}`.toLowerCase();
+                const cocokTeks = teksGabungan.includes(teksCari);
                 
-                if (namaToko === "toko kelontong") {
-                    return false; 
+                let cocokTipe = true;
+                if (tipePilih !== "Semua") {
+                    cocokTipe = (item.tipe === tipePilih);
                 }
 
-                const namaPemilik = (toko["Nama Pemilik"] || "").toLowerCase();
-                const kategoriTokoMentah = toko["Kategori Produk"] || "";
-
-                const cocokTeks = namaToko.includes(teksCari) || namaPemilik.includes(teksCari);
-                
-                let cocokKategori = true;
-                if (kategoriPilih !== "semua") {
-                    const arrayKategori = kategoriTokoMentah.split(',').map(k => k.trim().toLowerCase());
-                    cocokKategori = arrayKategori.includes(kategoriPilih);
-                }
-
-                return cocokTeks && cocokKategori;
+                return cocokTeks && cocokTipe;
             });
 
-            renderTabelData(dataTersaring);
+            renderList(dataTersaring);
         }
 
-        function renderTabelData(data) {
-            const wadahTabel = document.getElementById('wadah-tabel');
-            const isiTabel = document.getElementById('isi-tabel');
+        function renderList(data) {
+            const wadah = document.getElementById('wadah-list');
             const pesanKosong = document.getElementById('pesan-kosong');
 
-            isiTabel.innerHTML = "";
-
+            wadah.innerHTML = "";
             if (data.length === 0) {
-                wadahTabel.classList.add('hidden');
+                wadah.classList.add('hidden');
                 pesanKosong.classList.remove('hidden');
                 return;
             }
 
-            wadahTabel.classList.remove('hidden');
+            wadah.classList.remove('hidden');
             pesanKosong.classList.add('hidden');
 
-            let kodinganHTML = "";
-            data.forEach((toko, index) => {
-                const bgColor = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                const namaToko = toko["Nama Toko"];
-                const kodeUnikToko = toko["Kode Unik Toko"];
-                const kategori = toko["Kategori Produk"] || "-";
-                
-                const arrayKat = kategori.split(',').map(k => k.trim()).filter(k => k);
-                let badgeHTML = "";
-                
-                // [DIUBAH] Menyiapkan parameter filter dan nama toko untuk dikirim ke peta
-                let parameterFilter = "Semua";
-                if (arrayKat.length > 0) {
-                    parameterFilter = arrayKat[0]; // Ambil kategori pertama sebagai filter utama
-                    
-                    badgeHTML = `<div class="flex flex-wrap gap-1">`;
-                    arrayKat.forEach(k => {
-                        badgeHTML += `<span class="inline-block bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-md font-semibold border border-green-200">${k}</span>`;
-                    });
-                    badgeHTML += `</div>`;
-                } else {
-                    badgeHTML = `<span class="text-gray-400 italic text-xs">Belum ada kategori</span>`;
-                }
-                
-                let parameterToko = kodeUnikToko || namaToko;
-                let linkPeta = `peta.html?filter=${encodeURIComponent(parameterFilter)}&toko=${encodeURIComponent(parameterToko)}`;
+            let elemenHTML = "";
+            data.forEach((item) => {
+                // Tentukan Tema Warna Berdasarkan Tipe
+                const isUMKM = item.tipe === "UMKM";
+                const bgColor = isUMKM ? "bg-yellow-50" : "bg-green-50";
+                const borderColor = isUMKM ? "border-yellow-100" : "border-green-100";
+                const badgeColor = isUMKM ? "bg-yellow-400 text-yellow-900" : "bg-green-500 text-white";
+                const iconTipe = isUMKM ? "🏪" : "🌾";
+                const titleHover = isUMKM ? "group-hover:text-yellow-700" : "group-hover:text-green-700";
 
-                kodinganHTML += `
-                    <tr class="${bgColor} hover:bg-green-100 transition-colors">
-                        <td class="p-4 align-middle">
-                            <p class="font-bold text-gray-900">${namaToko}</p>
-                        </td>
-                        <td class="p-4 align-middle">
-                            ${badgeHTML}
-                        </td>
-                        <td class="p-4 align-middle text-center">
-                            <!-- [DIUBAH] Link tombol Buka Peta sekarang mengirimkan ID/Nama Toko -->
-                            <a href="${linkPeta}" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold px-4 py-2 rounded text-sm transition-colors shadow-sm inline-flex items-center gap-1 cursor-pointer">
-                                📍 Buka Peta
-                            </a>
-                        </td>
-                    </tr>
+                // Tombol WA
+                let tombolWA = "";
+                if (item.nomorWA) {
+                    const nomorBersih = item.nomorWA.toString().replace(/[^0-9]/g, '');
+                    const pesan = `Halo ${item.namaPemilik}, saya melihat info ${item.namaUtama} di website Lapak Desa Talumae. Apakah bisa dibantu informasinya?`;
+                    tombolWA = `<a href="https://wa.me/${nomorBersih}?text=${encodeURIComponent(pesan)}" target="_blank" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-center font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs mt-3 flex items-center justify-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg> Hubungi</a>`;
+                }
+
+                elemenHTML += `
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
+                        <div class="${bgColor} px-4 py-3 border-b ${borderColor} flex justify-between items-center">
+                            <span class="${badgeColor} text-[10px] font-bold px-2 py-1 rounded uppercase shadow-sm">${item.kategori.split(',')[0]}</span>
+                            <span class="text-xl opacity-70">${iconTipe}</span>
+                        </div>
+                        <div class="p-4 flex flex-col flex-grow">
+                            <h3 class="text-lg font-bold text-gray-900 leading-tight mb-1 ${titleHover} transition-colors">${item.namaUtama}</h3>
+                            <p class="text-xs text-gray-500 font-semibold mb-2 uppercase">👤 ${item.namaPemilik}</p>
+                            <div class="mt-auto bg-gray-50 p-2.5 rounded border border-gray-100 text-sm text-gray-700">
+                                ${item.infoTambahan}
+                            </div>
+                            ${tombolWA}
+                        </div>
+                    </div>
                 `;
             });
-
-            isiTabel.innerHTML = kodinganHTML;
-        }
-        
-        function validasiDanBukaAppSheet() {
-            const inputKode = document.getElementById('inputKodeUnik').value.trim();
-            const pesanError = document.getElementById('pesanErrorKode');
-            const btnValidasi = document.getElementById('btnValidasi');
-
-            if (!inputKode) {
-                pesanError.innerText = "Kode unik tidak boleh kosong!";
-                pesanError.classList.remove('hidden');
-                return;
-            }
-            btnValidasi.innerText = "Mengecek...";
-            btnValidasi.disabled = true;
-
-            const URL_APPSHEET = "https://www.appsheet.com/start/8dcd40af-1089-4094-8890-7e286c51921a";
-
-            const isValid = dataTokoMaster.some(toko => {
-                const kode = toko["Kode Unik Toko"];
-                return kode && (kode.trim().toLowerCase() === inputKode.toLowerCase());
-            });
-
-            if (isValid) {
-                pesanError.classList.add('hidden');
-                const urlTujuan = `${URL_APPSHEET}&defaults=%7B%22Kode%20Unik%22%3A%22${inputKode.toUpperCase()}%22%7D`;
-                window.open(urlTujuan, "_blank");
-                tutupModalKodeUnik();
-            } else {
-                pesanError.innerText = "Maaf, Kode Unik Anda tidak terdaftar!";
-                pesanError.classList.remove('hidden');
-            }
-            btnValidasi.innerText = "Validasi & Masuk";
-            btnValidasi.disabled = false;
+            wadah.innerHTML = elemenHTML;
         }
     </script>
 </body>

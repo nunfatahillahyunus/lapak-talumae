@@ -33,12 +33,10 @@
         </button>
         <div class="p-6 pt-16 flex-grow">
             <h2 class="text-xl font-bold text-green-700 mb-6 border-b pb-2">Menu Utama</h2>
-            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors bg-green-50 rounded-lg px-3 -ml-3">🏠 Beranda</a>
-            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors mt-2">🌾 Hasil Tani</a>
+            <a href="index.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🏠 Beranda</a>
+            <a href="tani.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🌾 Hasil Tani</a>
             <a href="peta.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">🗺️ Peta Lokasi UMKM</a>
             <a href="list.html" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">📊 Pusat Data & Pencarian</a>
-            <a href="https://forms.gle/rZTMGLUJNnEfv4zi7" target="_blank" class="block py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors border-t mt-2 pt-4">📝 Daftar Toko Baru</a>
-            <button onclick="bukaModalKodeUnik()" class="w-full text-left py-3 text-gray-800 hover:text-green-600 font-semibold transition-colors">⚙️ Dasbor Penjual</button>
         </div>
     </div>
 
@@ -58,7 +56,7 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                <input type="text" id="input-cari-toko" placeholder="Cari nama toko..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm shadow-sm">
+                <input type="text" id="input-cari-toko" placeholder="Cari nama toko..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm">
             </div>
         </div>
 
@@ -144,7 +142,6 @@
             return pureNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
-        // Fungsi Pemformatan Hari Operasional
         function formatHariOperasional(stringHari) {
             if (!stringHari || stringHari.trim() === "") return "Belum ada informasi";
             
@@ -252,7 +249,6 @@
                     if (masukKriteria) dataTersaring.push(toko);
                 });
 
-                // Urutkan (Sorting): Toko yang punya Kode Unik (punya detail) ada di atas
                 dataTersaring.sort((a, b) => {
                     const aPunyaDetail = (a["Kode Unik Toko"] && a["Kode Unik Toko"].trim() !== "") ? 1 : 0;
                     const bPunyaDetail = (b["Kode Unik Toko"] && b["Kode Unik Toko"].trim() !== "") ? 1 : 0;
@@ -266,7 +262,6 @@
                 document.getElementById('status-loading').innerHTML = `<span class="text-red-500 font-bold">Gagal memuat data. Periksa koneksi Anda.</span>`;
             });
 
-            // Event Listener Pencarian Toko
             document.getElementById('input-cari-toko').addEventListener('input', function(e) {
                 const teksCari = e.target.value.toLowerCase().trim();
                 const tersaringSearch = dataKatalogAsli.filter(t => {
@@ -300,14 +295,16 @@
                 const deskripsi = toko["Deskripsi Singkat Toko"] || "";
                 const jamBuka = toko["Jam Buka"] || "";
                 const jamTutup = toko["Jam Tutup"] || "";
+                const kategori = toko["Kategori Produk"] || "";
 
                 const statusBukaHtml = getStatusBukaTutup(jamBuka, jamTutup);
+                const katUtama = kategori.split(',')[0].trim();
 
-                // Tombol Peta mengarah ke halaman peta.html
+                // Tombol Peta mengarah ke halaman peta.html DENGAN PARAMETER FILTER
                 let tombolPeta = "";
                 if (lokasi && lokasi.includes(',')) {
                     tombolPeta = `
-                        <a href="peta.html?toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm text-xs flex items-center justify-center gap-1.5">
+                        <a href="peta.html?filter=${encodeURIComponent(katUtama)}&toko=${encodeURIComponent(nama)}" class="flex-none bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-center font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm text-xs flex items-center justify-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             Peta
                         </a>`;
@@ -324,12 +321,14 @@
                 }
 
                 const htmlDeskripsi = deskripsi ? `<p class="text-sm text-gray-600 mb-5 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>` : `<div class="flex-grow"></div>`;
+                
+                // Menampilkan nama pemilik tanpa "Warga Talumae"
                 const htmlPemilik = pemilik ? `<p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>${pemilik}</p>` : ``;
 
                 elemenHTML += `
                     <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
                         
-                        <!-- Header Hijau Tanpa Label Makanan -->
+                        <!-- Header Hijau -->
                         <div class="bg-green-700 px-5 py-4 flex flex-col justify-center min-h-[90px]">
                             <div class="flex justify-between items-start">
                                 <h3 class="text-xl font-bold text-white leading-tight mt-1 line-clamp-2 pr-2" title="${nama}">${nama}</h3>
@@ -378,8 +377,6 @@
             }
 
             document.getElementById('modal-dt-bayar').innerText = toko["Metode Pembayaran"] || "Belum ada informasi";
-            
-            // Render Hari Operasional berbentuk badge kotak
             document.getElementById('modal-dt-hari').innerHTML = formatHariOperasional(toko["Hari Operasional"]);
 
             const jamBuka = toko["Jam Buka"] || "";
@@ -392,7 +389,6 @@
             
             document.getElementById('modal-dt-jam').innerText = jamOperasional;
 
-            // Ambil Data Produk
             const kodeUnik = toko["Kode Unik Toko"];
             const wadahProduk = document.getElementById('modal-dt-produk');
             wadahProduk.innerHTML = `<p class="text-sm text-gray-500 text-center animate-pulse py-4">Memuat data produk...</p>`;
@@ -409,7 +405,6 @@
                 if (produkList.length === 0) {
                     wadahProduk.innerHTML = `<p class="text-sm text-gray-500 text-center italic py-2">Belum ada produk/menu yang ditambahkan.</p>`;
                 } else {
-                    // Sorting produk berdasarkan "Kategori Produk" secara urut abjad
                     produkList.sort((a, b) => {
                         const katA = (a["Kategori Produk"] || "").toLowerCase();
                         const katB = (b["Kategori Produk"] || "").toLowerCase();
@@ -420,11 +415,9 @@
                     produkList.forEach(p => {
                         const namaP = p["Nama Produk"];
                         const harga = p["Harga (Rp)"];
-                        const katP = p["Kategori Produk"] || "";
                         
                         const valPromo = (p["Ada Promo ?"] || "").trim().toLowerCase();
                         const isPromo = valPromo === "true" || valPromo === "ya";
-                        
                         const hargaPromo = p["Harga Promo (Rp)"];
                         
                         let hargaHtml = `<p class="text-sm font-bold text-green-700">Rp ${formatRupiah(harga)}</p>`;
@@ -441,8 +434,7 @@
                         htmlProd += `
                             <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
                                 <div>
-                                    <p class="font-bold text-gray-800 text-sm leading-tight">${namaP}</p>
-                                    ${katP ? `<span class="inline-block text-[10px] font-semibold text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 mt-1">${katP}</span>` : ''}
+                                    <p class="font-bold text-gray-800 text-sm">${namaP}</p>
                                 </div>
                                 <div class="text-right shrink-0 ml-3">
                                     ${hargaHtml}
@@ -464,8 +456,9 @@
 
             const lokasi = toko["Lokasi Toko"];
             if (lokasi && lokasi.includes(',')) {
+                const katUtama = (toko["Kategori Produk"] || "").split(',')[0].trim();
                 htmlAksi += `
-                    <a href="peta.html?toko=${encodeURIComponent(toko["Nama Toko"])}" class="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-center font-bold py-2.5 px-3 rounded-lg transition-colors text-sm flex items-center justify-center gap-1.5 shadow-sm">
+                    <a href="peta.html?filter=${encodeURIComponent(katUtama)}&toko=${encodeURIComponent(toko["Nama Toko"])}" class="flex-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-center font-bold py-2.5 px-3 rounded-lg transition-colors text-sm flex items-center justify-center gap-1.5 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Peta
                     </a>`;
@@ -495,7 +488,7 @@
         }
 
         function tutupModalDetail() {
-            document.body.style.overflow = 'auto'; // UN-FREEZE WEB
+            document.body.style.overflow = 'auto'; 
             const modal = document.getElementById('modal-detail-toko');
             modal.classList.add('opacity-0');
             modal.children[0].classList.remove('scale-100');

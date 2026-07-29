@@ -1,0 +1,24 @@
+{
+"type": "FeatureCollection",
+"name": "Titik_Penting",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1, "Jenis_Bangunan": "Masjid" }, "geometry": { "type": "Point", "coordinates": [ 119.890512871101066, -3.925830448130127 ] } },
+{ "type": "Feature", "properties": { "fid": 2, "Jenis_Bangunan": "Lapangan" }, "geometry": { "type": "Point", "coordinates": [ 119.890945653762572, -3.92512082096876 ] } },
+{ "type": "Feature", "properties": { "fid": 3, "Jenis_Bangunan": "Kantor Desa" }, "geometry": { "type": "Point", "coordinates": [ 119.891815360546474, -3.925269563829833 ] } },
+{ "type": "Feature", "properties": { "fid": 4, "Jenis_Bangunan": "Masjid" }, "geometry": { "type": "Point", "coordinates": [ 119.89108232197141, -3.924134365907151 ] } },
+{ "type": "Feature", "properties": { "fid": 5, "Jenis_Bangunan": "SDN 1 Mojong" }, "geometry": { "type": "Point", "coordinates": [ 119.894587033237627, -3.922906201903866 ] } },
+{ "type": "Feature", "properties": { "fid": 6, "Jenis_Bangunan": "Gereja" }, "geometry": { "type": "Point", "coordinates": [ 119.894859334290217, -3.901567468492076 ] } },
+{ "type": "Feature", "properties": { "fid": 7, "Jenis_Bangunan": "Arena Balap" }, "geometry": { "type": "Point", "coordinates": [ 119.894233973697979, -3.90441328410522 ] } },
+{ "type": "Feature", "properties": { "fid": 8, "Jenis_Bangunan": "Masjid" }, "geometry": { "type": "Point", "coordinates": [ 119.880413918755124, -3.90665480903078 ] } },
+{ "type": "Feature", "properties": { "fid": 9, "Jenis_Bangunan": "PAUD" }, "geometry": { "type": "Point", "coordinates": [ 119.890615372257628, -3.902335994602654 ] } },
+{ "type": "Feature", "properties": { "fid": 10, "Jenis_Bangunan": "SDN 1 Mojong" }, "geometry": null },
+{ "type": "Feature", "properties": { "fid": 11, "Jenis_Bangunan": "TK Negeri PGRI Mojong" }, "geometry": { "type": "Point", "coordinates": [ 119.890934264745127, -3.924465938890316 ] } },
+{ "type": "Feature", "properties": { "fid": 12, "Jenis_Bangunan": "Koperasi Desa" }, "geometry": { "type": "Point", "coordinates": [ 119.899289662062188, -3.922255449849949 ] } },
+{ "type": "Feature", "properties": { "fid": 15, "Jenis_Bangunan": "SDN 2 Mojong" }, "geometry": { "type": "Point", "coordinates": [ 119.890412440674709, -3.924454856332332 ] } },
+{ "type": "Feature", "properties": { "fid": 16, "Jenis_Bangunan": "Lapangan Tembak" }, "geometry": { "type": "Point", "coordinates": [ 119.901743518155584, -3.920175880686657 ] } },
+{ "type": "Feature", "properties": { "fid": 17, "Jenis_Bangunan": "MTSS DDI AL-Mujahidin" }, "geometry": { "type": "Point", "coordinates": [ 119.890491261094937, -3.925534042811354 ] } },
+{ "type": "Feature", "properties": { "fid": 18, "Jenis_Bangunan": "MAS DDI AL MUJAHIDIN BENDORO" }, "geometry": { "type": "Point", "coordinates": [ 119.89123944378963, -3.924569960261982 ] } },
+{ "type": "Feature", "properties": { "fid": 19, "Jenis_Bangunan": "Masjid" }, "geometry": { "type": "Point", "coordinates": [ 119.898271235523822, -3.900885165174663 ] } }
+]
+}

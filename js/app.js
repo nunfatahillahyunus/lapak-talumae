@@ -24,12 +24,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-function formatGambarDrive(urlDrive) {
-    if (!urlDrive) return "https://via.placeholder.com/400x300?text=Tidak+Ada+Foto";
-    const match = urlDrive.match(/([-\w]{25,})/);
-    if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
-    return urlDrive;
-}
+function formatGambar(sumberFoto) {
+            // Jika kolom di spreadsheet kosong
+            if (!sumberFoto || sumberFoto.trim() === "") {
+                return "https://via.placeholder.com/400x200?text=Tidak+Ada+Foto";
+            }
+            
+            // Cek apakah ini link Google Drive (Sistem lama)
+            if (sumberFoto.includes("drive.google.com")) {
+                const match = sumberFoto.match(/([-\w]{25,})/);
+                if (match && match[1]) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+                return sumberFoto;
+            } 
+            
+            // JIKA HANYA NAMA FILE (Sistem Baru)
+            // Gabungkan nama folder dengan nama file
+            return `img_umkm/${sumberFoto.trim()}`;
+        }
 
 function bersihkanAngka(str) {
     if (!str) return 0;

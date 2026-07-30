@@ -50,6 +50,7 @@
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl flex flex-col">
         
+        <!-- PANEL FILTER PETA -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 mb-6 relative z-[20]">
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Cari Lokasi Spesifik</h3>
             <div class="relative mb-5">
@@ -58,7 +59,21 @@
 
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
             <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
-            <p class="text-[11px] text-gray-400 mt-4 italic">*Pin UMKM dan Area Lahan akan muncul sesuai kategori yang dipilih. Titik penting desa dapat ditampilkan/disembunyikan melalui tombol di sudut peta.</p>
+            
+            <!-- TOGGLE GLOBAL TITIK PENTING -->
+            <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <div class="w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_4px_rgba(0,0,0,0.4)] border border-gray-300 inline-block"></div>
+                        Titik Penting Desa
+                    </span>
+                    <span class="text-[10px] text-gray-500 mt-1 hidden sm:block">Fasilitas umum seperti Masjid, Sekolah, dan Kantor Desa.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" id="toggle-global-titik" class="sr-only peer" checked onchange="toggleVisibilitasTitikPentingGlobal()">
+                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                </label>
+            </div>
         </div>
 
         <!-- WADAH PETA -->
@@ -71,10 +86,10 @@
 
             <div id="map" class="absolute inset-0 z-[10]"></div>
             
-            <!-- TOMBOL TOGGLE TITIK PENTING (Kanan Atas) -->
-            <button onclick="toggleTitikPenting()" id="btn-toggle-titik" class="absolute top-4 right-4 z-[1000] bg-white text-gray-800 px-3 py-2.5 rounded-lg shadow-[0_4px_10px_rgba(0,0,0,0.15)] border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 text-[11px] md:text-xs font-bold backdrop-blur-md bg-opacity-95">
-                <span id="ikon-toggle-titik" class="w-3 h-3 rounded-full bg-white shadow-[0_0_4px_rgba(0,0,0,0.8)] border border-gray-100 inline-block transition-all"></span>
-                <span id="teks-toggle-titik">Sembunyikan Titik Penting</span>
+            <!-- TOMBOL BUKA LIST TITIK PENTING (Kanan Atas) -->
+            <button onclick="bukaListTitikPenting()" id="btn-buka-list-titik" class="absolute top-4 right-4 z-[1000] bg-white text-gray-800 px-3 py-2.5 rounded-lg shadow-[0_4px_10px_rgba(0,0,0,0.15)] border border-gray-200 hover:bg-gray-50 hover:text-red-600 transition-all flex items-center gap-2 text-[11px] md:text-xs font-bold backdrop-blur-md bg-opacity-95">
+                <span class="text-sm">📍</span>
+                <span>Daftar Titik Penting</span>
             </button>
 
             <!-- TOMBOL LIVE LOCATION (Kanan Bawah) -->
@@ -84,6 +99,27 @@
         </div>
 
     </main>
+
+    <!-- MODAL LIST TITIK PENTING -->
+    <div id="modal-list-titik" class="fixed inset-0 bg-black bg-opacity-70 z-[1100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]">
+            <div class="bg-gray-800 p-4 shrink-0 flex justify-between items-center text-white border-b-4 border-red-500">
+                <h3 class="text-lg font-bold leading-tight flex items-center gap-2"><span>📍</span> Titik Penting Desa</h3>
+                <button onclick="tutupListTitikPenting()" class="hover:text-red-400 focus:outline-none shrink-0 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto bg-gray-50">
+                <p class="text-[11px] text-gray-500 mb-3 italic">Pilih salah satu lokasi untuk melihatnya langsung di peta.</p>
+                <div id="wadah-item-titik" class="flex flex-col gap-2.5">
+                    <!-- Digenerate oleh JS -->
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t border-gray-200 shrink-0">
+                <button onclick="tutupListTitikPenting()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-4 rounded-xl transition-colors shadow-sm text-sm">Tutup Daftar</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-6">
         <p>&copy; 2026 Lapak Desa Talumae, Kabupaten Sidenreng Rappang.</p>
@@ -96,7 +132,7 @@
         }
 
         async function fetchCSV(url) {
-            const cacheKey = "talumae_v6_" + url;
+            const cacheKey = "talumae_v7_" + url;
             const cachedText = sessionStorage.getItem(cacheKey);
             const cacheTime = sessionStorage.getItem(cacheKey + "_time");
 
@@ -118,9 +154,11 @@
         
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
-        let isTitikPentingVisible = true; // Status visibilitas Titik Penting
+        
+        // ARRAY PENYIMPANAN DAFTAR TITIK PENTING
+        let dataTitikPentingList = []; 
+        let idCounterTitik = 0;
 
-        // PENAMBAHAN KATEGORI BARU (SABLON, SERVICE HP, TOKO HADIAH)
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
             "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
@@ -133,7 +171,6 @@
         };
         const WARNA_DEFAULT = "#6b7280";
 
-        // Fungsi ikon standar UMKM
         function buatMarkerSVG(warnaHex) {
             return L.divIcon({
                 className: "bg-transparent",
@@ -142,11 +179,10 @@
             });
         }
 
-        // Fungsi logo titik bulat berwarna putih
         function buatTitikPutihIcon() {
             return L.divIcon({
                 className: "bg-transparent",
-                html: `<div class="w-4 h-4 bg-white rounded-full shadow-[0_0_6px_rgba(0,0,0,0.9)] border border-gray-300"></div>`,
+                html: `<div class="w-4 h-4 bg-white rounded-full shadow-[0_0_6px_rgba(0,0,0,0.9)] border border-gray-300 cursor-pointer hover:bg-red-200 transition-colors"></div>`,
                 iconSize: [16, 16],
                 iconAnchor: [8, 8],
                 popupAnchor: [0, -10]
@@ -178,23 +214,70 @@
             if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
         };
 
-        // FUNGSI TOGGLE TITIK PENTING (Bisa Ditampilkan/Disembunyikan)
-        window.toggleTitikPenting = function() {
-            const teksSpan = document.getElementById('teks-toggle-titik');
-            const ikonSpan = document.getElementById('ikon-toggle-titik');
-
-            if (isTitikPentingVisible) {
-                // Sembunyikan
-                petaLeaflet.removeLayer(layerGrupTitik);
-                teksSpan.innerText = "Tampilkan Titik Penting";
-                ikonSpan.className = "w-3 h-3 rounded-full bg-gray-300 border border-gray-400 inline-block opacity-50 transition-all";
-                isTitikPentingVisible = false;
-            } else {
-                // Tampilkan
+        // KONTROL TOGGLE GLOBAL TITIK PENTING
+        window.toggleVisibilitasTitikPentingGlobal = function() {
+            const isChecked = document.getElementById('toggle-global-titik').checked;
+            const btnPeta = document.getElementById('btn-buka-list-titik');
+            
+            if (isChecked) {
                 layerGrupTitik.addTo(petaLeaflet);
-                teksSpan.innerText = "Sembunyikan Titik Penting";
-                ikonSpan.className = "w-3 h-3 rounded-full bg-white shadow-[0_0_4px_rgba(0,0,0,0.8)] border border-gray-100 inline-block transition-all";
-                isTitikPentingVisible = true;
+                btnPeta.classList.remove('hidden');
+            } else {
+                petaLeaflet.removeLayer(layerGrupTitik);
+                btnPeta.classList.add('hidden');
+            }
+        };
+
+        // KONTROL MODAL LIST TITIK PENTING
+        window.bukaListTitikPenting = function() {
+            document.body.style.overflow = 'hidden';
+            const wadah = document.getElementById('wadah-item-titik');
+            let html = "";
+            
+            // Urutkan daftar berdasarkan abjad
+            const sortedList = [...dataTitikPentingList].sort((a,b) => a.nama.localeCompare(b.nama));
+            
+            if(sortedList.length === 0) {
+                html = `<p class="text-sm text-gray-500 text-center py-4 font-semibold">Data tidak tersedia.</p>`;
+            } else {
+                sortedList.forEach(item => {
+                    html += `
+                        <button onclick="fokusTitikPenting(${item.id})" class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 text-left hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-between group">
+                            <span class="font-bold text-gray-800 text-sm group-hover:text-red-700">${item.nama}</span>
+                            <span class="text-gray-400 group-hover:text-red-500 text-xs font-bold bg-gray-50 group-hover:bg-red-100 px-2 py-1 rounded">Lihat ➔</span>
+                        </button>
+                    `;
+                });
+            }
+            wadah.innerHTML = html;
+
+            const modal = document.getElementById('modal-list-titik');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-95');
+                modal.children[0].classList.add('scale-100');
+            }, 10);
+        };
+
+        window.tutupListTitikPenting = function() {
+            document.body.style.overflow = 'auto';
+            const modal = document.getElementById('modal-list-titik');
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.remove('scale-100');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        window.fokusTitikPenting = function(id) {
+            tutupListTitikPenting();
+            const item = dataTitikPentingList.find(t => t.id === id);
+            if(item) {
+                // Zoom-in dan buka popup
+                petaLeaflet.setView([item.lat, item.lng], 18);
+                setTimeout(() => {
+                    item.marker.openPopup();
+                }, 300);
             }
         };
 
@@ -205,7 +288,7 @@
             targetTokoBukaPopup = urlParamsPeta.get('toko'); 
             const filterDariURL = urlParamsPeta.get('filter');
 
-            // Inisialisasi Peta & Layer (Menggunakan satelit hybrid agar titik putih kontras)
+            // Inisialisasi Peta
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps' }).addTo(petaLeaflet);
             
@@ -236,7 +319,7 @@
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
 
-                // RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
+                // RENDER TITIK PENTING & SIMPAN KE DALAM LIST
                 if (geoTitik && geoTitik.features) {
                     geoTitik.features.forEach(feature => {
                         if (!feature.geometry || !feature.geometry.coordinates) return; 
@@ -245,14 +328,15 @@
                         const lat = feature.geometry.coordinates[1];
                         
                         const props = feature.properties || {};
-                        const namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
-
-                        const titikMarker = L.geoJSON(feature, {
-                            pointToLayer: function (geoJsonPoint, latlng) {
-                                // MENGGUNAKAN IKON BULAT PUTIH BARU
-                                return L.marker(latlng, { icon: buatTitikPutihIcon() });
-                            }
-                        });
+                        // Gabungkan Jenis dengan identifier kustom jika ada beberapa nama yang sama
+                        let namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
+                        
+                        // Deteksi nama spesifik yang perlu dibedakan (misal Masjid)
+                        if (namaTitik === "Masjid" && idCounterTitik > 0) {
+                            // Mencoba membuat nama unik (bisa dikustomisasi lebih lanjut pada file GeoJSON)
+                            const isBendoro = lat < -3.924;
+                            namaTitik = isBendoro ? "Masjid (Dusun Bendoro)" : "Masjid (Dusun Mojong)";
+                        }
 
                         const popupHTML = `
                             <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px] shadow-lg">
@@ -269,8 +353,18 @@
                             </div>
                         `;
                         
-                        titikMarker.bindPopup(popupHTML);
-                        layerGrupTitik.addLayer(titikMarker);
+                        // Create marker object langsung
+                        const titikMarkerObj = L.marker([lat, lng], { icon: buatTitikPutihIcon() }).bindPopup(popupHTML);
+                        layerGrupTitik.addLayer(titikMarkerObj);
+
+                        // Simpan ke array untuk keperluan List (Daftar)
+                        dataTitikPentingList.push({
+                            id: idCounterTitik++,
+                            nama: namaTitik,
+                            lat: lat,
+                            lng: lng,
+                            marker: titikMarkerObj
+                        });
                     });
                 }
 

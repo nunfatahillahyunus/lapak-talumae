@@ -58,7 +58,7 @@
 
             <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
             <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
-            <p class="text-[11px] text-gray-400 mt-4 italic">*Titik penting desa selalu ditampilkan secara permanen di peta. Pin UMKM dan Lahan akan muncul sesuai kategori yang dipilih.</p>
+            <p class="text-[11px] text-gray-400 mt-4 italic">*Pin UMKM dan Area Lahan akan muncul sesuai kategori yang dipilih. Titik penting desa dapat ditampilkan/disembunyikan melalui tombol di sudut peta.</p>
         </div>
 
         <!-- WADAH PETA -->
@@ -71,6 +71,13 @@
 
             <div id="map" class="absolute inset-0 z-[10]"></div>
             
+            <!-- TOMBOL TOGGLE TITIK PENTING (Kanan Atas) -->
+            <button onclick="toggleTitikPenting()" id="btn-toggle-titik" class="absolute top-4 right-4 z-[1000] bg-white text-gray-800 px-3 py-2.5 rounded-lg shadow-[0_4px_10px_rgba(0,0,0,0.15)] border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 text-[11px] md:text-xs font-bold backdrop-blur-md bg-opacity-95">
+                <span id="ikon-toggle-titik" class="w-3 h-3 rounded-full bg-white shadow-[0_0_4px_rgba(0,0,0,0.8)] border border-gray-100 inline-block transition-all"></span>
+                <span id="teks-toggle-titik">Sembunyikan Titik Penting</span>
+            </button>
+
+            <!-- TOMBOL LIVE LOCATION (Kanan Bawah) -->
             <button onclick="cariLokasiSaya()" class="absolute bottom-6 right-6 z-[1000] bg-white text-blue-600 p-3.5 rounded-full shadow-lg border border-gray-200 hover:bg-gray-100 transition-all flex items-center justify-center group" title="Temukan Lokasi Saya">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 14v1m8-8h1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </button>
@@ -111,7 +118,9 @@
         
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
+        let isTitikPentingVisible = true; // Status visibilitas Titik Penting
 
+        // PENAMBAHAN KATEGORI BARU (SABLON, SERVICE HP, TOKO HADIAH)
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
             "Kelontong": "#eab308", "Konter Pulsa": "#8b5cf6", "Laundry": "#0ea5e9",
@@ -119,15 +128,28 @@
             "Alat & Bahan Pertanian": "#14b8a6", "Pakaian": "#f43f5e", 
             "Pangkas Rambut": "#6366f1", "Fresh Food": "#84cc16", 
             "Frozen Food": "#0ea5e9", "Alat & Pakan Ternak": "#f59e0b",
+            "Sablon": "#a855f7", "Service HP": "#06b6d4", "Toko Hadiah": "#f472b6",
             "Tani Sawah": "#eab308", "Tani Sayur": "#22c55e"
         };
         const WARNA_DEFAULT = "#6b7280";
 
+        // Fungsi ikon standar UMKM
         function buatMarkerSVG(warnaHex) {
             return L.divIcon({
                 className: "bg-transparent",
                 html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" style="filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${warnaHex}" stroke="#ffffff" stroke-width="1.5"/></svg>`,
                 iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -32] 
+            });
+        }
+
+        // Fungsi logo titik bulat berwarna putih
+        function buatTitikPutihIcon() {
+            return L.divIcon({
+                className: "bg-transparent",
+                html: `<div class="w-4 h-4 bg-white rounded-full shadow-[0_0_6px_rgba(0,0,0,0.9)] border border-gray-300"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+                popupAnchor: [0, -10]
             });
         }
 
@@ -156,6 +178,26 @@
             if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
         };
 
+        // FUNGSI TOGGLE TITIK PENTING (Bisa Ditampilkan/Disembunyikan)
+        window.toggleTitikPenting = function() {
+            const teksSpan = document.getElementById('teks-toggle-titik');
+            const ikonSpan = document.getElementById('ikon-toggle-titik');
+
+            if (isTitikPentingVisible) {
+                // Sembunyikan
+                petaLeaflet.removeLayer(layerGrupTitik);
+                teksSpan.innerText = "Tampilkan Titik Penting";
+                ikonSpan.className = "w-3 h-3 rounded-full bg-gray-300 border border-gray-400 inline-block opacity-50 transition-all";
+                isTitikPentingVisible = false;
+            } else {
+                // Tampilkan
+                layerGrupTitik.addTo(petaLeaflet);
+                teksSpan.innerText = "Sembunyikan Titik Penting";
+                ikonSpan.className = "w-3 h-3 rounded-full bg-white shadow-[0_0_4px_rgba(0,0,0,0.8)] border border-gray-100 inline-block transition-all";
+                isTitikPentingVisible = true;
+            }
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             const URL_CSV_TOKO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSr_Sh6mxIZFs_BdXP7zXCuEiU_FiuVcjrchMm5X8cPq8HXn2DZ2X2OQA_ObHxdVLer3dWwGdi5WVmq/pub?gid=1489445987&single=true&output=csv";
 
@@ -163,7 +205,7 @@
             targetTokoBukaPopup = urlParamsPeta.get('toko'); 
             const filterDariURL = urlParamsPeta.get('filter');
 
-            // Inisialisasi Peta & Layer
+            // Inisialisasi Peta & Layer (Menggunakan satelit hybrid agar titik putih kontras)
             petaLeaflet = L.map('map').setView([-3.925302, 119.891833], 14);
             L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps' }).addTo(petaLeaflet);
             
@@ -194,9 +236,7 @@
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
 
-                // ----------------------------------------------------
-                // RENDER TITIK PENTING (DENGAN TOMBOL GOOGLE MAPS)
-                // ----------------------------------------------------
+                // RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
                 if (geoTitik && geoTitik.features) {
                     geoTitik.features.forEach(feature => {
                         if (!feature.geometry || !feature.geometry.coordinates) return; 
@@ -209,17 +249,18 @@
 
                         const titikMarker = L.geoJSON(feature, {
                             pointToLayer: function (geoJsonPoint, latlng) {
-                                return L.marker(latlng, { icon: buatMarkerSVG("#ef4444") });
+                                // MENGGUNAKAN IKON BULAT PUTIH BARU
+                                return L.marker(latlng, { icon: buatTitikPutihIcon() });
                             }
                         });
 
                         const popupHTML = `
-                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
-                                <div class="p-3 border-b-4 border-red-500 bg-red-50 flex flex-col items-center">
-                                    <span class="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-1 inline-block">Titik Penting Desa</span>
-                                    <h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaTitik}</h3>
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px] shadow-lg">
+                                <div class="p-3 border-b border-gray-100 flex flex-col items-center">
+                                    <span class="bg-gray-800 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase shadow-sm mb-1 inline-block">Titik Penting Desa</span>
+                                    <h3 class="font-extrabold text-gray-900 text-base leading-tight text-center">${namaTitik}</h3>
                                 </div>
-                                <div class="p-3 text-center bg-white flex flex-col gap-2">
+                                <div class="p-3 text-center bg-gray-50 flex flex-col gap-2">
                                     <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                         Buka Google Maps
@@ -291,7 +332,6 @@
                                 });
                             }
                             
-                            // TOMBOL GOOGLE MAPS UNTUK UMKM DITAMBAHKAN DI SINI
                             tombolHTML += `
                                 <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5 mt-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>

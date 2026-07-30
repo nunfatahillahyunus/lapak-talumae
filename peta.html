@@ -132,7 +132,7 @@
         }
 
         async function fetchCSV(url) {
-            const cacheKey = "talumae_v8_peta_" + url;
+            const cacheKey = "talumae_v9_" + url;
             const cachedText = sessionStorage.getItem(cacheKey);
             const cacheTime = sessionStorage.getItem(cacheKey + "_time");
 
@@ -332,12 +332,18 @@
             layerGrupMarker = L.layerGroup().addTo(petaLeaflet); 
             layerGrupTitik = L.layerGroup().addTo(petaLeaflet);  
 
-            // Fitur Lokasi Saya
+            // 1. CARI LOKASI SECARA OTOMATIS SAAT HALAMAN DIMUAT (TANPA ZOOM)
+            petaLeaflet.locate({setView: false});
+
+            // Fitur Lokasi Saya (Berlaku untuk otomatis awal dan tombol klik manual)
             petaLeaflet.on('locationfound', function(e) {
                 if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
                 if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
+                
                 const ikonLokasi = L.divIcon({ className: "bg-transparent", html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`, iconSize: [16, 16]});
-                markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`).openPopup();
+                
+                // Menghapus openPopup otomatis agar peta tidak tergeser jika pengunjung berada di luar desa
+                markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`);
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
             });
 
@@ -365,7 +371,7 @@
                         const lat = feature.geometry.coordinates[1];
                         
                         const props = feature.properties || {};
-                        // Pastikan namanya bersih, tanpa embel-embel dusun (Kecuali diset langsung di CSV)
+                        // Pastikan namanya bersih, tanpa embel-embel dusun
                         let namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
 
                         const popupHTML = `

@@ -200,7 +200,8 @@
         }
 
         async function fetchCSV(url) {
-            const cacheKey = "talumae_v4_" + url;
+            // CACHE KEY DIPERBARUI KE V9 AGAR BROWSER ANDA LANGSUNG MERENDER VERSI TERBARU
+            const cacheKey = "talumae_v9_katalog_" + url;
             const cachedText = sessionStorage.getItem(cacheKey);
             const cacheTime = sessionStorage.getItem(cacheKey + "_time");
 
@@ -304,7 +305,6 @@
                 const statusBukaHtml = getStatusBukaTutup(jamBuka, jamTutup);
                 const katUtama = kategori.split(',')[0].trim();
 
-                // Tombol Peta mengarah ke halaman peta.html DENGAN PARAMETER FILTER
                 let tombolPeta = "";
                 if (lokasi && lokasi.includes(',')) {
                     tombolPeta = `
@@ -314,7 +314,6 @@
                         </a>`;
                 }
 
-                // Tombol Detail
                 let tombolDetail = "";
                 if (kodeUnik && kodeUnik.trim() !== "") {
                     tombolDetail = `
@@ -325,14 +324,11 @@
                 }
 
                 const htmlDeskripsi = deskripsi ? `<p class="text-sm text-gray-600 mb-5 line-clamp-3 flex-grow leading-relaxed">${deskripsi}</p>` : `<div class="flex-grow"></div>`;
-                
-                // Menampilkan nama pemilik tanpa "Warga Talumae"
                 const htmlPemilik = pemilik ? `<p class="text-xs text-gray-500 font-semibold mb-3 uppercase tracking-wider flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>${pemilik}</p>` : ``;
 
                 elemenHTML += `
                     <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col group">
                         
-                        <!-- Header Hijau -->
                         <div class="bg-green-700 px-5 py-4 flex flex-col justify-center min-h-[90px]">
                             <div class="flex justify-between items-start">
                                 <h3 class="text-xl font-bold text-white leading-tight mt-1 line-clamp-2 pr-2" title="${nama}">${nama}</h3>
@@ -340,12 +336,10 @@
                             </div>
                         </div>
 
-                        <!-- Body Konten -->
                         <div class="p-5 flex flex-col flex-grow bg-white">
                             ${htmlPemilik}
                             ${htmlDeskripsi}
                             
-                            <!-- Area Tombol Bawah -->
                             <div class="flex flex-wrap items-center gap-2 mt-auto pt-4 border-t border-gray-100">
                                 ${tombolDetail}
                                 ${tombolPeta}
@@ -357,19 +351,14 @@
             wadah.innerHTML = elemenHTML;
         }
 
-        // ==========================================
-        // FUNGSI MODAL DETAIL TOKO (POP-UP)
-        // ==========================================
         function bukaModalDetail(index) {
             const toko = dataKatalogGlobal[index];
             if (!toko) return;
 
-            // FREEZE WEB BACKGROUND
             document.body.style.overflow = 'hidden';
 
             document.getElementById('modal-dt-nama').innerText = toko["Nama Toko"] || "Detail Toko";
             
-            // Deskripsi di Atas Popup
             const desc = toko["Deskripsi Singkat Toko"];
             const elDescWadah = document.getElementById('modal-dt-desc-wadah');
             const elDesc = document.getElementById('modal-dt-desc');
@@ -409,9 +398,10 @@
                 if (produkList.length === 0) {
                     wadahProduk.innerHTML = `<p class="text-sm text-gray-500 text-center italic py-2">Belum ada produk/menu yang ditambahkan.</p>`;
                 } else {
+                    // Sorting berdasarkan Kategori (Otomatis urut Abjad kategori)
                     produkList.sort((a, b) => {
-                        const katA = (a["Kategori Produk"] || "").toLowerCase();
-                        const katB = (b["Kategori Produk"] || "").toLowerCase();
+                        const katA = (a["Kategori Produk"] || a["Kategori"] || a["Jenis Produk"] || "").toLowerCase();
+                        const katB = (b["Kategori Produk"] || b["Kategori"] || b["Jenis Produk"] || "").toLowerCase();
                         return katA.localeCompare(katB);
                     });
 
@@ -419,6 +409,8 @@
                     produkList.forEach(p => {
                         const namaP = p["Nama Produk"];
                         const harga = p["Harga (Rp)"];
+                        // Anti-error pembacaan kolom kategori di database
+                        const katP = p["Kategori Produk"] || p["Kategori"] || p["Jenis Produk"] || "";
                         
                         const valPromo = (p["Ada Promo ?"] || "").trim().toLowerCase();
                         const isPromo = valPromo === "true" || valPromo === "ya";
@@ -435,10 +427,12 @@
                             `;
                         }
                         
+                        // Render UI List Menu
                         htmlProd += `
                             <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
                                 <div>
-                                    <p class="font-bold text-gray-800 text-sm">${namaP}</p>
+                                    <p class="font-bold text-gray-800 text-sm leading-tight">${namaP}</p>
+                                    ${katP ? `<span class="inline-block text-[10px] font-semibold text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 mt-1">${katP}</span>` : ''}
                                 </div>
                                 <div class="text-right shrink-0 ml-3">
                                     ${hargaHtml}
@@ -452,7 +446,6 @@
                 wadahProduk.innerHTML = `<p class="text-sm text-red-500 text-center py-2">Gagal memuat produk dari database.</p>`;
             });
 
-            // Logika Footer Pop-up
             const footer = document.getElementById('modal-dt-footer');
             let htmlFooter = `<button onclick="tutupModalDetail()" class="flex-none bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 px-5 rounded-lg transition-colors text-sm w-full sm:w-auto shadow-sm">Tutup</button>`;
             

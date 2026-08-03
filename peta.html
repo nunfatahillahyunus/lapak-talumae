@@ -98,27 +98,34 @@
             </button>
         </div>
 
-        <!-- PANEL STATISTIK TERDEKAT (BARU) -->
+        <!-- PANEL REKOMENDASI & STATISTIK TERDEKAT -->
         <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-200 mt-6 relative z-[20]">
-            <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 mb-5 gap-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">📍</span>
                     <div>
-                        <h3 class="font-bold text-gray-800 text-base md:text-lg uppercase">Rekomendasi Terdekat</h3>
-                        <p class="text-[11px] md:text-xs text-gray-500">UMKM dan Hasil Tani paling dekat dari lokasi Anda saat ini.</p>
+                        <h3 class="font-bold text-gray-800 text-base md:text-lg uppercase">Rekomendasi & Statistik Terdekat</h3>
+                        <p class="text-[11px] md:text-xs text-gray-500">Pilih kategori UMKM untuk melihat opsi terdekat dan statistik keterjangkauannya.</p>
                     </div>
+                </div>
+                
+                <!-- DROPDOWN KATEGORI UMKM -->
+                <div id="wadah-select-kategori" class="shrink-0 hidden">
+                    <select id="select-kategori-statistik" onchange="window.updateTampilanStatistikKategori()" class="bg-gray-50 border border-gray-300 text-gray-800 text-xs md:text-sm font-bold rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block p-2.5 shadow-sm cursor-pointer w-full sm:w-auto">
+                        <!-- Pilihan Kategori di-generate oleh JS -->
+                    </select>
                 </div>
             </div>
 
-            <!-- Wadah untuk menampung kartu-kartu statistik -->
-            <div id="wadah-statistik-terdekat" class="min-h-[100px] flex items-center justify-center">
-                <!-- Tampilan awal saat lokasi belum diaktifkan -->
+            <!-- WADAH STATISTIK KIRI DAN KANAN -->
+            <div id="wadah-statistik-terdekat" class="min-h-[120px] flex items-center justify-center">
+                <!-- Tampilan awal saat lokasi belum aktif -->
                 <div class="text-center py-6">
                     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-500 mb-3 shadow-sm border border-blue-100 animate-pulse">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </div>
                     <p class="text-sm font-medium text-gray-600">Sedang menunggu akses lokasi Anda...</p>
-                    <button onclick="cariLokasiSaya()" class="mt-2 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors underline">Ketuk di sini jika pop-up tidak muncul</button>
+                    <button onclick="cariLokasiSaya()" class="mt-2 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors underline">Ketuk di sini jika pop-up akses lokasi tidak muncul</button>
                 </div>
             </div>
         </div>
@@ -184,6 +191,7 @@
         let dataTitikPentingList = []; 
         let isTitikPentingVisible = true;
         let userLatLng = null; 
+        window.cacheStatistikKategori = {}; // Penyimpan data perhitungan jarak per kategori
 
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
@@ -196,6 +204,13 @@
             "Tani Sawah": "#eab308", "Tani Sayur": "#22c55e"
         };
         const WARNA_DEFAULT = "#6b7280";
+
+        function formatJarakText(distMeter) {
+            if (distMeter > 1000) {
+                return (distMeter / 1000).toFixed(1) + ' km';
+            }
+            return Math.round(distMeter) + ' m';
+        }
 
         function buatMarkerSVG(warnaHex) {
             return L.divIcon({
@@ -357,7 +372,7 @@
                 markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`);
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
 
-                // Memicu perhitungan jarak terdekat
+                // Memicu perhitungan analisis keterjangkauan
                 kalkulasiUMKMTerdekat(e.latlng);
             });
 
@@ -377,15 +392,14 @@
                         const targetLatLng = L.latLng(targetLat, targetLng);
                         const distance = userLatLng.distanceTo(targetLatLng); 
                         
-                        let distText = distance > 1000 ? (distance/1000).toFixed(1) + ' km' : Math.round(distance) + ' m';
-                        distanceEl.innerHTML = `📍 Jarak dari lokasi Anda: <strong>${distText}</strong>`;
+                        distanceEl.innerHTML = `📍 Jarak dari lokasi Anda: <strong>${formatJarakText(distance)}</strong>`;
                         distanceEl.classList.remove('hidden'); 
                     }
                 }
             });
 
             // Tarik Batas Dusun
-            fetch('data/Batas_Dusun_Talumae.geojson').then(r => r.json()).then(geo => {
+            fetch('data/Batas_Dusun_Talumae').then(r => r.json()).then(geo => {
                 const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
                 petaLeaflet.fitBounds(pol.getBounds());
             }).catch(e => console.log("Batas dusun tidak ada"));
@@ -490,7 +504,6 @@
                             
                             let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
                             
-                            // Kotak Penampil Jarak Live
                             tombolHTML += `<div class="jarak-live hidden text-[11px] text-blue-700 bg-blue-50 border border-blue-200 p-1.5 rounded font-medium shadow-inner text-center" data-lat="${lat}" data-lng="${lng}">Menghitung jarak...</div>`;
                             
                             if(arrKat.length > 0) {
@@ -542,7 +555,6 @@
                             style: { color: warnaPoli, weight: 2, fillColor: warnaPoli, fillOpacity: 0.4 }
                         });
                         
-                        // Menentukan titik tengah area (centroid)
                         const center = poligon.getBounds().getCenter();
 
                         const popupHTML = `
@@ -574,13 +586,13 @@
             }
         };
 
-        // ==========================================
-        // FUNGSI UNTUK STATISTIK UMKM TERDEKAT
-        // ==========================================
+        // =========================================================
+        // LOGIKA PENELITIAN & PERHITUNGAN STATISTIK DENGAN DROPDOWN
+        // =========================================================
         window.kalkulasiUMKMTerdekat = function(posisiUser) {
-            let jarakTerdekatPerKategori = {};
+            let dataPerKategori = {};
 
-            // 1. Kalkulasi jarak untuk UMKM / Toko
+            // 1. Kumpulkan data jarak seluruh Toko UMKM
             dataTokoPeta.forEach(toko => {
                 const lokasi = toko["Lokasi Toko"];
                 const nama = toko["Nama Toko"];
@@ -594,15 +606,14 @@
                         const arrKat = kategoriStr.split(',').map(k => k.trim()).filter(k => k);
                         
                         arrKat.forEach(kat => {
-                            if(!jarakTerdekatPerKategori[kat] || dist < jarakTerdekatPerKategori[kat].jarak) {
-                                jarakTerdekatPerKategori[kat] = { nama: nama, jarak: dist, lat: lat, lng: lng };
-                            }
+                            if (!dataPerKategori[kat]) dataPerKategori[kat] = [];
+                            dataPerKategori[kat].push({ nama: nama, jarak: dist, lat: lat, lng: lng });
                         });
                     }
                 }
             });
 
-            // 2. Kalkulasi jarak untuk Poligon Pertanian (Menggunakan titik tengah)
+            // 2. Kumpulkan data jarak seluruh Poligon Pertanian
             if (geojsonTani && geojsonTani.features) {
                 geojsonTani.features.forEach(feature => {
                     const props = feature.properties || {};
@@ -613,65 +624,121 @@
                         const center = tempLayer.getBounds().getCenter();
                         const dist = posisiUser.distanceTo(center);
 
-                        if(!jarakTerdekatPerKategori[kat] || dist < jarakTerdekatPerKategori[kat].jarak) {
-                            jarakTerdekatPerKategori[kat] = { nama: "Area " + kat, jarak: dist, lat: center.lat, lng: center.lng };
-                        }
+                        if (!dataPerKategori[kat]) dataPerKategori[kat] = [];
+                        dataPerKategori[kat].push({ nama: "Area " + kat, jarak: dist, lat: center.lat, lng: center.lng });
                     }
                 });
             }
 
-            renderStatistikTerdekat(jarakTerdekatPerKategori);
+            // 3. Olah Statistik Agregat per Kategori
+            window.cacheStatistikKategori = {};
+            Object.keys(dataPerKategori).forEach(kat => {
+                const list = dataPerKategori[kat];
+                list.sort((a, b) => a.jarak - b.jarak); // Urutkan dari yang paling dekat
+
+                const count = list.length;
+                const nearest = list[0];
+                const farthest = list[list.length - 1];
+                const totalDist = list.reduce((sum, item) => sum + item.jarak, 0);
+                const avgDist = totalDist / count;
+
+                window.cacheStatistikKategori[kat] = {
+                    count: count,
+                    nearest: nearest,
+                    farthestJarak: farthest.jarak,
+                    avgJarak: avgDist
+                };
+            });
+
+            // Isikan Opsi ke Dropdown
+            const selectEl = document.getElementById('select-kategori-statistik');
+            const containerSelect = document.getElementById('wadah-select-kategori');
+            let optionsHTML = "";
+            
+            // Urutkan abjad kategori di dropdown
+            const sortedKategori = Object.keys(window.cacheStatistikKategori).sort((a,b) => a.localeCompare(b));
+
+            if(sortedKategori.length > 0) {
+                sortedKategori.forEach(kat => {
+                    optionsHTML += `<option value="${kat}">Kategori: ${kat}</option>`;
+                });
+                selectEl.innerHTML = optionsHTML;
+                containerSelect.classList.remove('hidden');
+                
+                // Tampilkan statistik kategori pertama secara default
+                window.updateTampilanStatistikKategori();
+            } else {
+                document.getElementById('wadah-statistik-terdekat').innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Tidak ada data UMKM untuk dianalisis.</p>`;
+            }
         };
 
-        window.renderStatistikTerdekat = function(dataJarak) {
+        window.updateTampilanStatistikKategori = function() {
+            const selectEl = document.getElementById('select-kategori-statistik');
+            const katDipilih = selectEl.value;
+            const data = window.cacheStatistikKategori[katDipilih];
             const wadah = document.getElementById('wadah-statistik-terdekat');
-            const dataArray = Object.keys(dataJarak).map(kat => ({
-                kategori: kat,
-                nama: dataJarak[kat].nama,
-                jarak: dataJarak[kat].jarak,
-                lat: dataJarak[kat].lat,
-                lng: dataJarak[kat].lng
-            }));
 
-            // Urutkan dari yang posisinya paling dekat ke pengguna
-            dataArray.sort((a, b) => a.jarak - b.jarak);
+            if (!data) return;
 
-            if (dataArray.length === 0) {
-                wadah.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Data toko belum tersedia untuk dihitung.</p>`;
-                return;
-            }
+            // Cari warna sesuai kategori
+            const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === katDipilih.toLowerCase());
+            const warnaPin = keyWarna ? KATEGORI_WARNA[keyWarna] : WARNA_DEFAULT;
 
-            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">`;
-            
-            dataArray.forEach(item => {
-                let distText = item.jarak > 1000 ? (item.jarak/1000).toFixed(1) + ' km' : Math.round(item.jarak) + ' m';
-                
-                const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === item.kategori.toLowerCase());
-                const warnaPin = keyWarna ? KATEGORI_WARNA[keyWarna] : WARNA_DEFAULT;
-
-                html += `
-                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all relative overflow-hidden flex flex-col justify-between group">
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background-color: ${warnaPin};"></div>
-                        <div class="pl-2">
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-0.5 block">${item.kategori}</span>
-                            <h4 class="font-bold text-gray-800 text-sm leading-tight truncate group-hover:text-blue-600 transition-colors" title="${item.nama}">${item.nama}</h4>
-                        </div>
-                        <div class="mt-4 pl-2 flex items-center justify-between border-t border-gray-200/60 pt-3">
-                            <div class="flex flex-col">
-                                <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none mb-1">Jarak</span>
-                                <span class="text-blue-700 font-black text-sm leading-none">${distText}</span>
+            const html = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                    
+                    <!-- SISI KIRI: TOKO TERDEKAT -->
+                    <div class="bg-blue-50/60 rounded-2xl p-5 border border-blue-200/80 shadow-sm relative overflow-hidden flex flex-col justify-between group">
+                        <div class="absolute left-0 top-0 bottom-0 w-2" style="background-color: ${warnaPin};"></div>
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-800 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200/50">Toko Terdekat</span>
+                                <span class="text-xs font-black text-blue-700 bg-white px-2.5 py-1 rounded-lg border border-blue-100 shadow-2xs">📍 ${formatJarakText(data.nearest.jarak)}</span>
                             </div>
-                            <button onclick="fokusKeTokoDariStatistik('${item.nama}', ${item.lat}, ${item.lng})" class="text-[10px] bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-700 font-bold py-1.5 px-3 rounded-lg transition-all flex items-center gap-1 shadow-sm">
-                                ➔ Peta
+                            <h4 class="font-extrabold text-gray-900 text-lg leading-snug my-1 truncate" title="${data.nearest.nama}">${data.nearest.nama}</h4>
+                            <p class="text-xs text-gray-500">Paling dekat dari posisi Anda untuk kategori <strong class="text-gray-700">${katDipilih}</strong>.</p>
+                        </div>
+                        <div class="mt-5 pt-3 border-t border-blue-200/60 flex justify-end">
+                            <button onclick="fokusKeTokoDariStatistik('${data.nearest.nama}', ${data.nearest.lat}, ${data.nearest.lng})" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md">
+                                <span>Lihat di Peta</span>
+                                <span>➔</span>
                             </button>
                         </div>
                     </div>
-                `;
-            });
-            
-            html += `</div>`;
+
+                    <!-- SISI KANAN: STATISTIK KATEGORI -->
+                    <div class="bg-gray-50 rounded-2xl p-5 border border-gray-200 shadow-sm flex flex-col justify-between">
+                        <div class="mb-3 border-b border-gray-200/80 pb-2 flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Statistik Kategori</span>
+                            <span class="text-xs font-extrabold text-gray-700 bg-white px-2 py-0.5 rounded border border-gray-200">${katDipilih}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2.5 text-center my-auto">
+                            <!-- Jumlah UMKM -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-2xs flex flex-col justify-center">
+                                <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase block mb-1">Jumlah</span>
+                                <span class="text-sm sm:text-base md:text-lg font-black text-gray-800">${data.count} <span class="text-[10px] font-medium text-gray-500">Toko</span></span>
+                            </div>
+                            
+                            <!-- Rata-Rata Jarak -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-2xs flex flex-col justify-center">
+                                <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase block mb-1">Rata-Rata</span>
+                                <span class="text-sm sm:text-base md:text-lg font-black text-green-700">${formatJarakText(data.avgJarak)}</span>
+                            </div>
+                            
+                            <!-- Jarak Terjauh -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-2xs flex flex-col justify-center">
+                                <span class="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase block mb-1">Terjauh</span>
+                                <span class="text-sm sm:text-base md:text-lg font-black text-red-600">${formatJarakText(data.farthestJarak)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+
             wadah.innerHTML = html;
-            wadah.className = "w-full"; 
+            wadah.className = "w-full";
         };
 
         window.fokusKeTokoDariStatistik = function(namaToko, lat, lng) {

@@ -98,6 +98,31 @@
             </button>
         </div>
 
+        <!-- PANEL STATISTIK TERDEKAT (BARU) -->
+        <div class="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-200 mt-6 relative z-[20]">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📍</span>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-base md:text-lg uppercase">Rekomendasi Terdekat</h3>
+                        <p class="text-[11px] md:text-xs text-gray-500">UMKM dan Hasil Tani paling dekat dari lokasi Anda saat ini.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wadah untuk menampung kartu-kartu statistik -->
+            <div id="wadah-statistik-terdekat" class="min-h-[100px] flex items-center justify-center">
+                <!-- Tampilan awal saat lokasi belum diaktifkan -->
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-500 mb-3 shadow-sm border border-blue-100 animate-pulse">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-600">Sedang menunggu akses lokasi Anda...</p>
+                    <button onclick="cariLokasiSaya()" class="mt-2 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors underline">Ketuk di sini jika pop-up tidak muncul</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- MODAL LIST TITIK PENTING -->
@@ -158,7 +183,7 @@
         // VARIABEL PENYIMPANAN DATA TITIK & LOKASI PENGGUNA
         let dataTitikPentingList = []; 
         let isTitikPentingVisible = true;
-        let userLatLng = null; // Menyimpan titik kordinat user secara live
+        let userLatLng = null; 
 
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
@@ -320,27 +345,29 @@
             // CARI LOKASI OTOMATIS SAAT HALAMAN DIMUAT
             petaLeaflet.locate({setView: false});
 
-            // FITUR LOKASI SAYA (Menyimpan kordinat user ke variabel userLatLng)
+            // FITUR LOKASI SAYA
             petaLeaflet.on('locationfound', function(e) {
                 if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
                 if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
                 
-                userLatLng = e.latlng; // Menyimpan data latitude & longitude pengguna
+                userLatLng = e.latlng;
                 
                 const ikonLokasi = L.divIcon({ className: "bg-transparent", html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`, iconSize: [16, 16]});
                 
                 markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`);
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
+
+                // Memicu perhitungan jarak terdekat
+                kalkulasiUMKMTerdekat(e.latlng);
             });
 
-            // FITUR KALKULASI JARAK LIVE (Saat marker / area di-klik)
+            // FITUR KALKULASI JARAK LIVE DI POPUP
             petaLeaflet.on('popupopen', function(e) {
-                if (!userLatLng) return; // Hentikan jika pengguna belum mengaktifkan GPS
+                if (!userLatLng) return; 
                 
                 const popupNode = e.popup._contentNode;
                 if (!popupNode) return;
                 
-                // Cari elemen div penyimpan jarak di dalam kotak popup
                 const distanceEl = popupNode.querySelector('.jarak-live');
                 if (distanceEl) {
                     const targetLat = distanceEl.getAttribute('data-lat');
@@ -348,11 +375,11 @@
                     
                     if(targetLat && targetLng){
                         const targetLatLng = L.latLng(targetLat, targetLng);
-                        const distance = userLatLng.distanceTo(targetLatLng); // Hitung jarak otomatis by Leaflet
+                        const distance = userLatLng.distanceTo(targetLatLng); 
                         
                         let distText = distance > 1000 ? (distance/1000).toFixed(1) + ' km' : Math.round(distance) + ' m';
                         distanceEl.innerHTML = `📍 Jarak dari lokasi Anda: <strong>${distText}</strong>`;
-                        distanceEl.classList.remove('hidden'); // Memunculkan kotak penampil jarak
+                        distanceEl.classList.remove('hidden'); 
                     }
                 }
             });
@@ -545,6 +572,116 @@
                     }
                 });
             }
+        };
+
+        // ==========================================
+        // FUNGSI UNTUK STATISTIK UMKM TERDEKAT
+        // ==========================================
+        window.kalkulasiUMKMTerdekat = function(posisiUser) {
+            let jarakTerdekatPerKategori = {};
+
+            // 1. Kalkulasi jarak untuk UMKM / Toko
+            dataTokoPeta.forEach(toko => {
+                const lokasi = toko["Lokasi Toko"];
+                const nama = toko["Nama Toko"];
+                const kategoriStr = toko["Kategori Produk"] || "";
+                
+                if (lokasi && lokasi.includes(',')) {
+                    const lat = parseFloat(lokasi.split(',')[0].trim());
+                    const lng = parseFloat(lokasi.split(',')[1].trim());
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const dist = posisiUser.distanceTo(L.latLng(lat, lng));
+                        const arrKat = kategoriStr.split(',').map(k => k.trim()).filter(k => k);
+                        
+                        arrKat.forEach(kat => {
+                            if(!jarakTerdekatPerKategori[kat] || dist < jarakTerdekatPerKategori[kat].jarak) {
+                                jarakTerdekatPerKategori[kat] = { nama: nama, jarak: dist, lat: lat, lng: lng };
+                            }
+                        });
+                    }
+                }
+            });
+
+            // 2. Kalkulasi jarak untuk Poligon Pertanian (Menggunakan titik tengah)
+            if (geojsonTani && geojsonTani.features) {
+                geojsonTani.features.forEach(feature => {
+                    const props = feature.properties || {};
+                    const kat = props["Jenis Tani"] || "Hasil Tani";
+                    
+                    if(feature.geometry) {
+                        const tempLayer = L.geoJSON(feature);
+                        const center = tempLayer.getBounds().getCenter();
+                        const dist = posisiUser.distanceTo(center);
+
+                        if(!jarakTerdekatPerKategori[kat] || dist < jarakTerdekatPerKategori[kat].jarak) {
+                            jarakTerdekatPerKategori[kat] = { nama: "Area " + kat, jarak: dist, lat: center.lat, lng: center.lng };
+                        }
+                    }
+                });
+            }
+
+            renderStatistikTerdekat(jarakTerdekatPerKategori);
+        };
+
+        window.renderStatistikTerdekat = function(dataJarak) {
+            const wadah = document.getElementById('wadah-statistik-terdekat');
+            const dataArray = Object.keys(dataJarak).map(kat => ({
+                kategori: kat,
+                nama: dataJarak[kat].nama,
+                jarak: dataJarak[kat].jarak,
+                lat: dataJarak[kat].lat,
+                lng: dataJarak[kat].lng
+            }));
+
+            // Urutkan dari yang posisinya paling dekat ke pengguna
+            dataArray.sort((a, b) => a.jarak - b.jarak);
+
+            if (dataArray.length === 0) {
+                wadah.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Data toko belum tersedia untuk dihitung.</p>`;
+                return;
+            }
+
+            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">`;
+            
+            dataArray.forEach(item => {
+                let distText = item.jarak > 1000 ? (item.jarak/1000).toFixed(1) + ' km' : Math.round(item.jarak) + ' m';
+                
+                const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === item.kategori.toLowerCase());
+                const warnaPin = keyWarna ? KATEGORI_WARNA[keyWarna] : WARNA_DEFAULT;
+
+                html += `
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all relative overflow-hidden flex flex-col justify-between group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background-color: ${warnaPin};"></div>
+                        <div class="pl-2">
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-0.5 block">${item.kategori}</span>
+                            <h4 class="font-bold text-gray-800 text-sm leading-tight truncate group-hover:text-blue-600 transition-colors" title="${item.nama}">${item.nama}</h4>
+                        </div>
+                        <div class="mt-4 pl-2 flex items-center justify-between border-t border-gray-200/60 pt-3">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none mb-1">Jarak</span>
+                                <span class="text-blue-700 font-black text-sm leading-none">${distText}</span>
+                            </div>
+                            <button onclick="fokusKeTokoDariStatistik('${item.nama}', ${item.lat}, ${item.lng})" class="text-[10px] bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-700 font-bold py-1.5 px-3 rounded-lg transition-all flex items-center gap-1 shadow-sm">
+                                ➔ Peta
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            wadah.innerHTML = html;
+            wadah.className = "w-full"; 
+        };
+
+        window.fokusKeTokoDariStatistik = function(namaToko, lat, lng) {
+            document.getElementById('map-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            let namaCari = namaToko.replace("Area ", "");
+            document.getElementById('input-cari-peta').value = namaCari;
+            
+            targetTokoBukaPopup = namaCari;
+            window.terapkanFilterPeta();
         };
     </script>
 </body>

@@ -399,7 +399,7 @@
             });
 
             // Tarik Batas Dusun
-            fetch('data/Batas_Dusun_Talumae').then(r => r.json()).then(geo => {
+            fetch('data/Batas_Dusun_Talumae,geojson').then(r => r.json()).then(geo => {
                 const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
                 petaLeaflet.fitBounds(pol.getBounds());
             }).catch(e => console.log("Batas dusun tidak ada"));

@@ -58,8 +58,16 @@
             </div>
 
             <h3 class="font-bold text-gray-800 mb-1 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
-            <p class="text-[11px] text-gray-500 mb-3 italic">Pilih satu atau lebih kategori di bawah ini untuk memunculkan titik UMKM / Lahan Tani pada peta.</p>
-            <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
+            <p class="text-[11px] text-gray-500 mb-3 italic">Ketuk tombol di bawah ini untuk menyaring kategori UMKM / Lahan Tani pada peta.</p>
+            
+            <!-- TOMBOL FILTER KATEGORI (MEMBUKA MODAL) -->
+            <button onclick="bukaModalKategori()" class="bg-white border border-gray-300 hover:border-green-500 hover:bg-green-50 text-gray-700 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors text-sm w-full sm:w-max">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Pilih Kategori Peta
+            </button>
+            
+            <!-- TEMPAT MUNCULNYA TAGS KATEGORI YANG SEDANG AKTIF -->
+            <div id="kategori-terpilih-tags" class="flex flex-wrap gap-2 mt-3 empty:hidden"></div>
             
             <!-- TOGGLE GLOBAL TITIK PENTING -->
             <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
@@ -132,6 +140,28 @@
         </div>
 
     </main>
+
+    <!-- MODAL FILTER KATEGORI UMKM (BARU) -->
+    <div id="modal-filter-kategori" class="fixed inset-0 bg-black bg-opacity-70 z-[1100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]">
+            <div class="bg-gray-800 p-4 shrink-0 flex justify-between items-center text-white border-b-4 border-green-500">
+                <h3 class="text-lg font-bold leading-tight flex items-center gap-2"><span>🏷️</span> Filter Kategori</h3>
+                <button onclick="tutupModalKategori()" class="hover:text-red-400 focus:outline-none shrink-0 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto bg-gray-50">
+                <p class="text-[11px] text-gray-500 mb-4 italic">Ketuk pada kategori untuk mengaktifkan filter. Anda dapat memilih lebih dari satu.</p>
+                <div id="wadah-kategori-modal" class="flex flex-wrap gap-2.5">
+                    <!-- Digenerate oleh JS -->
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t border-gray-200 shrink-0 flex gap-2">
+                <button onclick="resetKategoriPeta()" class="w-1/3 bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2.5 px-4 rounded-xl transition-colors shadow-sm text-sm border border-red-200">Reset</button>
+                <button onclick="tutupModalKategori()" class="w-2/3 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl transition-colors shadow-sm text-sm">Terapkan</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL LIST TITIK PENTING -->
     <div id="modal-list-titik" class="fixed inset-0 bg-black bg-opacity-70 z-[1100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
@@ -232,23 +262,67 @@
             });
         }
 
+        // ==========================================
+        // FUNGSI MODAL FILTER KATEGORI UMKM BARU
+        // ==========================================
+        window.bukaModalKategori = function() {
+            document.body.style.overflow = 'hidden';
+            const modal = document.getElementById('modal-filter-kategori');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-95');
+                modal.children[0].classList.add('scale-100');
+            }, 10);
+        };
+
+        window.tutupModalKategori = function() {
+            document.body.style.overflow = 'auto';
+            const modal = document.getElementById('modal-filter-kategori');
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.remove('scale-100');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        window.resetKategoriPeta = function() {
+            kategoriAktif = [];
+            window.renderTombolKategoriPeta();
+            window.terapkanFilterPeta();
+        };
+
         window.renderTombolKategoriPeta = function() {
-            const wadah = document.getElementById('wadah-kategori-peta');
-            let html = "";
+            const wadahModal = document.getElementById('wadah-kategori-modal');
+            const wadahTags = document.getElementById('kategori-terpilih-tags');
+            
+            let htmlModal = "";
+            let htmlTags = "";
+
             Object.keys(KATEGORI_WARNA).forEach(kat => {
                 const warnaPin = KATEGORI_WARNA[kat];
                 const isAktif = kategoriAktif.includes(kat);
+                
                 const styleNormal = `border-color: ${warnaPin}; color: ${warnaPin}; background-color: transparent;`;
                 const styleAktif = `border-color: ${warnaPin}; background-color: ${warnaPin}; color: white;`;
-                html += `<button onclick="window.pilihKategoriPeta('${kat}')" class="border-2 font-bold py-1.5 px-4 rounded-full text-xs sm:text-sm transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>${kat}</button>`;
+                
+                // Render tombol untuk di dalam modal
+                htmlModal += `<button onclick="window.pilihKategoriPeta('${kat}')" class="border-2 font-bold py-2 px-4 rounded-full text-xs transition-all shadow-sm flex items-center gap-1.5 focus:outline-none" style="${isAktif ? styleAktif : styleNormal}"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${isAktif ? 'white' : warnaPin};"></span>${kat}</button>`;
+                
+                // Render tag penanda di halaman utama
+                if (isAktif) {
+                    htmlTags += `<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full text-white shadow-sm" style="background-color: ${warnaPin};">${kat} <button onclick="window.pilihKategoriPeta('${kat}')" class="hover:text-red-200 ml-1">✕</button></span>`;
+                }
             });
-            wadah.innerHTML = html;
+            
+            wadahModal.innerHTML = htmlModal;
+            wadahTags.innerHTML = htmlTags;
         };
 
         window.pilihKategoriPeta = function(katDipilih) {
             const index = kategoriAktif.indexOf(katDipilih);
             if (index > -1) kategoriAktif.splice(index, 1);
             else kategoriAktif.push(katDipilih);
+            
             window.renderTombolKategoriPeta();
             window.terapkanFilterPeta();
         };
@@ -416,7 +490,7 @@
             ]).then(([resToko, geoTani, geoTitik]) => {
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
-                isDataTokoLoaded = true; // Tandai bahwa CSV Toko sudah selesai didownload
+                isDataTokoLoaded = true; 
 
                 // 1. RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
                 if (geoTitik && geoTitik.features) {
@@ -460,6 +534,7 @@
                     if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                     else document.getElementById('input-cari-peta').value = filterDariURL;
                 }
+                
                 if (targetTokoBukaPopup) {
                     document.getElementById('input-cari-peta').value = targetTokoBukaPopup;
                 }
@@ -467,7 +542,7 @@
                 window.renderTombolKategoriPeta();
                 window.terapkanFilterPeta();
 
-                // Hitung ulang statistik jika GPS pengguna berhasil ditangkap lebih cepat dari download CSV
+                // Hitung ulang statistik jika GPS pengguna berhasil ditangkap
                 if (userLatLng) {
                     kalkulasiUMKMTerdekat(userLatLng);
                 }
@@ -488,7 +563,7 @@
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
-            // CEGAH RENDER UMKM JIKA TIDAK ADA FILTER ATAU PENCARIAN
+            // CEGAH RENDER UMKM JIKA TIDAK ADA FILTER ATAU PENCARIAN (Sesuai Permintaan)
             if (!filterTeksAda && !filterKategoriAda) {
                 return;
             }
@@ -535,6 +610,7 @@
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
                             layerGrupMarker.addLayer(marker);
                             
+                            // NOTE: Tetap dipertahankan HANYA untuk kebutuhan URL Parameter (?toko=...)
                             if (targetTokoBukaPopup && (namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); targetTokoBukaPopup=null; }, 600); 
                             }
@@ -642,7 +718,7 @@
             window.cacheStatistikKategori = {};
             Object.keys(dataPerKategori).forEach(kat => {
                 const list = dataPerKategori[kat];
-                list.sort((a, b) => a.jarak - b.jarak); // Urutkan dari yang paling dekat
+                list.sort((a, b) => a.jarak - b.jarak); 
 
                 const count = list.length;
                 const nearest = list[0];
@@ -658,22 +734,20 @@
                 };
             });
 
-            // Isikan Opsi ke Dropdown
+            // Isikan Opsi ke Dropdown (Menghapus tulisan "Kategori: ")
             const selectEl = document.getElementById('select-kategori-statistik');
             const containerSelect = document.getElementById('wadah-select-kategori');
             let optionsHTML = "";
             
-            // Urutkan abjad kategori di dropdown
             const sortedKategori = Object.keys(window.cacheStatistikKategori).sort((a,b) => a.localeCompare(b));
 
             if(sortedKategori.length > 0) {
                 sortedKategori.forEach(kat => {
-                    optionsHTML += `<option value="${kat}">Kategori: ${kat}</option>`;
+                    optionsHTML += `<option value="${kat}">${kat}</option>`;
                 });
                 selectEl.innerHTML = optionsHTML;
                 containerSelect.classList.remove('hidden');
                 
-                // Tampilkan statistik kategori pertama secara default
                 window.updateTampilanStatistikKategori();
             } else {
                 document.getElementById('wadah-statistik-terdekat').innerHTML = `<div class="w-full text-center py-6"><p class="text-sm text-gray-500 font-semibold">Toko atau UMKM belum ditambahkan ke dalam sistem.</p></div>`;
@@ -688,7 +762,6 @@
 
             if (!data) return;
 
-            // Cari warna sesuai kategori
             const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === katDipilih.toLowerCase());
             const warnaPin = keyWarna ? KATEGORI_WARNA[keyWarna] : WARNA_DEFAULT;
 
@@ -749,14 +822,22 @@
             wadah.className = "w-full";
         };
 
+        // FUNGSI UNTUK FOKUS KE TOKO TANPA MEMBUKA POPUP
         window.fokusKeTokoDariStatistik = function(namaToko, lat, lng) {
+            // Gulir layar (scroll) ke arah peta agar terlihat
             document.getElementById('map-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
             
+            // Masukkan nama ke kolom pencarian
             let namaCari = namaToko.replace("Area ", "");
             document.getElementById('input-cari-peta').value = namaCari;
             
-            targetTokoBukaPopup = namaCari;
+            // Terapkan filter peta untuk memunculkan ikon UMKM yang dicari
             window.terapkanFilterPeta();
+            
+            // Lakukan zoom-in ke titik koordinat (Tanpa memicu openPopup)
+            if (petaLeaflet && lat && lng) {
+                petaLeaflet.setView([lat, lng], 17);
+            }
         };
     </script>
 </body>

@@ -490,7 +490,7 @@
             ]).then(([resToko, geoTani, geoTitik]) => {
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
-                isDataTokoLoaded = true; 
+                isDataTokoLoaded = true; // Tandai bahwa CSV Toko sudah selesai didownload
 
                 // 1. RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
                 if (geoTitik && geoTitik.features) {
@@ -534,15 +534,16 @@
                     if (Object.keys(KATEGORI_WARNA).includes(filterDariURL)) kategoriAktif.push(filterDariURL);
                     else document.getElementById('input-cari-peta').value = filterDariURL;
                 }
-                
                 if (targetTokoBukaPopup) {
                     document.getElementById('input-cari-peta').value = targetTokoBukaPopup;
                 }
 
                 window.renderTombolKategoriPeta();
+                
+                // Terpakan filter awal (Sekarang akan merender semua marker jika tidak ada filter)
                 window.terapkanFilterPeta();
 
-                // Hitung ulang statistik jika GPS pengguna berhasil ditangkap
+                // Hitung ulang statistik jika GPS pengguna berhasil ditangkap lebih cepat dari download CSV
                 if (userLatLng) {
                     kalkulasiUMKMTerdekat(userLatLng);
                 }
@@ -563,7 +564,7 @@
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
-            // CEGAH RENDER UMKM JIKA TIDAK ADA FILTER ATAU PENCARIAN (Sesuai Permintaan)
+            // CEGAH RENDER UMKM JIKA TIDAK ADA FILTER ATAU PENCARIAN
             if (!filterTeksAda && !filterKategoriAda) {
                 return;
             }
@@ -573,6 +574,7 @@
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
                 
+                // Cek kesesuaian Teks & Kategori. Jika filter kosong, nilainya otomatis 'true'
                 const cocokTeks = !filterTeksAda || (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
                 const cocokKategori = !filterKategoriAda || kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
@@ -610,7 +612,7 @@
                             const marker = L.marker([lat, lng], { icon: buatMarkerSVG(warnaMarker) }).bindPopup(popup);
                             layerGrupMarker.addLayer(marker);
                             
-                            // NOTE: Tetap dipertahankan HANYA untuk kebutuhan URL Parameter (?toko=...)
+                            // HANYA UNTUK KEBUTUHAN URL PARAMETER SAJA
                             if (targetTokoBukaPopup && (namaToko.toLowerCase() === targetTokoBukaPopup.toLowerCase())) {
                                 setTimeout(() => { petaLeaflet.setView([lat, lng], 18); marker.openPopup(); targetTokoBukaPopup=null; }, 600); 
                             }
@@ -718,7 +720,7 @@
             window.cacheStatistikKategori = {};
             Object.keys(dataPerKategori).forEach(kat => {
                 const list = dataPerKategori[kat];
-                list.sort((a, b) => a.jarak - b.jarak); 
+                list.sort((a, b) => a.jarak - b.jarak); // Urutkan dari yang paling dekat
 
                 const count = list.length;
                 const nearest = list[0];
@@ -734,11 +736,12 @@
                 };
             });
 
-            // Isikan Opsi ke Dropdown (Menghapus tulisan "Kategori: ")
+            // Isikan Opsi ke Dropdown
             const selectEl = document.getElementById('select-kategori-statistik');
             const containerSelect = document.getElementById('wadah-select-kategori');
             let optionsHTML = "";
             
+            // Urutkan abjad kategori di dropdown
             const sortedKategori = Object.keys(window.cacheStatistikKategori).sort((a,b) => a.localeCompare(b));
 
             if(sortedKategori.length > 0) {
@@ -748,6 +751,7 @@
                 selectEl.innerHTML = optionsHTML;
                 containerSelect.classList.remove('hidden');
                 
+                // Tampilkan statistik kategori pertama secara default
                 window.updateTampilanStatistikKategori();
             } else {
                 document.getElementById('wadah-statistik-terdekat').innerHTML = `<div class="w-full text-center py-6"><p class="text-sm text-gray-500 font-semibold">Toko atau UMKM belum ditambahkan ke dalam sistem.</p></div>`;
@@ -762,8 +766,13 @@
 
             if (!data) return;
 
+            // Cari warna sesuai kategori
             const keyWarna = Object.keys(KATEGORI_WARNA).find(k => k.toLowerCase() === katDipilih.toLowerCase());
             const warnaPin = keyWarna ? KATEGORI_WARNA[keyWarna] : WARNA_DEFAULT;
+
+            // Escaping nama untuk mencegah error pada atribut onclick jika nama mengandung tanda kutip
+            const amanNama = data.nearest.nama.replace(/'/g, "\\'");
+            const amanKat = katDipilih.replace(/'/g, "\\'");
 
             const html = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
@@ -780,7 +789,7 @@
                             <p class="text-xs text-gray-500">Paling dekat dari posisi Anda untuk kategori <strong class="text-gray-700">${katDipilih}</strong>.</p>
                         </div>
                         <div class="mt-5 pt-3 border-t border-blue-200/60 flex justify-end">
-                            <button onclick="fokusKeTokoDariStatistik('${data.nearest.nama}', ${data.nearest.lat}, ${data.nearest.lng})" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md">
+                            <button onclick="fokusKeTokoDariStatistik('${amanNama}', ${data.nearest.lat}, ${data.nearest.lng}, '${amanKat}')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 group-hover:shadow-md">
                                 <span>Lihat di Peta</span>
                                 <span>➔</span>
                             </button>
@@ -822,19 +831,23 @@
             wadah.className = "w-full";
         };
 
-        // FUNGSI UNTUK FOKUS KE TOKO TANPA MEMBUKA POPUP
-        window.fokusKeTokoDariStatistik = function(namaToko, lat, lng) {
-            // Gulir layar (scroll) ke arah peta agar terlihat
+        // FUNGSI UNTUK FOKUS KE TOKO TANPA MEMBUKA POPUP DAN MENYESUAIKAN FILTER
+        window.fokusKeTokoDariStatistik = function(namaToko, lat, lng, kategoriToko) {
+            // 1. Gulir layar (scroll) ke arah peta agar terlihat
             document.getElementById('map-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
             
-            // Masukkan nama ke kolom pencarian
+            // 2. Ubah filter kategori secara otomatis agar toko bisa muncul
+            kategoriAktif = [kategoriToko]; 
+            window.renderTombolKategoriPeta(); 
+            
+            // 3. Masukkan nama ke kolom pencarian
             let namaCari = namaToko.replace("Area ", "");
             document.getElementById('input-cari-peta').value = namaCari;
             
-            // Terapkan filter peta untuk memunculkan ikon UMKM yang dicari
+            // 4. Terapkan filter peta untuk memunculkan ikon UMKM yang dicari
             window.terapkanFilterPeta();
             
-            // Lakukan zoom-in ke titik koordinat (Tanpa memicu openPopup)
+            // 5. Lakukan zoom-in ke titik koordinat (Tanpa memicu openPopup)
             if (petaLeaflet && lat && lng) {
                 petaLeaflet.setView([lat, lng], 17);
             }

@@ -155,9 +155,10 @@
         let kategoriAktif = [], markerLokasiSaya = null, circleLokasiSaya = null;
         let targetTokoBukaPopup = null;
         
-        // ARRAY PENYIMPANAN DAFTAR TITIK PENTING
+        // VARIABEL PENYIMPANAN DATA TITIK & LOKASI PENGGUNA
         let dataTitikPentingList = []; 
         let isTitikPentingVisible = true;
+        let userLatLng = null; // Menyimpan titik kordinat user secara live
 
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
@@ -214,7 +215,6 @@
             if (navigator.geolocation && petaLeaflet) petaLeaflet.locate({setView: true, maxZoom: 16});
         };
 
-        // KONTROL TOGGLE GLOBAL TITIK PENTING
         window.toggleVisibilitasTitikPentingGlobal = function() {
             const isChecked = document.getElementById('toggle-global-titik').checked;
             const btnPeta = document.getElementById('btn-buka-list-titik');
@@ -228,13 +228,11 @@
             }
         };
 
-        // KONTROL MODAL LIST TITIK PENTING (MENGELOMPOKKAN NAMA)
         window.bukaListTitikPenting = function() {
             document.body.style.overflow = 'hidden';
             const wadah = document.getElementById('wadah-item-titik');
             let html = "";
             
-            // Ambil nama unik saja dari keseluruhan list dan urutkan abjad
             const uniqueNames = [...new Set(dataTitikPentingList.map(item => item.nama))];
             uniqueNames.sort((a,b) => a.localeCompare(b));
             
@@ -242,7 +240,6 @@
                 html = `<p class="text-sm text-gray-500 text-center py-4 font-semibold">Data tidak tersedia.</p>`;
             } else {
                 uniqueNames.forEach(nama => {
-                    // Cek jika ada fasilitas dengan jumlah banyak (seperti Masjid)
                     const count = dataTitikPentingList.filter(t => t.nama === nama).length;
                     const labelJumlah = count > 1 ? `<span class="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded-full ml-1 font-black">${count} Titik</span>` : '';
 
@@ -274,31 +271,23 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         };
 
-        // FUNGSI FLASH (KEDIP) SAAT DAFTAR DITEKAN
         window.fokusTitikPenting = function(nama) {
             tutupListTitikPenting();
-            
-            // Cari semua marker yang namanya cocok
             const items = dataTitikPentingList.filter(t => t.nama === nama);
             
             if (items.length > 1) {
-                // Jika titiknya banyak (misal Masjid), buat peta menyesuaikan jangkauan
                 const latlngs = items.map(item => [item.lat, item.lng]);
                 const bounds = L.latLngBounds(latlngs);
                 petaLeaflet.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
                 
-                // Tunggu sedikit agar animasi zoom peta berjalan, lalu mulai berkedip (flash)
                 setTimeout(() => {
                     items.forEach(item => {
                         const el = item.marker.getElement();
                         if (el) {
-                            const dot = el.querySelector('div'); // Menarget bulatan putihnya
+                            const dot = el.querySelector('div'); 
                             if (dot) {
-                                // Ubah warna jadi merah, perbesar, dan berikan efek animasi pulse
                                 dot.classList.remove('bg-white');
                                 dot.classList.add('bg-red-500', 'scale-[2]', 'animate-pulse', 'border-red-700', '!z-[2000]', 'relative');
-                                
-                                // Hentikan kedipan dan kembalikan ke warna putih setelah 4 detik
                                 setTimeout(() => {
                                     dot.classList.add('bg-white');
                                     dot.classList.remove('bg-red-500', 'scale-[2]', 'animate-pulse', 'border-red-700', '!z-[2000]', 'relative');
@@ -307,14 +296,10 @@
                         }
                     });
                 }, 600);
-
             } else if (items.length === 1) {
-                // Jika titiknya hanya 1 (misal Kantor Desa), langsung zoom & buka pop-upnya
                 const item = items[0];
                 petaLeaflet.setView([item.lat, item.lng], 18);
-                setTimeout(() => {
-                    item.marker.openPopup();
-                }, 400);
+                setTimeout(() => { item.marker.openPopup(); }, 400);
             }
         };
 
@@ -332,19 +317,44 @@
             layerGrupMarker = L.layerGroup().addTo(petaLeaflet); 
             layerGrupTitik = L.layerGroup().addTo(petaLeaflet);  
 
-            // 1. CARI LOKASI SECARA OTOMATIS SAAT HALAMAN DIMUAT (TANPA ZOOM)
+            // CARI LOKASI OTOMATIS SAAT HALAMAN DIMUAT
             petaLeaflet.locate({setView: false});
 
-            // Fitur Lokasi Saya (Berlaku untuk otomatis awal dan tombol klik manual)
+            // FITUR LOKASI SAYA (Menyimpan kordinat user ke variabel userLatLng)
             petaLeaflet.on('locationfound', function(e) {
                 if (markerLokasiSaya) petaLeaflet.removeLayer(markerLokasiSaya);
                 if (circleLokasiSaya) petaLeaflet.removeLayer(circleLokasiSaya);
                 
+                userLatLng = e.latlng; // Menyimpan data latitude & longitude pengguna
+                
                 const ikonLokasi = L.divIcon({ className: "bg-transparent", html: `<div class="w-4 h-4 bg-blue-600 border-[3px] border-white rounded-full shadow-md animate-pulse"></div>`, iconSize: [16, 16]});
                 
-                // Menghapus openPopup otomatis agar peta tidak tergeser jika pengunjung berada di luar desa
                 markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`);
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
+            });
+
+            // FITUR KALKULASI JARAK LIVE (Saat marker / area di-klik)
+            petaLeaflet.on('popupopen', function(e) {
+                if (!userLatLng) return; // Hentikan jika pengguna belum mengaktifkan GPS
+                
+                const popupNode = e.popup._contentNode;
+                if (!popupNode) return;
+                
+                // Cari elemen div penyimpan jarak di dalam kotak popup
+                const distanceEl = popupNode.querySelector('.jarak-live');
+                if (distanceEl) {
+                    const targetLat = distanceEl.getAttribute('data-lat');
+                    const targetLng = distanceEl.getAttribute('data-lng');
+                    
+                    if(targetLat && targetLng){
+                        const targetLatLng = L.latLng(targetLat, targetLng);
+                        const distance = userLatLng.distanceTo(targetLatLng); // Hitung jarak otomatis by Leaflet
+                        
+                        let distText = distance > 1000 ? (distance/1000).toFixed(1) + ' km' : Math.round(distance) + ' m';
+                        distanceEl.innerHTML = `📍 Jarak dari lokasi Anda: <strong>${distText}</strong>`;
+                        distanceEl.classList.remove('hidden'); // Memunculkan kotak penampil jarak
+                    }
+                }
             });
 
             // Tarik Batas Dusun
@@ -362,16 +372,14 @@
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
 
-                // RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
+                // 1. RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
                 if (geoTitik && geoTitik.features) {
                     geoTitik.features.forEach(feature => {
                         if (!feature.geometry || !feature.geometry.coordinates) return; 
                         
                         const lng = feature.geometry.coordinates[0];
                         const lat = feature.geometry.coordinates[1];
-                        
                         const props = feature.properties || {};
-                        // Pastikan namanya bersih, tanpa embel-embel dusun
                         let namaTitik = props["Jenis_Bangunan"] || "Fasilitas Umum";
 
                         const popupHTML = `
@@ -381,6 +389,7 @@
                                     <h3 class="font-extrabold text-gray-900 text-base leading-tight text-center">${namaTitik}</h3>
                                 </div>
                                 <div class="p-3 text-center bg-gray-50 flex flex-col gap-2">
+                                    <div class="jarak-live hidden text-[11px] text-blue-700 bg-blue-50 border border-blue-200 p-1.5 rounded font-medium shadow-inner text-center" data-lat="${lat}" data-lng="${lng}">Menghitung jarak...</div>
                                     <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                         Buka Google Maps
@@ -389,11 +398,9 @@
                             </div>
                         `;
                         
-                        // Buat object marker
                         const titikMarkerObj = L.marker([lat, lng], { icon: buatTitikPutihIcon() }).bindPopup(popupHTML);
                         layerGrupTitik.addLayer(titikMarkerObj);
 
-                        // Simpan ke List Array agar bisa dipanggil oleh tombol
                         dataTitikPentingList.push({
                             nama: namaTitik,
                             lat: lat,
@@ -432,7 +439,7 @@
 
             if (!filterTeksAda && !filterKategoriAda) return;
 
-            // 1. RENDER TITIK UMKM
+            // 2. RENDER TITIK UMKM
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
@@ -455,6 +462,10 @@
                             if (keyWarna) warnaMarker = KATEGORI_WARNA[keyWarna];
                             
                             let tombolHTML = `<div class="flex flex-col gap-2 w-full mt-1">`;
+                            
+                            // Kotak Penampil Jarak Live
+                            tombolHTML += `<div class="jarak-live hidden text-[11px] text-blue-700 bg-blue-50 border border-blue-200 p-1.5 rounded font-medium shadow-inner text-center" data-lat="${lat}" data-lng="${lng}">Menghitung jarak...</div>`;
+                            
                             if(arrKat.length > 0) {
                                 arrKat.forEach(kat => {
                                     tombolHTML += `<a href="katalog.html?jenis=${encodeURIComponent(kat)}&toko=${encodeURIComponent(namaToko)}" class="inline-block w-full text-center bg-white border border-gray-300 hover:bg-green-600 hover:text-white hover:border-green-600 text-gray-700 font-bold py-1.5 px-3 rounded transition-colors text-xs shadow-sm">Buka Katalog ${kat}</a>`;
@@ -467,7 +478,6 @@
                                     Buka Google Maps
                                 </a>
                             `;
-                            
                             tombolHTML += `</div>`;
 
                             const popup = `<div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]"><div class="p-3 border-b-4" style="border-color: ${warnaMarker}; background-color: #f9fafb;"><h3 class="font-bold text-gray-900 text-base leading-tight text-center">${namaToko}</h3></div><div class="p-3 text-center bg-white flex flex-col gap-2">${tombolHTML}</div></div>`;
@@ -482,7 +492,7 @@
                 }
             });
 
-            // 2. RENDER POLIGON TANI
+            // 3. RENDER POLIGON TANI
             if (geojsonTani && geojsonTani.features) {
                 geojsonTani.features.forEach(feature => {
                     if(!feature.geometry) return;
@@ -504,17 +514,27 @@
                         const poligon = L.geoJSON(feature, {
                             style: { color: warnaPoli, weight: 2, fillColor: warnaPoli, fillOpacity: 0.4 }
                         });
+                        
+                        // Menentukan titik tengah area (centroid)
+                        const center = poligon.getBounds().getCenter();
 
                         const popupHTML = `
-                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px]">
+                            <div class="flex flex-col bg-white rounded-lg overflow-hidden min-w-[200px] shadow-lg">
                                 <div class="p-3 border-b-4 flex flex-col items-center" style="border-color: ${warnaPoli}; background-color: #f0fdf4;">
                                     <h3 class="font-bold text-gray-900 text-base leading-tight text-center uppercase">${jenisTani}</h3>
                                 </div>
                                 <div class="p-3 text-center bg-white flex flex-col gap-2">
-                                    <p class="text-xs text-gray-500 mb-2">Area Lahan Pertanian Desa</p>
-                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5">
+                                    <p class="text-[10px] text-gray-500 mb-1">Area Lahan Pertanian Desa</p>
+                                    
+                                    <div class="jarak-live hidden text-[11px] text-blue-700 bg-blue-50 border border-blue-200 p-1.5 rounded font-medium shadow-inner text-center" data-lat="${center.lat}" data-lng="${center.lng}">Menghitung jarak...</div>
+                                    
+                                    <a href="tani.html?filter=${encodeURIComponent(jenisTani)}" class="inline-block w-full bg-green-600 hover:bg-green-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5 mt-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Buka Bursa Tani
+                                        Bursa Tani
+                                    </a>
+                                    <a href="https://www.google.com/maps?q=${center.lat},${center.lng}" target="_blank" class="inline-block w-full bg-blue-600 hover:bg-blue-700 !text-white font-bold py-2 px-3 rounded transition-colors text-xs shadow-sm flex items-center justify-center gap-1.5 mt-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        Google Maps
                                     </a>
                                 </div>
                             </div>

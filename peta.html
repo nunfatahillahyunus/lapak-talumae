@@ -191,7 +191,8 @@
         let dataTitikPentingList = []; 
         let isTitikPentingVisible = true;
         let userLatLng = null; 
-        window.cacheStatistikKategori = {}; // Penyimpan data perhitungan jarak per kategori
+        let isDataTokoLoaded = false; // Penanda agar statistik tidak mendahului data toko
+        window.cacheStatistikKategori = {}; 
 
         const KATEGORI_WARNA = {
             "Makanan": "#ef4444", "Minuman": "#3b82f6", "Bengkel": "#4b5563",
@@ -372,11 +373,13 @@
                 markerLokasiSaya = L.marker(e.latlng, {icon: ikonLokasi}).addTo(petaLeaflet).bindPopup(`<strong>Lokasi Anda</strong>`);
                 circleLokasiSaya = L.circle(e.latlng, e.accuracy / 2, { color: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(petaLeaflet);
 
-                // Memicu perhitungan analisis keterjangkauan
-                kalkulasiUMKMTerdekat(e.latlng);
+                // Cek apakah data CSV toko sudah selesai di-load sebelum menghitung jarak
+                if (isDataTokoLoaded) {
+                    kalkulasiUMKMTerdekat(e.latlng);
+                }
             });
 
-            // FITUR KALKULASI JARAK LIVE DI POPUP
+            // FITUR KALKULASI JARAK LIVE DI POPUP PETA
             petaLeaflet.on('popupopen', function(e) {
                 if (!userLatLng) return; 
                 
@@ -399,7 +402,7 @@
             });
 
             // Tarik Batas Dusun
-            fetch('data/Batas_Dusun_Talumae,geojson').then(r => r.json()).then(geo => {
+            fetch('data/Batas_Dusun_Talumae.geojson').then(r => r.json()).then(geo => {
                 const pol = L.geoJSON(geo, { style: { color: '#4ade80', weight: 4, dashArray: '6, 6', fillColor: '#ffffff', fillOpacity: 0.1 } }).addTo(petaLeaflet);
                 petaLeaflet.fitBounds(pol.getBounds());
             }).catch(e => console.log("Batas dusun tidak ada"));
@@ -412,6 +415,7 @@
             ]).then(([resToko, geoTani, geoTitik]) => {
                 dataTokoPeta = resToko.data;
                 geojsonTani = geoTani;
+                isDataTokoLoaded = true; // Tandai bahwa CSV Toko sudah selesai didownload
 
                 // 1. RENDER TITIK PENTING (MENGGUNAKAN TITIK PUTIH)
                 if (geoTitik && geoTitik.features) {
@@ -460,7 +464,14 @@
                 }
 
                 window.renderTombolKategoriPeta();
+                
+                // Terpakan filter awal (Sekarang akan merender semua marker jika tidak ada filter)
                 window.terapkanFilterPeta();
+
+                // Hitung ulang statistik jika GPS pengguna berhasil ditangkap lebih cepat dari download CSV
+                if (userLatLng) {
+                    kalkulasiUMKMTerdekat(userLatLng);
+                }
 
                 const overlay = document.getElementById("data-loading-overlay");
                 if (overlay) { overlay.classList.add("opacity-0"); setTimeout(() => overlay.remove(), 500); }
@@ -478,19 +489,16 @@
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
-            if (!filterTeksAda && !filterKategoriAda) return;
-
             // 2. RENDER TITIK UMKM
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
-                const cocokTeks = (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
-                const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
+                
+                // Cek kesesuaian Teks & Kategori. Jika filter kosong, nilainya otomatis 'true'
+                const cocokTeks = !filterTeksAda || (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
+                const cocokKategori = !filterKategoriAda || kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
-                if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
-                    (filterTeksAda && !filterKategoriAda && cocokTeks) || 
-                    (!filterTeksAda && filterKategoriAda && cocokKategori)) {
-                    
+                if (cocokTeks && cocokKategori) {
                     const lokasi = toko["Lokasi Toko"];
                     if (lokasi && lokasi.includes(',')) {
                         const lat = parseFloat(lokasi.split(',')[0].trim());
@@ -540,13 +548,10 @@
                     const props = feature.properties || {};
                     const jenisTani = props["Jenis Tani"] || "Hasil Tani"; 
                     
-                    const cocokTeks = jenisTani.toLowerCase().includes(teksCari);
-                    const cocokKategori = !filterKategoriAda ? true : kategoriAktif.some(k => k.toLowerCase() === jenisTani.toLowerCase());
+                    const cocokTeks = !filterTeksAda || jenisTani.toLowerCase().includes(teksCari);
+                    const cocokKategori = !filterKategoriAda || kategoriAktif.some(k => k.toLowerCase() === jenisTani.toLowerCase());
 
-                    if ((filterTeksAda && filterKategoriAda && cocokTeks && cocokKategori) || 
-                        (filterTeksAda && !filterKategoriAda && cocokTeks) || 
-                        (!filterTeksAda && filterKategoriAda && cocokKategori)) {
-                        
+                    if (cocokTeks && cocokKategori) {
                         let warnaPoli = "#22c55e"; 
                         if (jenisTani.toLowerCase().includes("sawah")) warnaPoli = "#eab308"; 
                         if (jenisTani.toLowerCase().includes("sayur")) warnaPoli = "#22c55e"; 
@@ -660,7 +665,7 @@
 
             if(sortedKategori.length > 0) {
                 sortedKategori.forEach(kat => {
-                    optionsHTML += `<option value="${kat}">${kat}</option>`;
+                    optionsHTML += `<option value="${kat}">Kategori: ${kat}</option>`;
                 });
                 selectEl.innerHTML = optionsHTML;
                 containerSelect.classList.remove('hidden');
@@ -668,7 +673,7 @@
                 // Tampilkan statistik kategori pertama secara default
                 window.updateTampilanStatistikKategori();
             } else {
-                document.getElementById('wadah-statistik-terdekat').innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Tidak ada data UMKM untuk dianalisis.</p>`;
+                document.getElementById('wadah-statistik-terdekat').innerHTML = `<div class="w-full text-center py-6"><p class="text-sm text-gray-500 font-semibold">Toko atau UMKM belum ditambahkan ke dalam sistem.</p></div>`;
             }
         };
 

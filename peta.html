@@ -660,7 +660,7 @@
 
             if(sortedKategori.length > 0) {
                 sortedKategori.forEach(kat => {
-                    optionsHTML += `<option value="${kat}">Kategori: ${kat}</option>`;
+                    optionsHTML += `<option value="${kat}">${kat}</option>`;
                 });
                 selectEl.innerHTML = optionsHTML;
                 containerSelect.classList.remove('hidden');

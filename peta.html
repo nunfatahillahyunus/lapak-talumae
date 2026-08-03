@@ -57,7 +57,8 @@
                 <input type="text" id="input-cari-peta" placeholder="Cari nama toko, jenis tani, atau lokasi..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm shadow-sm">
             </div>
 
-            <h3 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
+            <h3 class="font-bold text-gray-800 mb-1 text-sm uppercase flex items-center gap-2 border-b pb-2">Saring Kategori Peta</h3>
+            <p class="text-[11px] text-gray-500 mb-3 italic">Pilih satu atau lebih kategori di bawah ini untuk memunculkan titik UMKM / Lahan Tani pada peta.</p>
             <div id="wadah-kategori-peta" class="flex flex-wrap gap-2.5"></div>
             
             <!-- TOGGLE GLOBAL TITIK PENTING -->
@@ -191,7 +192,7 @@
         let dataTitikPentingList = []; 
         let isTitikPentingVisible = true;
         let userLatLng = null; 
-        let isDataTokoLoaded = false; // Penanda agar statistik tidak mendahului data toko
+        let isDataTokoLoaded = false; 
         window.cacheStatistikKategori = {}; 
 
         const KATEGORI_WARNA = {
@@ -464,8 +465,6 @@
                 }
 
                 window.renderTombolKategoriPeta();
-                
-                // Terpakan filter awal (Sekarang akan merender semua marker jika tidak ada filter)
                 window.terapkanFilterPeta();
 
                 // Hitung ulang statistik jika GPS pengguna berhasil ditangkap lebih cepat dari download CSV
@@ -489,12 +488,16 @@
             const filterTeksAda = teksCari !== "";
             const filterKategoriAda = kategoriAktif.length > 0;
 
+            // CEGAH RENDER UMKM JIKA TIDAK ADA FILTER ATAU PENCARIAN
+            if (!filterTeksAda && !filterKategoriAda) {
+                return;
+            }
+
             // 2. RENDER TITIK UMKM
             dataTokoPeta.forEach(toko => {
                 const namaToko = toko["Nama Toko"] || "Toko Warga";
                 const stringKategori = toko["Kategori Produk"] || "";
                 
-                // Cek kesesuaian Teks & Kategori. Jika filter kosong, nilainya otomatis 'true'
                 const cocokTeks = !filterTeksAda || (namaToko.toLowerCase().includes(teksCari) || stringKategori.toLowerCase().includes(teksCari));
                 const cocokKategori = !filterKategoriAda || kategoriAktif.some(kat => stringKategori.toLowerCase().includes(kat.toLowerCase()));
 
